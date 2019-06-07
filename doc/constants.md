@@ -362,6 +362,8 @@
 - `mf_noviewid`: 56
 - `mf_pairship_startable`: 57
 - `mf_pairship_endable`: 58
+- `mf_nostorage`: 59
+- `mf_nogstorage`: 60
 
 ### Cell Properties
 
@@ -1407,13 +1409,13 @@
 - `e_panic`: 79
 - `e_whisp`: 80
 
-### petstat
+### petstat - deprecated, use *getpetinfo
 
-- `PET_CLASS`: 1
-- `PET_NAME`: 2
-- `PET_LEVEL`: 3
-- `PET_HUNGRY`: 4
-- `PET_INTIMATE`: 5
+- `PET_CLASS`: 1 **(DEPRECATED)**
+- `PET_NAME`: 2 **(DEPRECATED)**
+- `PET_LEVEL`: 3 **(DEPRECATED)**
+- `PET_HUNGRY`: 4 **(DEPRECATED)**
+- `PET_INTIMATE`: 5 **(DEPRECATED)**
 
 ### getmonsterinfo
 
@@ -3762,66 +3764,6 @@
 - `SEX_MALE`: 1
 - `SEX_ANY`: 2
 
-### Script Unit Data Types
-
-- `UDT_TYPE`: 0
-- `UDT_SIZE`: 1
-- `UDT_LEVEL`: 2
-- `UDT_HP`: 3
-- `UDT_MAXHP`: 4
-- `UDT_SP`: 5
-- `UDT_MAXSP`: 6
-- `UDT_MASTERAID`: 7
-- `UDT_MASTERCID`: 8
-- `UDT_MAPIDXY`: 9
-- `UDT_WALKTOXY`: 10
-- `UDT_SPEED`: 11
-- `UDT_MODE`: 12
-- `UDT_AI`: 13
-- `UDT_SCOPTION`: 14
-- `UDT_SEX`: 15
-- `UDT_CLASS`: 16
-- `UDT_HAIRSTYLE`: 17
-- `UDT_HAIRCOLOR`: 18
-- `UDT_HEADBOTTOM`: 19
-- `UDT_HEADMIDDLE`: 20
-- `UDT_HEADTOP`: 21
-- `UDT_CLOTHCOLOR`: 22
-- `UDT_SHIELD`: 23
-- `UDT_WEAPON`: 24
-- `UDT_LOOKDIR`: 25
-- `UDT_CANMOVETICK`: 26
-- `UDT_STR`: 27
-- `UDT_AGI`: 28
-- `UDT_VIT`: 29
-- `UDT_INT`: 30
-- `UDT_DEX`: 31
-- `UDT_LUK`: 32
-- `UDT_ATKRANGE`: 33
-- `UDT_ATKMIN`: 34
-- `UDT_ATKMAX`: 35
-- `UDT_MATKMIN`: 36
-- `UDT_MATKMAX`: 37
-- `UDT_DEF`: 38
-- `UDT_MDEF`: 39
-- `UDT_HIT`: 40
-- `UDT_FLEE`: 41
-- `UDT_PDODGE`: 42
-- `UDT_CRIT`: 43
-- `UDT_RACE`: 44
-- `UDT_ELETYPE`: 45
-- `UDT_ELELEVEL`: 46
-- `UDT_AMOTION`: 47
-- `UDT_ADELAY`: 48
-- `UDT_DMOTION`: 49
-- `UDT_HUNGER`: 50
-- `UDT_INTIMACY`: 51
-- `UDT_LIFETIME`: 52
-- `UDT_MERC_KILLCOUNT`: 53
-- `UDT_STATADD`: 54
-- `UDT_ROBE`: 55
-- `UDT_BODY2`: 56
-
 ### HatEffect Constants
 
 - `HAT_EF_BLOSSOM_FLUTTERING`: 1
@@ -3989,8 +3931,12 @@
 - `MAX_BG_MEMBERS`: 30
 - `MAX_CHAT_USERS`: 20
 - `MAX_REFINE`: 20
+- `MAX_ITEM_ID`: 65535
 - `MAX_MENU_OPTIONS`: 255
 - `MAX_MENU_LENGTH`: 2048
+- `MOB_CLONE_START`: 4001
+- `MOB_CLONE_END`: 5000
+- `MAX_NPC_PER_MAP`: 512
 
 ### status options
 
@@ -4180,6 +4126,7 @@
 - `PERM_DISABLE_STORE`: 16777216
 - `PERM_DISABLE_EXP`: 33554432
 - `PERM_DISABLE_SKILL_USAGE`: 67108864
+- `PERM_BYPASS_NOSTORAGE`: 134217728
 
 ### Data types
 
@@ -4258,6 +4205,16 @@
 - `MAPINFO_SIZE_X`: 2
 - `MAPINFO_SIZE_Y`: 3
 - `MAPINFO_ZONE`: 4
+- `MAPINFO_NPC_COUNT`: 5
+
+### consolemes options
+
+- `CONSOLEMES_DEBUG`: 0
+- `CONSOLEMES_ERROR`: 1
+- `CONSOLEMES_WARNING`: 2
+- `CONSOLEMES_INFO`: 3
+- `CONSOLEMES_STATUS`: 4
+- `CONSOLEMES_NOTICE`: 5
 
 ### set/getiteminfo options
 
@@ -4279,6 +4236,34 @@
 - `ITEMINFO_MATK`: 15
 - `ITEMINFO_VIEWSPRITE`: 16
 - `ITEMINFO_TRADE`: 17
+
+### getmercinfo options
+
+- `MERCINFO_ID,`: 0
+- `MERCINFO_CLASS`: 1
+- `MERCINFO_NAME`: 2
+- `MERCINFO_FAITH`: 3
+- `MERCINFO_CALLS`: 4
+- `MERCINFO_KILLCOUNT`: 5
+- `MERCINFO_LIFETIME`: 6
+- `MERCINFO_LEVEL`: 7
+- `MERCINFO_GID`: 8
+
+### getpetinfo options
+
+- `PETINFO_ID`: 0
+- `PETINFO_CLASS`: 1
+- `PETINFO_NAME`: 2
+- `PETINFO_INTIMACY`: 3
+- `PETINFO_HUNGRY`: 4
+- `PETINFO_RENAME`: 5
+- `PETINFO_GID`: 6
+- `PETINFO_EGGITEM`: 7
+- `PETINFO_FOODITEM`: 8
+- `PETINFO_ACCESSORYITEM`: 9
+- `PETINFO_ACCESSORYFLAG`: 10
+- `PETINFO_EVO_EGGID`: 11
+- `PETINFO_AUTOFEED`: 12
 
 ### monster skill states
 
@@ -4414,6 +4399,73 @@
 - `NST_MARKET`: 2
 - `NST_CUSTOM`: 3
 - `NST_BARTER`: 4
+
+### script unit data types
+
+- `UDT_TYPE`: 0
+- `UDT_SIZE`: 1
+- `UDT_LEVEL`: 2
+- `UDT_HP`: 3
+- `UDT_MAXHP`: 4
+- `UDT_SP`: 5
+- `UDT_MAXSP`: 6
+- `UDT_MASTERAID`: 7
+- `UDT_MASTERCID`: 8
+- `UDT_MAPIDXY`: 9 **(DEPRECATED)**
+- `UDT_WALKTOXY`: 10 **(DEPRECATED)**
+- `UDT_SPEED`: 11
+- `UDT_MODE`: 12
+- `UDT_AI`: 13
+- `UDT_SCOPTION`: 14
+- `UDT_SEX`: 15
+- `UDT_CLASS`: 16
+- `UDT_HAIRSTYLE`: 17
+- `UDT_HAIRCOLOR`: 18
+- `UDT_HEADBOTTOM`: 19
+- `UDT_HEADMIDDLE`: 20
+- `UDT_HEADTOP`: 21
+- `UDT_CLOTHCOLOR`: 22
+- `UDT_SHIELD`: 23
+- `UDT_WEAPON`: 24
+- `UDT_LOOKDIR`: 25
+- `UDT_CANMOVETICK`: 26
+- `UDT_STR`: 27
+- `UDT_AGI`: 28
+- `UDT_VIT`: 29
+- `UDT_INT`: 30
+- `UDT_DEX`: 31
+- `UDT_LUK`: 32
+- `UDT_ATKRANGE`: 33
+- `UDT_ATKMIN`: 34
+- `UDT_ATKMAX`: 35
+- `UDT_MATKMIN`: 36
+- `UDT_MATKMAX`: 37
+- `UDT_DEF`: 38
+- `UDT_MDEF`: 39
+- `UDT_HIT`: 40
+- `UDT_FLEE`: 41
+- `UDT_PDODGE`: 42
+- `UDT_CRIT`: 43
+- `UDT_RACE`: 44
+- `UDT_ELETYPE`: 45
+- `UDT_ELELEVEL`: 46
+- `UDT_AMOTION`: 47
+- `UDT_ADELAY`: 48
+- `UDT_DMOTION`: 49
+- `UDT_HUNGER`: 50
+- `UDT_INTIMACY`: 51
+- `UDT_LIFETIME`: 52
+- `UDT_MERC_KILLCOUNT`: 53
+- `UDT_STATPOINT`: 54
+- `UDT_ROBE`: 55
+- `UDT_BODY2`: 56
+- `UDT_GROUP`: 57
+
+### getguildonline types
+
+- `GUILD_ONLINE_ALL`: 0
+- `GUILD_ONLINE_VENDOR`: 1
+- `GUILD_ONLINE_NO_VENDOR`: 2
 
 ### Renewal
 
@@ -17854,6 +17906,12 @@
 - `Chest_Of_Death`: 22679
 - `Solo_Christmas_Gift`: 22685
 - `Solo_Cookie`: 22686
+- `STR_Soul_Potion`: 22702
+- `AGI_Soul_Potion`: 22703
+- `VIT_Soul_Potion`: 22704
+- `INT_Soul_Potion`: 22705
+- `DEX_Soul_Potion`: 22706
+- `LUK_Soul_Potion`: 22707
 - `Bullet_Case_Blood_`: 22737
 - `Bullet_Case_Silver_`: 22738
 - `Sphere_Case_Wind_`: 22739

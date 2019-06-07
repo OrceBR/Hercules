@@ -36,6 +36,7 @@
 #include "map/mob.h"
 #include "map/pc.h"
 #include "map/pet.h"
+#include "map/quest.h"
 #include "map/script.h"
 #include "map/skill.h"
 #include "map/status.h"
@@ -2638,8 +2639,9 @@ static int npc_unload(struct npc_data *nd, bool single)
 		nd->path = NULL;
 	}
 
-	if( single && nd->bl.m != -1 )
-		map->remove_questinfo(nd->bl.m,nd);
+	if (single && nd->bl.m != -1)
+		map->remove_questinfo(nd->bl.m, nd);
+	npc->questinfo_clear(nd);
 
 	if (nd->src_id == 0 && ( nd->subtype == SHOP || nd->subtype == CASHSHOP)) {
 		//src check for duplicate shops [Orcao]
@@ -2978,6 +2980,7 @@ static struct npc_data *npc_create_npc(enum npc_subtype subtype, int m, int x, i
 	nd->class_ = class_;
 	nd->speed = 200;
 	nd->vd = npc_viewdb[0]; // Copy INVISIBLE_CLASS view data. Actual view data is set by npc->add_to_location() later.
+	VECTOR_INIT(nd->qi_data);
 
 	return nd;
 }
@@ -3911,7 +3914,7 @@ static void npc_setdisplayname(struct npc_data *nd, const char *newname)
 
 	safestrncpy(nd->name, newname, sizeof(nd->name));
 	if( map->list[nd->bl.m].users )
-		clif->charnameack(0, &nd->bl);
+		clif->blname_ack(0, &nd->bl);
 }
 
 /// Changes the display class of the npc.
@@ -4794,6 +4797,10 @@ static const char *npc_parse_mapflag(const char *w1, const char *w2, const char 
 		map->list[m].flag.pairship_startable = (state) ? 1 : 0;
 	}  else if (!strcmpi(w3, "pairship_endable")) {
 		map->list[m].flag.pairship_endable = (state) ? 1 : 0;
+	}  else if (!strcmpi(w3, "nostorage")) {
+		map->list[m].flag.nostorage = (state) ? cap_value(atoi(w4), 1, 3) : 0;
+	}  else if (!strcmpi(w3, "nogstorage")) {
+		map->list[m].flag.nogstorage = (state) ? cap_value(atoi(w4), 1, 3) : 0;
 	} else {
 		npc->parse_unknown_mapflag(mapname, w3, w4, start, buffer, filepath, retval);
 	}
@@ -5331,6 +5338,18 @@ static void npc_debug_warps(void)
 			npc->debug_warps_sub(map->list[m].npc[i]);
 }
 
+static void npc_questinfo_clear(struct npc_data *nd)
+{
+	nullpo_retv(nd);
+
+	for (int i = 0; i < VECTOR_LENGTH(nd->qi_data); i++) {
+		struct questinfo *qi = &VECTOR_INDEX(nd->qi_data, i);
+		VECTOR_CLEAR(qi->items);
+		VECTOR_CLEAR(qi->quest_requirement);
+	}
+	VECTOR_CLEAR(nd->qi_data);
+}
+
 /*==========================================
  * npc initialization
  *------------------------------------------*/
@@ -5551,4 +5570,5 @@ void npc_defaults(void)
 	npc->barter_delfromsql_sub = npc_barter_delfromsql_sub;
 	npc->db_checkid = npc_db_checkid;
 	npc->refresh = npc_refresh;
+	npc->questinfo_clear = npc_questinfo_clear;
 }

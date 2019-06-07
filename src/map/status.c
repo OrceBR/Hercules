@@ -38,6 +38,7 @@
 #include "map/path.h"
 #include "map/pc.h"
 #include "map/pet.h"
+#include "map/refine.h"
 #include "map/script.h"
 #include "map/skill.h"
 #include "map/skill.h"
@@ -2577,18 +2578,18 @@ static int status_calc_pc_(struct map_session_data *sd, enum e_status_calc_opt o
 				r = 0;
 
 			if (r)
-				wa->atk2 = status->dbs->refine_info[wlv].bonus[r-1] / 100;
+				wa->atk2 = refine->get_bonus(wlv, r) / 100;
 
 #ifdef RENEWAL
 			wa->matk += sd->inventory_data[index]->matk;
 			wa->wlv = wlv;
 			if( r && sd->weapontype1 != W_BOW ) // renewal magic attack refine bonus
-				wa->matk += status->dbs->refine_info[wlv].bonus[r-1] / 100;
+				wa->matk += refine->get_bonus(wlv, r) / 100;
 #endif
 
 			//Overrefined bonus.
 			if (r)
-				wd->overrefine = status->dbs->refine_info[wlv].randombonus_max[r-1] / 100;
+				wd->overrefine = refine->get_randombonus_max(wlv, r) / 100;
 
 			wa->range += sd->inventory_data[index]->range;
 			if(sd->inventory_data[index]->script) {
@@ -2623,7 +2624,7 @@ static int status_calc_pc_(struct map_session_data *sd, enum e_status_calc_opt o
 				r = 0;
 
 			if (r)
-				refinedef += status->dbs->refine_info[REFINE_TYPE_ARMOR].bonus[r-1];
+				refinedef += refine->get_bonus(REFINE_TYPE_ARMOR, r);
 
 			if(sd->inventory_data[index]->script) {
 				if( i == EQI_HAND_L ) //Shield
@@ -3853,7 +3854,7 @@ static void status_calc_bl_main(struct block_list *bl, /*enum scb_flag*/int flag
 		temp = bst->batk - status->base_atk(bl,bst);
 		if (temp) {
 			temp += st->batk;
-			st->batk = cap_value(temp, 0, USHRT_MAX);
+			st->batk = cap_value(temp, battle_config.batk_min, battle_config.batk_max);
 		}
 		st->batk = status->calc_batk(bl, sc, st->batk, true);
 	}
@@ -4448,7 +4449,7 @@ static int status_base_amotion_pc(struct map_session_data *sd, struct status_dat
 	return amotion;
 }
 
-static unsigned short status_base_atk(const struct block_list *bl, const struct status_data *st)
+static int status_base_atk(const struct block_list *bl, const struct status_data *st)
 {
 	int flag = 0, str, dex, dstr;
 
@@ -4505,42 +4506,50 @@ static unsigned short status_base_atk(const struct block_list *bl, const struct 
 	if (bl->type == BL_PC)
 		str += dex / 5 + st->luk / 5;
 #endif // RENEWAL
-	return cap_value(str, 0, USHRT_MAX);
+	return cap_value(str, battle_config.batk_min, battle_config.batk_max);
 }
 
-static unsigned short status_base_matk_min(const struct status_data *st)
+static int status_base_matk_min(const struct status_data *st)
 {
 	nullpo_ret(st);
 #ifdef RENEWAL
 	Assert_ret(0);
 	return 0;
 #else // not RENEWAL
-	return st->int_ + (st->int_ / 7) * (st->int_ / 7);
+	int matk = st->int_ + (st->int_ / 7) * (st->int_ / 7);
+	return cap_value(matk, battle_config.matk_min, battle_config.matk_max);
 #endif // RENEWAL
 }
 
-static unsigned short status_base_matk_max(const struct status_data *st)
+static int status_base_matk_max(const struct status_data *st)
 {
 	nullpo_ret(st);
-	return st->int_ + (st->int_ / 5)*(st->int_ / 5);
+	int matk = st->int_ + (st->int_ / 5) * (st->int_ / 5);
+	return cap_value(matk, battle_config.matk_min, battle_config.matk_max);
 }
 
-static unsigned short status_base_matk(struct block_list *bl, const struct status_data *st, int level)
+static int status_base_matk(struct block_list *bl, const struct status_data *st, int level)
 {
 #ifdef RENEWAL
 	nullpo_ret(bl);
 	nullpo_ret(st);
-	switch ( bl->type ) {
+	int matk = 0;
+	switch (bl->type) {
 		case BL_MOB:
-			return st->int_ + level;
+			matk = st->int_ + level;
+			break;
 		case BL_HOM:
-			return status_get_homint(st, BL_UCCAST(BL_HOM, bl)) + level;
+			matk = status_get_homint(st, BL_UCCAST(BL_HOM, bl)) + level;
+			break;
 		case BL_MER:
-			return st->int_ + st->int_ / 5 * st->int_ / 5;
+			matk = st->int_ + st->int_ / 5 * st->int_ / 5;
+			break;
 		case BL_PC:
 		default: // temporary until all are formulated
-			return st->int_ + (st->int_ / 2) + (st->dex / 5) + (st->luk / 3) + (level / 4);
+			matk = st->int_ + (st->int_ / 2) + (st->dex / 5) + (st->luk / 3) + (level / 4);
+			break;
 	}
+	return cap_value(matk, battle_config.matk_min, battle_config.matk_max);
 #else
 	Assert_ret(0);
 	return 0;
@@ -4597,7 +4606,7 @@ static void status_calc_misc(struct block_list *bl, struct status_data *st, int 
 
 	if ( st->batk ) {
 		int temp = st->batk + status->base_atk(bl, st);
-		st->batk = cap_value(temp, 0, USHRT_MAX);
+		st->batk = cap_value(temp, battle_config.batk_min, battle_config.batk_max);
 	} else
 		st->batk = status->base_atk(bl, st);
 	if ( st->cri ) {
@@ -4994,17 +5003,17 @@ static unsigned short status_calc_luk(struct block_list *bl, struct status_chang
 	return (unsigned short)cap_value(luk, 0, USHRT_MAX);
 }
 
-static unsigned short status_calc_batk(struct block_list *bl, struct status_change *sc, int batk, bool viewable)
+static int status_calc_batk(struct block_list *bl, struct status_change *sc, int batk, bool viewable)
 {
 	nullpo_ret(bl);
 	if(!sc || !sc->count)
-		return cap_value(batk,0,USHRT_MAX);
+		return cap_value(batk, battle_config.batk_min, battle_config.batk_max);
 
 	if( !viewable ){
 		/* some statuses that are hidden in the status window */
 		if(sc->data[SC_PLUSATTACKPOWER])
 			batk += sc->data[SC_PLUSATTACKPOWER]->val1;
-		return (unsigned short)cap_value(batk,0,USHRT_MAX);
+		return cap_value(batk, battle_config.batk_min, battle_config.batk_max);
 	}
 #ifndef RENEWAL
 	if(sc->data[SC_PLUSATTACKPOWER])
@@ -5087,14 +5096,14 @@ static unsigned short status_calc_batk(struct block_list *bl, struct status_chan
 	if (sc->data[SC_SHRIMP])
 		batk += batk * sc->data[SC_SHRIMP]->val2 / 100;
 
-	return (unsigned short)cap_value(batk,0,USHRT_MAX);
+	return cap_value(batk, battle_config.batk_min, battle_config.batk_max);
 }
 
-static unsigned short status_calc_watk(struct block_list *bl, struct status_change *sc, int watk, bool viewable)
+static int status_calc_watk(struct block_list *bl, struct status_change *sc, int watk, bool viewable)
 {
 	nullpo_ret(bl);
 	if(!sc || !sc->count)
-		return cap_value(watk,0,USHRT_MAX);
+		return cap_value(watk, battle_config.watk_min, battle_config.watk_max);
 
 	if( !viewable ){
 		/* some statuses that are hidden in the status window */
@@ -5102,7 +5111,7 @@ static unsigned short status_calc_watk(struct block_list *bl, struct status_chan
 			watk -= sc->data[SC_WATER_BARRIER]->val3;
 		if(sc->data[SC_GENTLETOUCH_CHANGE] && sc->data[SC_GENTLETOUCH_CHANGE]->val2)
 			watk += sc->data[SC_GENTLETOUCH_CHANGE]->val2;
-		return (unsigned short)cap_value(watk,0,USHRT_MAX);
+		return cap_value(watk, battle_config.watk_min, battle_config.watk_max);
 	}
 #ifndef RENEWAL
 	if(sc->data[SC_IMPOSITIO])
@@ -5180,14 +5189,14 @@ static unsigned short status_calc_watk(struct block_list *bl, struct status_chan
 	if (sc->data[SC_CATNIPPOWDER])
 		watk -= watk * sc->data[SC_CATNIPPOWDER]->val2 / 100;
 
-	return (unsigned short)cap_value(watk,0,USHRT_MAX);
+	return cap_value(watk, battle_config.watk_min, battle_config.watk_max);
 }
 
-static unsigned short status_calc_ematk(struct block_list *bl, struct status_change *sc, int matk)
+static int status_calc_ematk(struct block_list *bl, struct status_change *sc, int matk)
 {
 #ifdef RENEWAL
 	if (!sc || !sc->count)
-		return cap_value(matk,0,USHRT_MAX);
+		return cap_value(matk, battle_config.matk_min, battle_config.matk_max);
 	if (sc->data[SC_PLUSMAGICPOWER])
 		matk += sc->data[SC_PLUSMAGICPOWER]->val1;
 	if (sc->data[SC_MATKFOOD])
@@ -5208,22 +5217,22 @@ static unsigned short status_calc_ematk(struct block_list *bl, struct status_cha
 		matk += 25 * sc->data[SC_IZAYOI]->val1;
 	if (sc->data[SC_SHRIMP])
 		matk += matk * sc->data[SC_SHRIMP]->val2 / 100;
-	return (unsigned short)cap_value(matk,0,USHRT_MAX);
+	return cap_value(matk, battle_config.matk_min, battle_config.matk_max);
 #else
 	return 0;
 #endif
 }
 
-static unsigned short status_calc_matk(struct block_list *bl, struct status_change *sc, int matk, bool viewable)
+static int status_calc_matk(struct block_list *bl, struct status_change *sc, int matk, bool viewable)
 {
 	if (!sc || !sc->count)
-		return cap_value(matk,0,USHRT_MAX);
+		return cap_value(matk, battle_config.matk_min, battle_config.matk_max);
 
 	if (!viewable) {
 		/* some statuses that are hidden in the status window */
 		if (sc->data[SC_MINDBREAKER])
 			matk += matk * sc->data[SC_MINDBREAKER]->val2 / 100;
-		return (unsigned short)cap_value(matk, 0, USHRT_MAX);
+		return cap_value(matk, battle_config.matk_min, battle_config.matk_max);
 	}
 
 #ifndef RENEWAL
@@ -5281,17 +5290,17 @@ static unsigned short status_calc_matk(struct block_list *bl, struct status_chan
 	if (sc->data[SC_MAGIC_CANDY])
 		matk += sc->data[SC_MAGIC_CANDY]->val1;
 
-	return (unsigned short)cap_value(matk, 0, USHRT_MAX);
+	return cap_value(matk, battle_config.matk_min, battle_config.matk_max);
 }
 
-static signed short status_calc_critical(struct block_list *bl, struct status_change *sc, int critical, bool viewable)
+static int status_calc_critical(struct block_list *bl, struct status_change *sc, int critical, bool viewable)
 {
 	if (!sc || !sc->count)
-		return cap_value(critical, 10, SHRT_MAX);
+		return cap_value(critical, battle_config.critical_min, battle_config.critical_max);
 
 	if (!viewable) {
 		/* some statuses that are hidden in the status window */
-		return (short)cap_value(critical, 10, SHRT_MAX);
+		return cap_value(critical, battle_config.critical_min, battle_config.critical_max);
 	}
 
 	if (sc->data[SC_CRITICALPERCENT])
@@ -5322,20 +5331,20 @@ static signed short status_calc_critical(struct block_list *bl, struct status_ch
 	if (sc->data[SC_BUCHEDENOEL])
 		critical += sc->data[SC_BUCHEDENOEL]->val4 * 10;
 
-	return (short)cap_value(critical, 10, SHRT_MAX);
+	return cap_value(critical, battle_config.critical_min, battle_config.critical_max);
 }
 
-static signed short status_calc_hit(struct block_list *bl, struct status_change *sc, int hit, bool viewable)
+static int status_calc_hit(struct block_list *bl, struct status_change *sc, int hit, bool viewable)
 {
 
 	if (!sc || !sc->count)
-		return cap_value(hit, 1, SHRT_MAX);
+		return cap_value(hit, battle_config.hit_min, battle_config.hit_max);
 
 	if (!viewable) {
 		/* some statuses that are hidden in the status window */
 		if (sc->data[SC_MTF_ASPD])
 			hit += sc->data[SC_MTF_ASPD]->val2;
-		return (short)cap_value(hit, 1, SHRT_MAX);
+		return cap_value(hit, battle_config.hit_min, battle_config.hit_max);
 	}
 
 	if (sc->data[SC_INCHIT])
@@ -5377,26 +5386,26 @@ static signed short status_calc_hit(struct block_list *bl, struct status_change 
 	if (sc->data[SC_BUCHEDENOEL])
 		hit += sc->data[SC_BUCHEDENOEL]->val3;
 
-	return (short)cap_value(hit, 1, SHRT_MAX);
+	return cap_value(hit, battle_config.hit_min, battle_config.hit_max);
 }
 
-static signed short status_calc_flee(struct block_list *bl, struct status_change *sc, int flee, bool viewable)
+static int status_calc_flee(struct block_list *bl, struct status_change *sc, int flee, bool viewable)
 {
 	nullpo_retr(1, bl);
 
 	if (bl->type == BL_PC) {
 		if (map_flag_gvg2(bl->m))
 			flee -= flee * battle_config.gvg_flee_penalty / 100;
-		else if( map->list[bl->m].flag.battleground )
+		else if (map->list[bl->m].flag.battleground)
 			flee -= flee * battle_config.bg_flee_penalty / 100;
 	}
 
 	if (!sc || !sc->count)
-		return cap_value(flee, 1, SHRT_MAX);
+		return cap_value(flee, battle_config.flee_min, battle_config.flee_max);
 
 	if (!viewable) {
 		/* some statuses that are hidden in the status window */
-		return (short)cap_value(flee, 1, SHRT_MAX);
+		return cap_value(flee, battle_config.flee_min, battle_config.flee_max);
 	}
 
 	if (sc->data[SC_INCFLEE])
@@ -5474,17 +5483,17 @@ static signed short status_calc_flee(struct block_list *bl, struct status_change
 	if (sc->data[SC_MYSTICPOWDER])
 		flee += sc->data[SC_MYSTICPOWDER]->val2;
 
-	return (short)cap_value(flee, 1, SHRT_MAX);
+	return cap_value(flee, battle_config.flee_min, battle_config.flee_max);
 }
 
-static signed short status_calc_flee2(struct block_list *bl, struct status_change *sc, int flee2, bool viewable)
+static int status_calc_flee2(struct block_list *bl, struct status_change *sc, int flee2, bool viewable)
 {
 	if(!sc || !sc->count)
-		return cap_value(flee2,10,SHRT_MAX);
+		return cap_value(flee2, battle_config.flee2_min, battle_config.flee2_max);
 
 	if( !viewable ){
 		/* some statuses that are hidden in the status window */
-		return (short)cap_value(flee2,10,SHRT_MAX);
+		return cap_value(flee2, battle_config.flee2_min, battle_config.flee2_max);
 	}
 
 	if(sc->data[SC_PLUSAVOIDVALUE])
@@ -5496,7 +5505,7 @@ static signed short status_calc_flee2(struct block_list *bl, struct status_chang
 	if (sc->data[SC_FREYJASCROLL])
 		flee2 += sc->data[SC_FREYJASCROLL]->val2;
 
-	return (short)cap_value(flee2,10,SHRT_MAX);
+	return cap_value(flee2, battle_config.flee2_min, battle_config.flee2_max);
 }
 
 static defType status_calc_def(struct block_list *bl, struct status_change *sc, int def, bool viewable)
@@ -8474,12 +8483,12 @@ static int status_change_start(struct block_list *src, struct block_list *bl, en
 					val3 = 0;
 					val4 = 0;
 					max_stat = (status->get_lv(bl)-10<50)?status->get_lv(bl)-10:50;
-					stat = max(0, max_stat - status2->str ); val3 |= cap_value(stat,0,0xFF)<<16;
-					stat = max(0, max_stat - status2->agi ); val3 |= cap_value(stat,0,0xFF)<<8;
-					stat = max(0, max_stat - status2->vit ); val3 |= cap_value(stat,0,0xFF);
-					stat = max(0, max_stat - status2->int_); val4 |= cap_value(stat,0,0xFF)<<16;
-					stat = max(0, max_stat - status2->dex ); val4 |= cap_value(stat,0,0xFF)<<8;
-					stat = max(0, max_stat - status2->luk ); val4 |= cap_value(stat,0,0xFF);
+					stat = max(0, max_stat - (int)status2->str ); val3 |= cap_value(stat,0,0xFF)<<16;
+					stat = max(0, max_stat - (int)status2->agi ); val3 |= cap_value(stat,0,0xFF)<<8;
+					stat = max(0, max_stat - (int)status2->vit ); val3 |= cap_value(stat,0,0xFF);
+					stat = max(0, max_stat - (int)status2->int_); val4 |= cap_value(stat,0,0xFF)<<16;
+					stat = max(0, max_stat - (int)status2->dex ); val4 |= cap_value(stat,0,0xFF)<<8;
+					stat = max(0, max_stat - (int)status2->luk ); val4 |= cap_value(stat,0,0xFF);
 				}
 				break;
 			case SC_SWORDREJECT:
@@ -12508,10 +12517,10 @@ static int status_get_weapon_atk(struct block_list *bl, struct weapon_atk *watk,
 
 	if ( bl->type == BL_PC && !(flag & 2) ) {
 		const struct map_session_data *sd = BL_UCCAST(BL_PC, bl);
-		short index = sd->equip_index[EQI_HAND_R], refine;
+		short index = sd->equip_index[EQI_HAND_R], refine_level;
 		if ( index >= 0 && sd->inventory_data[index] && sd->inventory_data[index]->type == IT_WEAPON
-			&& (refine = sd->status.inventory[index].refine) < 16 && refine ) {
-			int r = status->dbs->refine_info[watk->wlv].randombonus_max[refine + (4 - watk->wlv)] / 100;
+			&& (refine_level = sd->status.inventory[index].refine) < 16 && refine_level) {
+			int r = refine->get_randombonus_max(watk->wlv, refine_level + (4 - watk->wlv) + 1) / 100;
 			if ( r )
 				max += (rnd() % 100) % r + 1;
 		}
@@ -12623,10 +12632,10 @@ static void status_get_matk_sub(struct block_list *bl, int flag, unsigned short 
 
 #ifdef RENEWAL
 	if ( sd && !(flag & 2) ) {
-		short index = sd->equip_index[EQI_HAND_R], refine;
+		short index = sd->equip_index[EQI_HAND_R], refine_level;
 		if ( index >= 0 && sd->inventory_data[index] && sd->inventory_data[index]->type == IT_WEAPON
-			&& (refine = sd->status.inventory[index].refine) < 16 && refine ) {
-			int r =  status->dbs->refine_info[sd->inventory_data[index]->wlv].randombonus_max[refine + (4 - sd->inventory_data[index]->wlv)] / 100;
+			&& (refine_level = sd->status.inventory[index].refine) < 16 && refine_level) {
+			int r = refine->get_randombonus_max(sd->inventory_data[index]->wlv, refine_level + (4 - sd->inventory_data[index]->wlv) + 1) / 100;
 			if ( r )
 				*matk_max += (rnd() % 100) % r + 1;
 		}
@@ -13076,25 +13085,6 @@ static int status_natural_heal_timer(int tid, int64 tick, int id, intptr_t data)
 	return 0;
 }
 
-/**
- * Get the chance to upgrade a piece of equipment.
- * @param wlv The weapon type of the item to refine (see see enum refine_type)
- * @param refine The target refine level
- * @return The chance to refine the item, in percent (0~100)
- */
-static int status_get_refine_chance(enum refine_type wlv, int refine, enum refine_chance_type type)
-{
-	Assert_ret((int)wlv >= REFINE_TYPE_ARMOR && wlv < REFINE_TYPE_MAX);
-
-	if (refine < 0 || refine >= MAX_REFINE)
-		return 0;
-
-	if (type >= REFINE_CHANCE_TYPE_MAX)
-		return 0;
-
-	return status->dbs->refine_info[wlv].chance[type][refine];
-}
-
 static int status_get_sc_type(sc_type type)
 {
 
@@ -13405,171 +13395,6 @@ static bool status_readdb_sizefix(char *fields[], int columns, int current)
 	return true;
 }
 
-/**
- * Processes a refine_db.conf entry.
- *
- * @param r      Libconfig setting entry. It is expected to be valid and it
- *               won't be freed (it is care of the caller to do so if
- *               necessary)
- * @param n      Ordinal number of the entry, to be displayed in case of
- *               validation errors.
- * @param source Source of the entry (file name), to be displayed in case of
- *               validation errors.
- * @return # of the validated entry, or 0 in case of failure.
- */
-static int status_readdb_refine_libconfig_sub(struct config_setting_t *r, const char *name, const char *source)
-{
-	struct config_setting_t *rate = NULL;
-	int type = REFINE_TYPE_ARMOR, bonus_per_level = 0, rnd_bonus_v = 0, rnd_bonus_lv = 0;
-	char lv[4];
-	nullpo_ret(r);
-	nullpo_ret(name);
-	nullpo_ret(source);
-
-	if (strncmp(name, "Armors", 6) == 0) {
-		type = REFINE_TYPE_ARMOR;
-	} else if (strncmp(name, "WeaponLevel", 11) != 0 || !strspn(&name[strlen(name)-1], "0123456789") || (type = atoi(strncpy(lv, name+11, 2))) == REFINE_TYPE_ARMOR) {
-		ShowError("status_readdb_refine_libconfig_sub: Invalid key name for entry '%s' in \"%s\", skipping.\n", name, source);
-		return 0;
-	}
-	if (type < REFINE_TYPE_ARMOR || type >= REFINE_TYPE_MAX) {
-		ShowError("status_readdb_refine_libconfig_sub: Out of range level for entry '%s' in \"%s\", skipping.\n", name, source);
-		return 0;
-	}
-	if (!libconfig->setting_lookup_int(r, "StatsPerLevel", &bonus_per_level)) {
-		ShowWarning("status_readdb_refine_libconfig_sub: Missing StatsPerLevel for entry '%s' in \"%s\", skipping.\n", name, source);
-		return 0;
-	}
-	if (!libconfig->setting_lookup_int(r, "RandomBonusStartLevel", &rnd_bonus_lv)) {
-		ShowWarning("status_readdb_refine_libconfig_sub: Missing RandomBonusStartLevel for entry '%s' in \"%s\", skipping.\n", name, source);
-		return 0;
-	}
-	if (!libconfig->setting_lookup_int(r, "RandomBonusValue", &rnd_bonus_v)) {
-		ShowWarning("status_readdb_refine_libconfig_sub: Missing RandomBonusValue for entry '%s' in \"%s\", skipping.\n", name, source);
-		return 0;
-	}
-
-	if ((rate=libconfig->setting_get_member(r, "Rates")) != NULL && config_setting_is_group(rate)) {
-		struct config_setting_t *t = NULL;
-		bool duplicate[MAX_REFINE];
-		int bonus[MAX_REFINE], rnd_bonus[MAX_REFINE];
-		int chance[REFINE_CHANCE_TYPE_MAX][MAX_REFINE];
-		int i, j;
-
-		memset(&duplicate, 0, sizeof(duplicate));
-		memset(&bonus, 0, sizeof(bonus));
-		memset(&rnd_bonus, 0, sizeof(rnd_bonus));
-
-		for (i = 0; i < REFINE_CHANCE_TYPE_MAX; i++)
-			for (j = 0; j < MAX_REFINE; j++)
-				chance[i][j] = 100; // default value for all rates.
-
-		i = 0;
-		j = 0;
-		while ((t = libconfig->setting_get_elem(rate,i++)) != NULL && config_setting_is_group(t)) {
-			int level = 0, i32;
-			char *rlvl = config_setting_name(t);
-			memset(&lv, 0, sizeof(lv));
-
-			if (!strspn(&rlvl[strlen(rlvl) - 1], "0123456789") || (level = atoi(strncpy(lv, rlvl + 2, 3))) <= 0) {
-				ShowError("status_readdb_refine_libconfig_sub: Invalid refine level format '%s' for entry %s in \"%s\"... skipping.\n", rlvl, name, source);
-				continue;
-			}
-
-			if (level <= 0 || level > MAX_REFINE) {
-				ShowError("status_readdb_refine_libconfig_sub: Out of range refine level '%s' for entry %s in \"%s\"... skipping.\n", rlvl, name, source);
-				continue;
-			}
-
-			level--;
-
-			if (duplicate[level]) {
-				ShowWarning("status_readdb_refine_libconfig_sub: duplicate rate '%s' for entry %s in \"%s\", overwriting previous entry...\n", rlvl, name, source);
-			} else {
-				duplicate[level] = true;
-			}
-
-			if (libconfig->setting_lookup_int(t, "NormalChance", &i32) != 0)
-				chance[REFINE_CHANCE_TYPE_NORMAL][level] = i32;
-			else
-				chance[REFINE_CHANCE_TYPE_NORMAL][level] = 100;
-
-			if (libconfig->setting_lookup_int(t, "EnrichedChance", &i32) != 0)
-				chance[REFINE_CHANCE_TYPE_ENRICHED][level] = i32;
-			else
-				chance[REFINE_CHANCE_TYPE_ENRICHED][level] = level > 10 ? 0 : 100; // enriched ores up to +10 only.
-
-			if (libconfig->setting_lookup_int(t, "EventNormalChance", &i32) != 0)
-				chance[REFINE_CHANCE_TYPE_E_NORMAL][level] = i32;
-			else
-				chance[REFINE_CHANCE_TYPE_E_NORMAL][level] = 100;
-
-			if (libconfig->setting_lookup_int(t, "EventEnrichedChance", &i32) != 0)
-				chance[REFINE_CHANCE_TYPE_E_ENRICHED][level] = i32;
-			else
-				chance[REFINE_CHANCE_TYPE_E_ENRICHED][level] = level > 10 ? 0 : 100; // enriched ores up to +10 only.
-
-			if (libconfig->setting_lookup_int(t, "Bonus", &i32) != 0)
-				bonus[level] += i32;
-
-			if (level >= rnd_bonus_lv - 1)
-				rnd_bonus[level] = rnd_bonus_v * (level - rnd_bonus_lv + 2);
-		}
-		for (i = 0; i < MAX_REFINE; i++) {
-			status->dbs->refine_info[type].chance[REFINE_CHANCE_TYPE_NORMAL][i] = chance[REFINE_CHANCE_TYPE_NORMAL][i];
-			status->dbs->refine_info[type].chance[REFINE_CHANCE_TYPE_E_NORMAL][i] = chance[REFINE_CHANCE_TYPE_E_NORMAL][i];
-			status->dbs->refine_info[type].chance[REFINE_CHANCE_TYPE_ENRICHED][i] = chance[REFINE_CHANCE_TYPE_ENRICHED][i];
-			status->dbs->refine_info[type].chance[REFINE_CHANCE_TYPE_E_ENRICHED][i] = chance[REFINE_CHANCE_TYPE_E_ENRICHED][i];
-			status->dbs->refine_info[type].randombonus_max[i] = rnd_bonus[i];
-			bonus[i] += bonus_per_level + (i > 0 ? bonus[i - 1] : 0);
-			status->dbs->refine_info[type].bonus[i] = bonus[i];
-		}
-	} else {
-		ShowWarning("status_readdb_refine_libconfig_sub: Missing refine rates for entry '%s' in \"%s\", skipping.\n", name, source);
-		return 0;
-	}
-
-	return type + 1;
-}
-
-/**
- * Reads from a libconfig-formatted refine_db.conf file.
- *
- * @param *filename File name, relative to the database path.
- * @return The number of found entries.
- */
-static int status_readdb_refine_libconfig(const char *filename)
-{
-	bool duplicate[REFINE_TYPE_MAX];
-	struct config_t refine_db_conf;
-	struct config_setting_t *r;
-	char filepath[256];
-	int i = 0, count = 0;
-
-	safesnprintf(filepath, sizeof(filepath), "%s/%s", map->db_path, filename);
-	if (!libconfig->load_file(&refine_db_conf, filepath))
-		return 0;
-
-	memset(&duplicate,0,sizeof(duplicate));
-
-	while((r = libconfig->setting_get_elem(refine_db_conf.root,i++))) {
-		char *name = config_setting_name(r);
-		int type = status->readdb_refine_libconfig_sub(r, name, filename);
-		if (type != 0) {
-			if (duplicate[type-1]) {
-				ShowWarning("status_readdb_refine_libconfig: duplicate entry for %s in \"%s\", overwriting previous entry...\n", name, filename);
-			} else {
-				duplicate[type-1] = true;
-			}
-			count++;
-		}
-	}
-	libconfig->destroy(&refine_db_conf);
-	ShowStatus("Done reading '"CL_WHITE"%d"CL_RESET"' entries in '"CL_WHITE"%s"CL_RESET"'.\n", count, filename);
-
-	return count;
-}
-
 static bool status_readdb_scconfig(char *fields[], int columns, int current)
 {
 	int val = 0;
@@ -13627,7 +13452,6 @@ static int status_readdb(void)
 	//
 	sv->readdb(map->db_path, "job_db2.txt",         ',', 1,                 1+MAX_LEVEL,       -1,                       status->readdb_job2);
 	sv->readdb(map->db_path, DBPATH"size_fix.txt", ',', MAX_SINGLE_WEAPON_TYPE, MAX_SINGLE_WEAPON_TYPE, ARRAYLENGTH(status->dbs->atkmods), status->readdb_sizefix);
-	status->readdb_refine_libconfig(DBPATH"refine_db.conf");
 	sv->readdb(map->db_path, "sc_config.txt",       ',', 2,                 2,                 SC_MAX,                   status->readdb_scconfig);
 	status->read_job_db();
 
@@ -13685,7 +13509,6 @@ void status_defaults(void)
 	status->natural_heal_prev_tick = 0;
 	status->natural_heal_diff_tick = 0;
 	/* funcs */
-	status->get_refine_chance = status_get_refine_chance;
 	// for looking up associated data
 	status->skill2sc = status_skill2sc;
 	status->sc2skill = status_sc2skill;
@@ -13819,8 +13642,6 @@ void status_defaults(void)
 	status->natural_heal_timer = status_natural_heal_timer;
 	status->readdb_job2 = status_readdb_job2;
 	status->readdb_sizefix = status_readdb_sizefix;
-	status->readdb_refine_libconfig = status_readdb_refine_libconfig;
-	status->readdb_refine_libconfig_sub = status_readdb_refine_libconfig_sub;
 	status->readdb_scconfig = status_readdb_scconfig;
 	status->read_job_db = status_read_job_db;
 	status->read_job_db_sub = status_read_job_db_sub;

@@ -9,11 +9,224 @@ and this project does not adhere to [Semantic Versioning](http://semver.org/spec
 If you are reading this in a text editor, simply ignore this section
 -->
 
+### [v2019.06.02] `June 2 2019`
+
+### Added
+
+- Added Stat Reduction Potions to the Renewal item DB. (#2483)
+- Added the constant `MAX_NPC_PER_MAP` to the script engine. (part of #2474)
+- Added the `cap_value()` script command, to cap a value between a minimum and maximum. (#2472)
+- Added the `mesclear()` script command, to clean an NPC message dialog without user interaction. (#2471)
+- Added a script for simplified installation on Windows development machines. (#2222)
+- Added/updated packets, encryption keys and message tables for clients up to 2019-05-30. (#2468, #2490)
+- Added support for multiple hotkeys sets (two 'tabs' on the RE clients). The constant `MAX_HOTKEYS_DB` represents the maximum amount of hotkeys saved to the database. This requires a database migration. (part of #2468)
+- Added the `delitemidx()` script command, to delete an item by its inventory index. (#2394)
+- Added the `getguildonline()` script command, to return the amount of online guild members. (#2290)
+- Added the `nostorage` and `nogstorage` mapflags, disallowing storage usage on the affected maps. The `bypass_nostorage` permission is also provided, to bypass those mapflags. (#2221)
+
+### Changed
+
+- Moved the questinfo data from map to npc data, allowing the use of multiple `questinfo()` blocks. (#2433, issue #2431)
+- Removed code duplication from the map data cleanup functions. (part of #2433)
+- Allow to read negative values from `input()`. The minimum value is still set to 0 in the default configuration, but it can be overridden globally by editing `input_min_value` or locally by specifying the `min` and `max` arguments to `input()`. (#2375)
+- Extended the `getmapinfo()` command to return the total number of NPCs in a map (`MAPINFO_NPC_COUNT`). (#2474)
+- Updated the pre-renewal Byorgue summon slave delay to match the official value, increased before renewal to prevent farming exploits. (#2456)
+- Changed the `"all"` special value used by `killmonster()` to be lowercase and case sensitive, for consistency with other script commands. (#2380)
+- Updated and simplified the Windows installation instructions. (part of #2222)
+- Updated some NPC/name translations to match the official ones or the official intent. Cougar -> Kuuga Gai, Gaebolg -> Geoborg, Family -> Clan, Magic Gear -> Mado Gear (#2457)
+- Updated the Mado Gear rental NPC to sell Mado Gear Box and Cooling Device. (part of #2457)
+- Changed the `expandinventoryack()`, `expandinventoryresult()`, `expandinventory()` and `getinventorysize()` script commands to be lowercase, for consistency. (#2374)
+
+### Fixed
+
+- Fixed the `failedremovecards()` command, to only remove the carts when `type` is set to 1, as described in its documentation. (#2477, issue #2469)
+- Fixed a crash when using `npcspeed()`, `npcwalkto()`, `npcstop()`, `unitwalk()`, `unitwarp()`, `unitstop()` on a floating NPC without a sprite. (#2430)
+- Fixed a stats calculation regression. (#2482)
+- Fixed a version check for the `ZC_PING` packet. (part of #2468)
+- Fixed errors caused by missing Option DB and Option Drop Groups DB data when the map server loads the mob database in minimal mode. (#2486, related to issue #2484)
+
+### Deprecated
+
+- Deprecated use of `"All"` with `killmonster()`. Use `"all"` instead. (part of #2380)
+- Deprecated the mixed case version of the `expandInventoryAck()`, `expandInventoryResult()`, `expandInventory()` and `getInventorySize()` script commands. Use the lowercase variants instead. (part of #2374)
+
+## [v2019.05.05+4] `May 5 2019` `PATCH 4`
+
+### Fixed
+
+- Fixed a reading error in refine database caused refine chances to be incorrectly read. (#2481)
+
+## [v2019.05.05+3] `May 5 2019` `PATCH 3`
+
+### Fixed
+
+- Fixed a calculation error in the ASPD (and/or other substats) when the maximum stats have values higher than default. (#2419)
+- Fixed a parsing error in the HPM Hooks Generator. (#2467)
+
+## [v2019.05.05+2] `May 5 2019` `PATCH 2`
+
+### Fixed
+
+- Fixed a packet generation issue that caused the Guild Storage to appear empty. (#2464, issue #2463)
+- Fixed use of `ZC_SE_PC_BUY_CASHITEM_RESULT` on old packet versions that didn't support it. (#2465)
+
+## [v2019.05.05+1] `May 5 2019` `PATCH 1`
+
+### Fixed
+
+- Fixed an issue in the player name packet causing names not to be sent correctly. (#2460, issue #2459)
+- Fixed a null pointer error on MVP drops. (#2461)
+
+## [v2019.05.05] `May 5 2019`
+
+### Added
+
+- Added `consolemes()` script function which allow the script engine to print error, warning, status, debug and info messages to the console. (part of #2440)
+- Added the item combo effect for Geffenia Tomb of Water (2161) and La'cryma Stick (1646). (#2441, issue #1982)
+- Added support for mobs to drop items with Random Options. See the new database file `db/option_drop_group.conf` and the new optional syntax in the drop entries of `mob_db.conf`. (#2309)
+- Added a global function `F_MesItemInfo()`, to print an item name with description link, formatted for the current client version. (#2068)
+- Added/updated packets, encryption keys and message tables for clients up to 2019-05-02. (#2432)
+- Added a new function `clif_selforarea()` to send packets to self, falling back to area when no target is specified. (part of #2432)
+- Added script commands `getunittitle()` and `setunittitle()`, and the related information in the `unit_data` structure. (part of #2432)
+- Added support for players to automatically reject party invites through the party options. (part of #2432)
+- Added an option to automatically drop the connection on the server side when a character is kicked. See `drop_connection_on_quit` in `client.conf` (note: the previous behavior was equivalent to `true`). (part of #2432)
+- Added an option to force character save when the party options are changed. See `save_settings` in `map-server.conf`. (part of #2432)
+- Added the script command `closeroulette()` and the related packet `ZC_ACK_CLOSE_ROULETTE` to close the roulette window. (part of #2432)
+- Added a missing `CSBR_BUSY` value to `enum CASH_SHOP_BUY_RESULT`. (part of #2432)
+- Added support for the refinery UI. See the new `refine_db.conf` changes and the settings `enable_refinery_ui` and `replace_refine_npcs` in `features.conf` to toggle between the new UI and the previous scripted refiner. (#2446)
+- Added a new `SkillInfo` flag `HiddenTrap`, to make certain traps invisible, according to the `trap_options` configuration flag. The default settings have changed to match Renewal. Pre-renewal users might want to review `trap_options` and the now superseded `traps_setting`. (#2232, issues #1927 and #1928)
+
+### Changed
+
+- Extended `@dropall` to accept an optional argument for item type (#2439).
+- Updated copyright header in the configuration files for year 2019. (part of #2452)
+- Extended the `getinventorylist()` script command to return an array `@inventorylist_favorite`, set to true when the item is located in the favorite tab. (#2426)
+- Split the function `clif_blname_ack()` into bl type-specific functions. (part of #2432)
+- Extended `getunitdata()` and `setunitdata()` with support for the group ID (`UDT_GROUP`), and added the related information in the `unit_data` structure. (part of #2432)
+- Moved the `UDT_*` constants from `constants.conf` to `script.c`. (part of #2432)
+- Extended the guild expulsion information to include the character ID for supported client versions. This includes a database migration. (part of #2432)
+- Disabled packet validation in `socket_datasync()`. (part of #2432)
+- Moved the refine database and refine related functions to a new `refine.c` file. A public and private interface is provided, with public database accessors `refine->get_bonus()` and `refine->get_randombonus_max()`. (part of #2446)
+- Changed several battle calculation limits to be configurable through `battle/limits.conf` and no longer hardcoded. Several `status_data` fields and battle functions now use `int` instead of `short` to accommodate this change. (#2419)
+- Changed the `unitwarp()` script command to allow NPCs to be relocated to non-walkable cells (like `movenpc()`). (#2453)
+
+### Fixed
+
+- Corrected MSVC version naming in console (#2450).
+- Corrected an example using a sprite number instead of a constant in README.md. (#2449)
+- Fixed an issue in a monster death label callback in `npc/custom/events/mushroom_event.txt` when the monster is killed without an attached player. (#2442, issue #1955)
+- Fixed an issue where when a chat room handler leaves, the following leader won't be checked for `cell_chknochat` and will bypass it. (#2443, issue #1569)
+- Corrected the documentation for `pincode.enabled` in the char-server configuration. (part of #2452)
+- Fixed an incorrectly displayed ITEMLINK entry in the OldGlastHeim script. (part of #2068)
+- Fixed a packet size underflow in the storage packet for certain client versions. (#2424)
+- Fixed an issue that caused named/brewed/forged items to be saved to database with the wrong character ID. Database migrations are provided, to update the existing data. (#2425, issue #2409)
+- Fixed a truncated title in the inventory window. (part of #2432)
+- Fixed a possible overflow in the guild member login field (only supporting timestamps until 2036-12-31). (part of #2432)
+- Fixed a compile error with old packet versions. (part of #2432, issue #2438)
+- Fixed a potential exploit related to the vending skill, by adding stricter validation on the vending status flags. (part of #2432)
+- Fixed a regression, restoring the ability for HPM Hooks to hook into private interfaces, through the new macros `addHookPrePriv()` and `addHookPostPriv()`. (#2447)
+- Fixed a zeny loss caused by the inter-server deleting zeny from messages when the user only requests to take items. (#2455)
+- Fixed a compatibility issue with Perl 5.26 in the item converter script. (#2444)
+- Fixed various gitlab-ci build failures, by removing some no longer supported debian versions and packages. The gcc-4.6, gcc-4.7 and gcc-5 builds have been removed. (#2458)
+
+### Deprecated
+
+- Deprecated the script command `debugmes()`, superseded by `consolemes()`. (part of #2440)
+
+### Removed
+
+- Removed the superseded `traps_setting` configuration flag, replaced by `trap_options`. (part of #2232)
+
+## [v2019.04.07+1] `April 7 2019` `PATCH 1`
+
+### Fixed
+
+- Fixed some race conditions and missing validation in the item and zeny handling code for RODEX. (#2437)
+- Fixed pet eggs getting lost for pets that were hatched before the pet evolution system. Pets are now automatically migrated to the new system that keeps eggs in the user's inventory. (#2428)
+
+## [v2019.04.07] `April 7 2019`
+
+### Added
+
+- Added a configuration flag to disable the achievement system even then it's supported by the current client version. See `features/enable_achievement_system` in `battle/feature.conf`. (#2170)
+- Added the `PETINFO_*` constants, to be used with `getpetinfo()`. (part of #2398)
+- Added/updated packets, encryption keys and message tables for clients up to 2019-04-03. (#2406)
+- Added support for the `ZC_PING` and `CZ_PING` packets. (part of #2406)
+- Added support for the `CZ_COOLDOWN_RESET` packet and the related `/resetcooltime` client command. (part of #2406)
+- Added support for the "allow call" player configuration option. (part of #2406)
+- Added support to open the macro UI in the client. (part of #2406)
+- Added support for the `CZ_STYLE_CLOSE` packet. (part of #2406)
+- Exposed the `MAX_ITEM_ID` constant to the script engine. (#2367)
+
+### Changed
+
+- Extended `getinventorylist()` to return the item's inventory index in the `@inventorylist_idx[]` array. (#2401)
+- Extended `gettimestr()` to accept an optional argument providing a UNIX timestamp, as returned for example by `getcalendartime()`. (#2388)
+- Extended `getpetinfo()` to include information previously returned by `petstat()`. (#2398)
+- Renamed `clif_charnameack()` to the more accurate `clif_blname_ack()`. (part of #2406)
+- Extended `showscript()` to accept an optional argument to specify the send target. (#2415)
+- Updated `README.md` to include links to the sections. (#2354)
+
+### Fixed
+
+- Fixed a compilation error in the sample plugin, on systems where `rand()` is not available. (#2403)
+- Fixed a visual glitch caused by `setunitdata(UDT_LEVEL, ...)` not updating the monster level, when `show_mob_info` is configured to display it. (#2408)
+- Fixed the `features/enable_pet_autofeed` configuration value that was ignored and `features/enable_homunculus_autofeed` was used instead. (#2417)
+- Fixed an unescaped string in the db2sql generated data for the mob skill database. (#2416, related to #2407)
+- Fixed some possible null pointer warnings reported by gcc. (part of #2406)
+- Fixed a client crash with `@bodystyle` and `Job_Super_Novice_E`. (part of #2402, related to #2383)
+- Fixed a client crash when using `@jobchange` to a class that doesn't support alternate body styles while a body style is applied. (#2402)
+
+### Deprecated
+
+- Deprecated the command `petstat()`, superseded by `getpetinfo()`. (part of #2398)
+- Deprecated the `PET_*` constants, used by the `petstat()` command. (part of #2398)
+
+## [v2019.03.10] `March 10 2019`
+
+### Added
+
+- Added `MOB_CLONE_START` and `MOB_CLONE_END` to the constants available to the script engine. (#2390)
+- Added crash dumps to the Travis-CI output in case one of the servers crashes during the tests. (#2385)
+- Added gcc-7 and gcc-8 builds to Travis-CI. (part of #2385)
+- Added a configuration setting `magicrod_type` (`skill.conf`) to restore the old eAthena behavior for the Magic Rod skill. (#2034)
+- Added some missing information to the documentation for `bg_create_team()` and `waitingroom2bg()`, to remove the automatic respawn. (#2381)
+- Added the `MERCINFO_*` constants to the script engine, for `getmercinfo()`. (#2397)
+- Added support for `MERCINFO_GID` to `getmercinfo()`. (#2397)
+- Added the script commands `mobattached()` and `killmonstergid()`. (#2396)
+- Added/updated packets, encryption keys and message tables for clients up to 2019-03-06. (#2377)
+- Added a missing value into enum `BATTLEGROUNDS_QUEUE_ACK`. (part of #2377)
+
+### Changed
+
+- Changed the Windows SDK from version 10.0.15063.0 into 10.0.17763.0 for Visual Studio 2017. (#2368)
+- Changed the return value of `getunitdata()` from `0` to `-1` in case the requested value couldn't be retrieved, in order to differentiate between a zero and an invalid value. Note: this may break existing scripts. (#2392)
+- Updated the `getunitdata()` and `setunitdata()` documentation to clarify that the command only handles integer values. (#2391)
+- Added the function `connect_client()` into the socket interface. (#2378)
+- Moved the variable `SOCKET_CONF_FILENAME` to the socket interface. (#2378)
+- Moved local variables from `atcommand.c` to the interface. (#2378)
+- Moved defines from `map.h` to `mapdefines.h` to remove an inclusion loop. (#2378)
+- Moved the stylist-related functions to their own interface. (#2400)
+
+### Fixed
+
+- Fixed some typos in the item bonus documentation. (#2376)
+- Fixed a typo in the `setpcblock()` documentation. (c9bab97108)
+- Fixed a missing return value in `F_GetTradeRestriction()`. (#2360)
+- Fixed the return value of `bg_create_team()` to be -1 in case of failure, as described in the documentation. (part of #2381)
+- Fixed the date field in the member list packet. (part of #2377)
+- Fixed the documentation for `needed_status_point()`, not supporting the `char_id` argument. (#2399)
+
+### Deprecated
+
+- Deprecated the `UDT_MAPIDXY` constant. Its use in `setunitdata()` is replaced by `unitwarp()` and its use in `getunitdata()` is replaced by `getmapxy()`. (#2391)
+- Deprecated the `UDT_WALKTOXY` constant. Its use in `setunitdata()` is replaced by `unitwalk()`. (#2391)
+
 ## [v2019.02.10+1] `February 10 2019` `PATCH 1`
 
 ### Fixed
 
-- Fixed a buffer size issue in inter server packets (#2365, issue #2369)
+- Fixed a buffer size issue in inter server packets (#2370, issue #2369)
 
 ## [v2019.02.10] `February 10 2019`
 
@@ -596,7 +809,16 @@ If you are reading this in a text editor, simply ignore this section
 - New versioning scheme and project changelogs/release notes (#1853)
 
 [Unreleased]: https://github.com/HerculesWS/Hercules/compare/stable...master
-[v2019.02.10+1]: https://github.com/HerculesWS/Hercules/compare/v2019.02.10...v2019.10.10+1
+[v2019.06.02]: https://github.com/HerculesWS/Hercules/compare/v2019.05.05+4...v2019.06.02
+[v2019.05.05+4]: https://github.com/HerculesWS/Hercules/compare/v2019.05.05+3...v2019.05.05+4
+[v2019.05.05+3]: https://github.com/HerculesWS/Hercules/compare/v2019.05.05+2...v2019.05.05+3
+[v2019.05.05+2]: https://github.com/HerculesWS/Hercules/compare/v2019.05.05+1...v2019.05.05+2
+[v2019.05.05+1]: https://github.com/HerculesWS/Hercules/compare/v2019.05.05...v2019.05.05+1
+[v2019.05.05]: https://github.com/HerculesWS/Hercules/compare/v2019.04.07+1...v2019.05.05
+[v2019.04.07+1]: https://github.com/HerculesWS/Hercules/compare/v2019.04.07...v2019.04.07+1
+[v2019.04.07]: https://github.com/HerculesWS/Hercules/compare/v2019.03.10...v2019.04.07
+[v2019.03.10]: https://github.com/HerculesWS/Hercules/compare/v2019.02.10+1...v2019.03.10
+[v2019.02.10+1]: https://github.com/HerculesWS/Hercules/compare/v2019.02.10...v2019.02.10+1
 [v2019.02.10]: https://github.com/HerculesWS/Hercules/compare/v2018.12.16+1...v2019.02.10
 [v2018.12.16+1]: https://github.com/HerculesWS/Hercules/compare/v2018.12.16...v2018.12.16+1
 [v2018.12.16]: https://github.com/HerculesWS/Hercules/compare/v2018.11.18+1...v2018.12.16

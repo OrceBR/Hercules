@@ -149,7 +149,8 @@ struct Battle_Config {
 	int pc_damage_delay_rate;
 	int defnotenemy;
 	int vs_traps_bctall;
-	int traps_setting;
+	int trap_visibility;
+	int trap_trigger;
 	int summon_flora; //[Skotlex]
 	int clear_unit_ondeath; //[Skotlex]
 	int clear_unit_onwarp; //[Skotlex]
@@ -576,6 +577,34 @@ struct Battle_Config {
 	int min_item_sell_price;
 
 	int display_fake_hp_when_dead;
+
+	int magicrod_type;
+
+	int feature_enable_achievement;
+
+	int ping_timer_interval;
+	int ping_time;
+
+	int option_drop_max_loop;
+
+	int drop_connection_on_quit;
+	int enable_refinery_ui;
+	int replace_refine_npcs;
+
+	int batk_min;
+	int batk_max;
+	int matk_min;
+	int matk_max;
+	int watk_min;
+	int watk_max;
+	int flee_min;
+	int flee_max;
+	int flee2_min;
+	int flee2_max;
+	int critical_min;
+	int critical_max;
+	int hit_min;
+	int hit_max;
 };
 
 /* criteria for battle_config.idletime_critera */

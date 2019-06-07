@@ -44,6 +44,7 @@
 #include "map/path.h"
 #include "map/pc.h"
 #include "map/pet.h"
+#include "map/refine.h"
 #include "map/script.h"
 #include "map/status.h"
 #include "map/unit.h"
@@ -2892,14 +2893,16 @@ static int skill_attack(int attack_type, struct block_list *src, struct block_li
 			}
 		#endif /* MAGIC_REFLECTION_TYPE */
 		}
-		if(sc && sc->data[SC_MAGICROD] && src == dsrc) {
-			int sp = skill->get_sp(skill_id,skill_lv);
+		if (sc && sc->data[SC_MAGICROD] && src == dsrc) {
+			int sp = skill->get_sp(skill_id, skill_lv);
 			dmg.damage = dmg.damage2 = 0;
 			dmg.dmg_lv = ATK_MISS; //This will prevent skill additional effect from taking effect. [Skotlex]
 			sp = sp * sc->data[SC_MAGICROD]->val2 / 100;
-			if(skill_id == WZ_WATERBALL && skill_lv > 1)
-				sp = sp/((skill_lv|1)*(skill_lv|1)); //Estimate SP cost of a single water-ball
+			if (skill_id == WZ_WATERBALL && skill_lv > 1)
+				sp = sp / ((skill_lv | 1) * (skill_lv | 1)); //Estimate SP cost of a single water-ball
 			status->heal(bl, 0, sp, STATUS_HEAL_SHOWEFFECT);
+			if (battle->bc->magicrod_type == 1)
+				clif->skill_nodamage(bl, bl, SA_MAGICROD, sc->data[SC_MAGICROD]->val1, 1); // Animation used here in eAthena [Wolfie]
 		}
 	}
 
@@ -4153,10 +4156,9 @@ static int skill_reveal_trap(struct block_list *bl, va_list ap)
 	Assert_ret(bl->type == BL_SKILL);
 	su = BL_UCAST(BL_SKILL, bl);
 
-	if (su->alive && su->group && skill->get_inf2(su->group->skill_id)&INF2_TRAP) { //Reveal trap.
-		//Change look is not good enough, the client ignores it as an actual trap still. [Skotlex]
-		//clif->changetraplook(bl, su->group->unit_id);
-		clif->getareachar_skillunit(&su->bl,su,AREA);
+	if (su->alive && su->group && skill->get_inf2(su->group->skill_id) & INF2_HIDDEN_TRAP) { //Reveal trap.
+		su->visible = true;
+		clif->skillunit_update(bl);
 		return 1;
 	}
 	return 0;
@@ -7881,8 +7883,9 @@ static int skill_castend_nodamage_id(struct block_list *src, struct block_list *
 			}
 			break;
 		case SA_MAGICROD:
-			clif->skill_nodamage(src,src,SA_MAGICROD,skill_lv,1);
-			sc_start(src,bl,type,100,skill_lv,skill->get_time(skill_id,skill_lv));
+			if (battle->bc->magicrod_type == 0)
+				clif->skill_nodamage(src, src, SA_MAGICROD, skill_lv, 1); // Animation used here in official [Wolfie]
+			sc_start(src, bl, type, 100, skill_lv, skill->get_time(skill_id, skill_lv));
 			break;
 		case SA_AUTOSPELL:
 			clif->skill_nodamage(src,bl,skill_id,skill_lv,1);
@@ -11041,9 +11044,10 @@ static int skill_castend_pos2(struct block_list *src, int x, int y, uint16 skill
 			map->foreachinarea(status->change_timer_sub,
 			                   src->m, x-r, y-r, x+r,y+r,BL_CHAR,
 			                   src,NULL,SC_SIGHT,tick);
-			if(battle_config.traps_setting&1)
-			map->foreachinarea(skill_reveal_trap,
-			                   src->m, x-r, y-r, x+r, y+r, BL_SKILL);
+			if (battle_config.trap_visibility != 0) {
+				map->foreachinarea(skill_reveal_trap,
+			                   src->m, x - r, y - r, x + r, y + r, BL_SKILL);
+			}
 			break;
 
 		case SR_RIDEINLIGHTNING:
@@ -12760,6 +12764,13 @@ static int skill_unit_onplace_timer(struct skill_unit *src, struct block_list *b
 			ts->tick += sg->interval*(map->count_oncell(bl->m,bl->x,bl->y,BL_CHAR,0)-1);
 	}
 
+	if (sg->skill_id == HT_ANKLESNARE
+		|| (battle_config.trap_trigger == 1 && skill->get_inf2(sg->skill_id) & INF2_HIDDEN_TRAP)
+	) {
+		src->visible = true;
+		clif->skillunit_update(&src->bl);
+	}
+
 	switch (sg->unit_id) {
 		case UNT_FIREWALL:
 		case UNT_KAEN: {
@@ -12912,10 +12923,11 @@ static int skill_unit_onplace_timer(struct skill_unit *src, struct block_list *b
 						clif->fixpos(bl);
 					}
 					sg->val2 = bl->id;
-				} else
+				} else {
 					sec = 3000; //Couldn't trap it?
+				}
+
 				if( sg->unit_id == UNT_ANKLESNARE ) {
-					clif->skillunit_update(&src->bl);
 					/**
 					 * If you're snared from a trap that was invisible this makes the trap be
 					 * visible again -- being you stepped on it (w/o this the trap remains invisible and you go "WTF WHY I CANT MOVE")
@@ -16201,7 +16213,7 @@ static void skill_weaponrefine(struct map_session_data *sd, int idx)
 				return;
 			}
 
-			per = status->get_refine_chance(ditem->wlv, (int)item->refine, REFINE_CHANCE_TYPE_NORMAL) * 10;
+			per = refine->get_refine_chance(ditem->wlv, (int)item->refine, REFINE_CHANCE_TYPE_NORMAL) * 10;
 
 			// Aegis leaked formula. [malufett]
 			if (sd->status.class == JOB_MECHANIC_T)
@@ -17072,6 +17084,14 @@ static struct skill_unit *skill_initunit(struct skill_unit_group *group, int idx
 	su->val1=val1;
 	su->val2 = val2;
 	su->prev = 0;
+	su->visible = true;
+
+	if (skill->get_inf2(group->skill_id) & INF2_HIDDEN_TRAP
+		&& ((battle_config.trap_visibility == 1 && map_flag_vs(group->map)) // invisible in PvP/GvG
+			|| battle_config.trap_visibility == 2 // always invisible
+	)) {
+	 	su->visible = false;
+	}
 
 	idb_put(skill->unit_db, su->bl.id, su);
 	map->addiddb(&su->bl);
@@ -20236,6 +20256,12 @@ static void skill_validate_skillinfo(struct config_setting_t *conf, struct s_ski
 					sk->inf2 |= INF2_ALLOW_REPRODUCE;
 				} else {
 					sk->inf2 &= ~INF2_ALLOW_REPRODUCE;
+				}
+			} else if (strcmpi(type, "HiddenTrap") == 0) {
+				if (on) {
+					sk->inf2 |= INF2_HIDDEN_TRAP;
+				} else {
+					sk->inf2 &= ~INF2_HIDDEN_TRAP;
 				}
 			} else if (strcmpi(type, "None") != 0) {
 				skilldb_invalid_error(type, config_setting_name(t), sk->nameid);

@@ -764,6 +764,10 @@ struct {
 	struct HPMHookPoint *HP_inter_rodex_savemessage_post;
 	struct HPMHookPoint *HP_inter_rodex_updatemail_pre;
 	struct HPMHookPoint *HP_inter_rodex_updatemail_post;
+	struct HPMHookPoint *HP_inter_rodex_getzeny_pre;
+	struct HPMHookPoint *HP_inter_rodex_getzeny_post;
+	struct HPMHookPoint *HP_inter_rodex_getitems_pre;
+	struct HPMHookPoint *HP_inter_rodex_getitems_post;
 	struct HPMHookPoint *HP_inter_storage_tosql_pre;
 	struct HPMHookPoint *HP_inter_storage_tosql_post;
 	struct HPMHookPoint *HP_inter_storage_fromsql_pre;
@@ -1224,6 +1228,10 @@ struct {
 	struct HPMHookPoint *HP_mapif_parse_rodex_checkname_post;
 	struct HPMHookPoint *HP_mapif_rodex_checkname_pre;
 	struct HPMHookPoint *HP_mapif_rodex_checkname_post;
+	struct HPMHookPoint *HP_mapif_rodex_getzenyack_pre;
+	struct HPMHookPoint *HP_mapif_rodex_getzenyack_post;
+	struct HPMHookPoint *HP_mapif_rodex_getitemsack_pre;
+	struct HPMHookPoint *HP_mapif_rodex_getitemsack_post;
 	struct HPMHookPoint *HP_mapif_load_guild_storage_pre;
 	struct HPMHookPoint *HP_mapif_load_guild_storage_post;
 	struct HPMHookPoint *HP_mapif_save_guild_storage_ack_pre;
@@ -1422,6 +1430,8 @@ struct {
 	struct HPMHookPoint *HP_sockt_flush_post;
 	struct HPMHookPoint *HP_sockt_flush_fifos_pre;
 	struct HPMHookPoint *HP_sockt_flush_fifos_post;
+	struct HPMHookPoint *HP_sockt_connect_client_pre;
+	struct HPMHookPoint *HP_sockt_connect_client_post;
 	struct HPMHookPoint *HP_sockt_set_nonblocking_pre;
 	struct HPMHookPoint *HP_sockt_set_nonblocking_post;
 	struct HPMHookPoint *HP_sockt_set_defaultparse_pre;
@@ -2401,6 +2411,10 @@ struct {
 	int HP_inter_rodex_savemessage_post;
 	int HP_inter_rodex_updatemail_pre;
 	int HP_inter_rodex_updatemail_post;
+	int HP_inter_rodex_getzeny_pre;
+	int HP_inter_rodex_getzeny_post;
+	int HP_inter_rodex_getitems_pre;
+	int HP_inter_rodex_getitems_post;
 	int HP_inter_storage_tosql_pre;
 	int HP_inter_storage_tosql_post;
 	int HP_inter_storage_fromsql_pre;
@@ -2861,6 +2875,10 @@ struct {
 	int HP_mapif_parse_rodex_checkname_post;
 	int HP_mapif_rodex_checkname_pre;
 	int HP_mapif_rodex_checkname_post;
+	int HP_mapif_rodex_getzenyack_pre;
+	int HP_mapif_rodex_getzenyack_post;
+	int HP_mapif_rodex_getitemsack_pre;
+	int HP_mapif_rodex_getitemsack_post;
 	int HP_mapif_load_guild_storage_pre;
 	int HP_mapif_load_guild_storage_post;
 	int HP_mapif_save_guild_storage_ack_pre;
@@ -3059,6 +3077,8 @@ struct {
 	int HP_sockt_flush_post;
 	int HP_sockt_flush_fifos_pre;
 	int HP_sockt_flush_fifos_post;
+	int HP_sockt_connect_client_pre;
+	int HP_sockt_connect_client_post;
 	int HP_sockt_set_nonblocking_pre;
 	int HP_sockt_set_nonblocking_post;
 	int HP_sockt_set_defaultparse_pre;

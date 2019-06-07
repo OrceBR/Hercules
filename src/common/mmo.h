@@ -134,22 +134,33 @@
 // Comment the following line to disable sc_data saving. [Skotlex]
 #define ENABLE_SC_SAVING
 
-#if PACKETVER >= 20070227
+#if PACKETVER_MAIN_NUM >= 20070711 || PACKETVER_RE_NUM >= 20080827 || PACKETVER_AD_NUM >= 20070711 || PACKETVER_SAK_NUM >= 20070628 || defined(PACKETVER_ZERO)
 // Comment the following like to disable server-side hot-key saving support. [Skotlex]
 // Note that newer clients no longer save hotkeys in the registry!
 #define HOTKEY_SAVING
 
-#if PACKETVER < 20090603
-	// (27 = 9 skills x 3 bars)               (0x02b9,191)
-	#define MAX_HOTKEYS 27
-#elif PACKETVER < 20090617
-	// (36 = 9 skills x 4 bars)               (0x07d9,254)
-	#define MAX_HOTKEYS 36
-#else // >= 20090617
-	// (38 = 9 skills x 4 bars & 2 Quickslots)(0x07d9,268)
-	#define MAX_HOTKEYS 38
-#endif // 20090603
-#endif // 20070227
+#if PACKETVER_MAIN_NUM >= 20190522 || PACKETVER_RE_NUM >= 20190508
+#define MAX_HOTKEYS 38
+#elif PACKETVER_MAIN_NUM >= 20141022 || PACKETVER_RE_NUM >= 20141015 || defined(PACKETVER_ZERO)
+// (38 = 9 skills x 4 bars & 2 Quickslots)(0x07d9,268)
+#define MAX_HOTKEYS 38
+#elif PACKETVER_MAIN_NUM >= 20090617 || PACKETVER_RE_NUM >= 20090617 || PACKETVER_SAK_NUM >= 20090617
+// (38 = 9 skills x 4 bars & 2 Quickslots)(0x07d9,268)
+#define MAX_HOTKEYS 38
+#elif PACKETVER_MAIN_NUM >= 20090603 || PACKETVER_RE_NUM >= 20090603 || PACKETVER_SAK_NUM >= 20090603
+// (36 = 9 skills x 4 bars)               (0x07d9,254)
+#define MAX_HOTKEYS 36
+#elif PACKETVER_MAIN_NUM >= 20070711 || PACKETVER_RE_NUM >= 20080827 || PACKETVER_AD_NUM >= 20070711 || PACKETVER_SAK_NUM >= 20070628
+// (27 = 9 skills x 3 bars)               (0x02b9,191)
+#define MAX_HOTKEYS 27
+#endif
+#endif  // PACKETVER_MAIN_NUM >= 20070711 || PACKETVER_RE_NUM >= 20080827 || PACKETVER_AD_NUM >= 20070711 || PACKETVER_SAK_NUM >= 20070628 || defined(PACKETVER_ZERO)
+
+#if PACKETVER_MAIN_NUM >= 20190522 || PACKETVER_RE_NUM >= 20190508
+#define MAX_HOTKEYS_DB ((MAX_HOTKEYS) * 2)
+#else
+#define MAX_HOTKEYS_DB MAX_HOTKEYS
+#endif
 
 #if PACKETVER >= 20150805 /* Cart Decoration */
 	#define CART_DECORATION
@@ -487,6 +498,7 @@ enum e_mmo_charstatus_opt {
 	OPT_NONE        = 0x0,
 	OPT_SHOW_EQUIP  = 0x1,
 	OPT_ALLOW_PARTY = 0x2,
+	OPT_ALLOW_CALL  = 0x4,
 };
 
 enum e_item_bound_type {
@@ -731,9 +743,11 @@ struct mmo_charstatus {
 
 	struct s_friend friends[MAX_FRIENDS]; //New friend system [Skotlex]
 #ifdef HOTKEY_SAVING
-	struct hotkey hotkeys[MAX_HOTKEYS];
+	struct hotkey hotkeys[MAX_HOTKEYS_DB];
 #endif
-	bool show_equip, allow_party;
+	bool show_equip;
+	bool allow_party;
+	bool allow_call;
 	unsigned short rename;
 	unsigned short slotchange;
 
@@ -750,6 +764,7 @@ struct mmo_charstatus {
 	short attendance_count;
 
 	unsigned char hotkey_rowshift;
+	unsigned char hotkey_rowshift2;
 
 	int32 title_id; // Achievement Title[Dastgir/Hercules]
 };
@@ -853,6 +868,7 @@ struct guild_expulsion {
 	char name[NAME_LENGTH];
 	char mes[40];
 	int account_id;
+	int char_id;
 };
 
 struct guild_skill {
@@ -975,6 +991,11 @@ enum fame_list_type {
 	RANKTYPE_PK         = 3, //Not supported yet
 };
 
+struct rodex_item {
+	struct item item;
+	int idx;
+};
+
 struct rodex_message {
 	int64 id;
 	int sender_id;
@@ -984,10 +1005,7 @@ struct rodex_message {
 	char receiver_name[NAME_LENGTH];
 	char title[RODEX_TITLE_LENGTH];
 	char body[RODEX_BODY_LENGTH];
-	struct {
-		struct item item;
-		int idx;
-	} items[RODEX_MAX_ITEM];
+	struct rodex_item items[RODEX_MAX_ITEM];
 	int64 zeny;
 	uint8 type;
 	int8 opentype;
@@ -1360,6 +1378,10 @@ enum questinfo_type {
 #define MAX_ITEMLIST MAX_STORAGE
 #endif
 
+#ifndef MAX_REFINE_REQUIREMENTS
+	#define MAX_REFINE_REQUIREMENTS 4
+#endif
+
 // sanity checks...
 #if MAX_ZENY > INT_MAX
 #error MAX_ZENY is too big
@@ -1371,6 +1393,10 @@ enum questinfo_type {
 
 #ifdef MAX_SKILL
 #error MAX_SKILL has been replaced by MAX_SKILL_DB. Please update your custom definitions.
+#endif
+
+#if MAX_REFINE_REQUIREMENTS > 4
+#error MAX_REFINE_REQUIREMENTS is bigger than allowed, this is a hardcoded limit in the client
 #endif
 
 #endif /* COMMON_MMO_H */

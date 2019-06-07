@@ -27,6 +27,7 @@
 #include "map/map.h"
 #include "map/mob.h"    // MAX_MOB_DB
 #include "map/pc.h"     // W_MUSICAL, W_WHIP
+#include "map/refine.h"
 #include "map/script.h" // item script processing
 #include "common/HPM.h"
 #include "common/conf.h"
@@ -2448,6 +2449,8 @@ static void itemdb_read(bool minimal)
 
 	itemdb->other->foreach(itemdb->other, itemdb->addname_sub);
 
+	itemdb->read_options();
+	
 	if (minimal)
 		return;
 
@@ -2457,8 +2460,6 @@ static void itemdb_read(bool minimal)
 	itemdb->read_groups();
 	itemdb->read_chains();
 	itemdb->read_packages();
-	itemdb->read_options();
-	clif->stylist_read_db_libconfig();
 }
 
 /**
@@ -2707,7 +2708,6 @@ static void do_final_itemdb(void)
 	itemdb->destroy_item_data(&itemdb->dummy, 0);
 	db_destroy(itemdb->names);
 	VECTOR_CLEAR(clif->attendance_data);
-	clif->stylist_vector_clear();
 }
 
 static void do_init_itemdb(bool minimal)
@@ -2717,7 +2717,6 @@ static void do_init_itemdb(bool minimal)
 	itemdb->options = idb_alloc(DB_OPT_RELEASE_DATA);
 	itemdb->names = strdb_alloc(DB_OPT_BASE,ITEM_NAME_LENGTH);
 	itemdb->create_dummy_data(); //Dummy data item.
-	clif->stylist_vector_init();
 	itemdb->read(minimal);
 
 	if (minimal)

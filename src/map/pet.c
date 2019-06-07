@@ -251,7 +251,7 @@ static int pet_hungry(int tid, int64 tick, int id, intptr_t data)
 
 	pd->pet.hungry--;
 	/* Pet Autofeed */
-	if (battle_config.feature_enable_homun_autofeed != 0) {
+	if (battle_config.feature_enable_pet_autofeed != 0) {
 		if (pd->petDB->autofeed == 1 && pd->pet.autofeed == 1 && pd->pet.hungry <= 25) {
 			pet->food(sd, pd);
 		}
@@ -348,6 +348,21 @@ static int pet_return_egg(struct map_session_data *sd, struct pet_data *pd)
 	if (i != sd->status.inventorySize) {
 		sd->status.inventory[i].attribute &= ~ATTR_BROKEN;
 		sd->status.inventory[i].bound = IBT_NONE;
+	} else {
+		// The pet egg wasn't found: it was probably hatched with the old system that deleted the egg.
+		struct item tmp_item = {0};
+		int flag;
+
+		tmp_item.nameid = pd->petDB->EggID;
+		tmp_item.identify = 1;
+		tmp_item.card[0] = CARD0_PET;
+		tmp_item.card[1] = GetWord(pd->pet.pet_id, 0);
+		tmp_item.card[2] = GetWord(pd->pet.pet_id, 1);
+		tmp_item.card[3] = pd->pet.rename_flag;
+		if ((flag = pc->additem(sd, &tmp_item, 1, LOG_TYPE_EGG)) != 0) {
+			clif->additem(sd, 0, 0, flag);
+			map->addflooritem(&sd->bl, &tmp_item, 1, sd->bl.m, sd->bl.x, sd->bl.y, 0, 0, 0, 0, false);
+		}
 	}
 #if PACKETVER >= 20180704
 	clif->inventoryList(sd);
@@ -733,7 +748,7 @@ static int pet_change_name_ack(struct map_session_data *sd, const char *name, in
 	}
 	safestrncpy(pd->pet.name, newname, NAME_LENGTH);
 	aFree(newname);
-	clif->charnameack (0,&pd->bl);
+	clif->blname_ack(0,&pd->bl);
 	pd->pet.rename_flag = 1;
 	clif->send_petdata(NULL, sd->pd, 3, sd->pd->vd.head_bottom);
 	clif->send_petstatus(sd);

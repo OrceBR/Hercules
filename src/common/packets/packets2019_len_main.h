@@ -2,8 +2,8 @@
  * This file is part of Hercules.
  * http://herc.ws - http://github.com/HerculesWS/Hercules
  *
- * Copyright (C) 2019  Hercules Dev Team
- * Copyright (C) 2019  Andrei Karas (4144)
+ * Copyright (C) 2018-2019  Hercules Dev Team
+ * Copyright (C) 2018-2019  Andrei Karas (4144)
  *
  * Hercules is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -3787,13 +3787,13 @@ packetLen(0x0a43, 85)  // ZC_ADD_MEMBER_TO_GROUP
 packetLen(0x0a44, -1)  // ZC_GROUP_LIST
 
 // Packet: 0x0a46
-packetLen(0x0a46, 14)
+packetLen(0x0a46, 14)  // CZ_REQ_STYLE_CHANGE
 
 // Packet: 0x0a47
 packetLen(0x0a47, 3)  // ZC_STYLE_CHANGE_RES
 
 // Packet: 0x0a48
-packetLen(0x0a48, 2)
+packetLen(0x0a48, 2)  // CZ_STYLE_CLOSE
 
 // Packet: 0x0a49
 packetLen(0x0a49, 22)  // CZ_PRIVATE_AIRSHIP_REQUEST
@@ -3946,10 +3946,10 @@ packetLen(0x0a85, 82)
 packetLen(0x0a86, -1)
 
 // Packet: 0x0a87
-packetLen(0x0a87, -1)
+packetLen(0x0a87, -1)  // ZC_BAN_LIST
 
 // Packet: 0x0a88
-packetLen(0x0a88, 2)
+packetLen(0x0a88, 2)  // CZ_COOLDOWN_RESET
 
 // Packet: 0x0a89
 packetLen(0x0a89, 61)  // ZC_NOTIFY_OFFLINE_STORE
@@ -3994,13 +3994,13 @@ packetLen(0x0a95, 4)
 packetLen(0x0a96, 61)  // ZC_ADD_EXCHANGE_ITEM4
 
 // Packet: 0x0a97
-packetLen(0x0a97, 8)  // CZ_ALT_EQUIPMENT_EQUIP
+packetLen(0x0a97, 8)  // CZ_ALT_EQUIPMENT_ADD
 
 // Packet: 0x0a98
 packetLen(0x0a98, 10)  // ZC_ALT_EQUIPMENT_EQUIP
 
 // Packet: 0x0a99
-packetLen(0x0a99, 4)
+packetLen(0x0a99, 4)  // CZ_ALT_EQUIPMENT_REMOVE
 
 // Packet: 0x0a9a
 packetLen(0x0a9a, 10)  // ZC_ALT_EQUIPMENT_REMOVE
@@ -4009,10 +4009,10 @@ packetLen(0x0a9a, 10)  // ZC_ALT_EQUIPMENT_REMOVE
 packetLen(0x0a9b, -1)  // ZC_ALT_EQUIPMENT_ITEMS
 
 // Packet: 0x0a9c
-packetLen(0x0a9c, 2)
+packetLen(0x0a9c, 2)  // CZ_ALT_EQUIPMENT_SWITCH
 
 // Packet: 0x0a9d
-packetLen(0x0a9d, 4)
+packetLen(0x0a9d, 4)  // ZC_ALT_EQUIPMENT_SWITCH_ACK
 
 // Packet: 0x0a9e
 packetLen(0x0a9e, 2)
@@ -4168,7 +4168,7 @@ packetLen(0x0acf, 68)  // CA_LOGIN_OTP
 packetLen(0x0ad0, 11)  // CA_OTP_CODE
 
 // Packet: 0x0ad1
-packetLen(0x0ad1, -1)
+packetLen(0x0ad1, -1)  // AC_LOGIN_OTP
 
 // Packet: 0x0ad2
 packetLen(0x0ad2, 30)
@@ -4210,7 +4210,7 @@ packetLen(0x0add, 24)  // ZC_ITEM_FALL_ENTRY
 packetLen(0x0ade, 6)  // ZC_OVERWEIGHT_PERCENT
 
 // Packet: 0x0adf
-packetLen(0x0adf, 58)  // ZC_ACK_REQNAME
+packetLen(0x0adf, 58)  // ZC_ACK_REQNAME_TITLE
 
 // Packet: 0x0ae0
 packetLen(0x0ae0, 30)
@@ -4288,7 +4288,7 @@ packetLen(0x0afa, 54)
 packetLen(0x0afb, -1)  // ZC_AUTOSPELLLIST
 
 // Packet: 0x0afc
-packetLen(0x0afc, 16)
+packetLen(0x0afc, 16)  // CZ_REQ_STYLE_CHANGE2
 
 // Packet: 0x0afd
 packetLen(0x0afd, -1)  // ZC_GUILD_POSITION
@@ -4375,7 +4375,137 @@ packetLen(0x0b18, 4)  // ZC_INVENTORY_EXPANSION_INFO
 packetLen(0x0b19, 2)  // CZ_INVENTORY_EXPAND_REJECTED
 
 // Packet: 0x0b1a
-packetLen(0x0b1a, 29)
+packetLen(0x0b1a, 29)  // ZC_USESKILL_ACK3
+
+// Packet: 0x0b1b
+#if PACKETVER >= 20190213
+packetLen(0x0b1b, 2)  // ZC_ALT_PING
+#endif
+
+// Packet: 0x0b1c
+#if PACKETVER >= 20190227
+packetLen(0x0b1c, 2)  // CZ_PING
+#endif
+
+// Packet: 0x0b1d
+#if PACKETVER >= 20190227
+packetLen(0x0b1d, 2)  // ZC_PING
+#endif
+
+// Packet: 0x0b1e
+#if PACKETVER >= 20190227
+packetLen(0x0b1e, 10)
+#endif
+
+// Packet: 0x0b1f
+#if PACKETVER >= 20190306
+packetLen(0x0b1f, 10)
+#endif
+
+// Packet: 0x0b20
+#if PACKETVER >= 20190403
+packetLen(0x0b20, 271)  // ZC_SHORTCUT_KEY_LIST_V4
+#endif
+
+// Packet: 0x0b21
+#if PACKETVER >= 20190403
+packetLen(0x0b21, 13)  // CZ_SHORTCUT_KEY_CHANGE
+#elif PACKETVER >= 20190306
+// removed
+#elif PACKETVER >= 20190227
+packetLen(0x0b21, 10)  // CZ_SHORTCUT_KEY_CHANGE
+#endif
+
+// Packet: 0x0b22
+#if PACKETVER >= 20190403
+packetLen(0x0b22, 5)  // CZ_SHORTCUTKEYBAR_ROTATE
+#elif PACKETVER >= 20190306
+// removed
+#elif PACKETVER >= 20190227
+packetLen(0x0b22, 6)  // CZ_SHORTCUTKEYBAR_ROTATE
+#endif
+
+// Packet: 0x0b23
+#if PACKETVER >= 20190417
+packetLen(0x0b23, 6)
+#elif PACKETVER >= 20190306
+// removed
+#elif PACKETVER >= 20190227
+packetLen(0x0b23, 10)
+#endif
+
+// Packet: 0x0b24
+#if PACKETVER >= 20190417
+packetLen(0x0b24, 6)
+#endif
+
+// Packet: 0x0b25
+#if PACKETVER >= 20190417
+packetLen(0x0b25, 6)
+#endif
+
+// Packet: 0x0b26
+#if PACKETVER >= 20190522
+// removed
+#elif PACKETVER >= 20190508
+packetLen(0x0b26, 16)
+#elif PACKETVER >= 20190417
+packetLen(0x0b26, 18)
+#endif
+
+// Packet: 0x0b27
+#if PACKETVER >= 20190508
+packetLen(0x0b27, -1)
+#endif
+
+// Packet: 0x0b28
+#if PACKETVER >= 20190522
+packetLen(0x0b28, 3)
+#elif PACKETVER >= 20190508
+packetLen(0x0b28, 22)
+#endif
+
+// Packet: 0x0b29
+#if PACKETVER >= 20190508
+packetLen(0x0b29, 6)
+#endif
+
+// Packet: 0x0b2a
+#if PACKETVER >= 20190522
+packetLen(0x0b2a, 40)
+#elif PACKETVER >= 20190508
+packetLen(0x0b2a, 6)
+#endif
+
+// Packet: 0x0b2b
+#if PACKETVER >= 20190522
+packetLen(0x0b2b, 11)
+#endif
+
+// Packet: 0x0b2c
+#if PACKETVER >= 20190522
+packetLen(0x0b2c, 3)
+#endif
+
+// Packet: 0x0b2d
+#if PACKETVER >= 20190522
+packetLen(0x0b2d, 11)
+#endif
+
+// Packet: 0x0b2e
+#if PACKETVER >= 20190522
+packetLen(0x0b2e, 4)
+#endif
+
+// Packet: 0x0b2f
+#if PACKETVER >= 20190529
+packetLen(0x0b2f, 73)
+#endif
+
+// Packet: 0x0b30
+#if PACKETVER >= 20190529
+packetLen(0x0b30, -1)
+#endif
 
 
 #endif /* COMMON_PACKETS2019_LEN_MAIN_H */

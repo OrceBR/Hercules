@@ -6361,7 +6361,7 @@ static enum damage_lv battle_weapon_attack(struct block_list *src, struct block_
 
 			if (d_bl != NULL
 			 && ((d_bl->type == BL_MER && d_md->master != NULL && d_md->master->bl.id == target->id)
-			  || (d_bl->type == BL_PC && d_sd->devotion[sce->val2] == target->id)
+			  || (d_sd != NULL && d_bl->type == BL_PC && d_sd->devotion[sce->val2] == target->id)
 			    )
 			 && check_distance_bl(target, d_bl, sce->val3)
 			) {
@@ -7004,7 +7004,8 @@ static const struct battle_data {
 	{ "player_damage_delay_rate",           &battle_config.pc_damage_delay_rate,            100,    0,      INT_MAX,        },
 	{ "defunit_not_enemy",                  &battle_config.defnotenemy,                     0,      0,      1,              },
 	{ "gvg_traps_target_all",               &battle_config.vs_traps_bctall,                 BL_PC,  BL_NUL, BL_ALL,         },
-	{ "traps_setting",                      &battle_config.traps_setting,                   0,      0,      1,              },
+	{ "trap_options/visibility",            &battle_config.trap_visibility,                 2,      0,      2,              },
+	{ "trap_options/display_on_trigger",    &battle_config.trap_trigger,                    1,      0,      1,              },
 	{ "summon_flora_setting",               &battle_config.summon_flora,                    1|2,    0,      1|2,            },
 	{ "clear_skills_on_death",              &battle_config.clear_unit_ondeath,              BL_NUL, BL_NUL, BL_ALL,         },
 	{ "clear_skills_on_warp",               &battle_config.clear_unit_onwarp,               BL_ALL, BL_NUL, BL_ALL,         },
@@ -7413,6 +7414,28 @@ static const struct battle_data {
 	{ "min_item_buy_price",                 &battle_config.min_item_buy_price,              1,      0,      INT_MAX,        },
 	{ "min_item_sell_price",                &battle_config.min_item_sell_price,             0,      0,      INT_MAX,        },
 	{ "display_fake_hp_when_dead",          &battle_config.display_fake_hp_when_dead,       1,      0,      1,              },
+	{ "magicrod_type",                      &battle_config.magicrod_type,                   0,      0,      1,              },
+	{ "features/enable_achievement_system", &battle_config.feature_enable_achievement,      1,      0,      1,              },
+	{ "ping_timer_inverval",                &battle_config.ping_timer_interval,             30,     0,      99999999,       },
+	{ "ping_time",                          &battle_config.ping_time,                       20,     0,      99999999,       },
+	{ "option_drop_max_loop",               &battle_config.option_drop_max_loop,            10,     1,      100000,         },
+	{ "drop_connection_on_quit",            &battle_config.drop_connection_on_quit,         0,      0,      1,              },
+	{ "features/enable_refinery_ui",        &battle_config.enable_refinery_ui,              1,      0,      1,              },
+	{ "features/replace_refine_npcs",       &battle_config.replace_refine_npcs,             1,      0,      1,              },
+	{ "batk_min_limit",                     &battle_config.batk_min,                        0,      0,      INT_MAX,        },
+	{ "batk_max_limit",                     &battle_config.batk_max,                        USHRT_MAX, 1,   INT_MAX,        },
+	{ "matk_min_limit",                     &battle_config.matk_min,                        0,      0,      INT_MAX,        },
+	{ "matk_max_limit",                     &battle_config.matk_max,                        USHRT_MAX, 1,   INT_MAX,        },
+	{ "watk_min_limit",                     &battle_config.watk_min,                        0,      0,      INT_MAX,        },
+	{ "watk_max_limit",                     &battle_config.watk_max,                        USHRT_MAX, 1,   INT_MAX,        },
+	{ "flee_min_limit",                     &battle_config.flee_min,                        1,      1,      INT_MAX,        },
+	{ "flee_max_limit",                     &battle_config.flee_max,                        SHRT_MAX, 1,    INT_MAX,        },
+	{ "flee2_min_limit",                    &battle_config.flee2_min,                       10,     1,      INT_MAX,        },
+	{ "flee2_max_limit",                    &battle_config.flee2_max,                       SHRT_MAX, 1,    INT_MAX,        },
+	{ "critical_min_limit",                 &battle_config.critical_min,                    10,     1,      INT_MAX,        },
+	{ "critical_max_limit",                 &battle_config.critical_max,                    SHRT_MAX, 1,    INT_MAX,        },
+	{ "hit_min_limit",                      &battle_config.hit_min,                         1,      1,      INT_MAX,        },
+	{ "hit_max_limit",                      &battle_config.hit_max,                         SHRT_MAX, 1,    INT_MAX,        },
 };
 
 static bool battle_set_value_sub(int index, int value)
@@ -7538,6 +7561,18 @@ static void battle_adjust_conf(void)
 	}
 #endif
 
+#if !(PACKETVER_MAIN_NUM >= 20161130 || PACKETVER_RE_NUM >= 20161109 || defined(PACKETVER_ZERO))
+	if (battle_config.enable_refinery_ui == 1) {
+		ShowWarning("conf/map/battle/feature.conf refinery ui is enabled but it requires PACKETVER 2016-11-09 RagexeRE/2016-11-30 Ragexe or newer, disabling...\n");
+		battle_config.enable_refinery_ui = 0;
+	}
+
+	if (battle_config.replace_refine_npcs == 1) {
+		ShowWarning("conf/map/battle/feature.conf replace refine npcs is enabled but it requires PACKETVER 2016-11-09 RagexeRE/2016-11-30 Ragexe or newer, disabling...\n");
+		battle_config.replace_refine_npcs = 0;
+	}
+#endif
+
 #ifndef CELL_NOSTACK
 	if (battle_config.custom_cell_stack_limit != 1)
 		ShowWarning("Battle setting 'custom_cell_stack_limit' takes no effect as this server was compiled without Cell Stack Limit support.\n");
@@ -7566,6 +7601,10 @@ static bool battle_config_read(const char *filename, bool imported)
 
 	if (!imported)
 		battle->config_set_defaults();
+
+	if (libconfig->lookup(&config, "battle_configuration/traps_setting") != NULL) {
+		ShowError("The `traps_setting` battle conf option has been replaced by `trap_visibility`. Please see conf/map/battle/skill.conf.\n");
+	}
 
 	for (i = 0; i < ARRAYLENGTH(battle_data); i++) {
 		int type, val;

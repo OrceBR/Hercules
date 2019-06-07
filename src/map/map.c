@@ -56,7 +56,9 @@
 #include "map/skill.h"
 #include "map/status.h"
 #include "map/storage.h"
+#include "map/stylist.h"
 #include "map/rodex.h"
+#include "map/refine.h"
 #include "map/trade.h"
 #include "map/unit.h"
 #include "map/achievement.h"
@@ -3584,23 +3586,27 @@ static void map_zone_db_clear(void)
 }
 static void map_clean(int i)
 {
-	int v;
 	Assert_retv(i >= 0 && i < map->count);
-	if(map->list[i].cell && map->list[i].cell != (struct mapcell *)0xdeadbeaf) aFree(map->list[i].cell);
-	if(map->list[i].block) aFree(map->list[i].block);
-	if(map->list[i].block_mob) aFree(map->list[i].block_mob);
 
-	if(battle_config.dynamic_mobs) { //Dynamic mobs flag by [random]
-		int j;
-		if(map->list[i].mob_delete_timer != INVALID_TIMER)
+	if (map->list[i].cell && map->list[i].cell != (struct mapcell *)0xdeadbeaf)
+		aFree(map->list[i].cell);
+	if (map->list[i].block)
+		aFree(map->list[i].block);
+	if (map->list[i].block_mob)
+		aFree(map->list[i].block_mob);
+
+	if (battle_config.dynamic_mobs != 0) { //Dynamic mobs flag by [random]
+		if (map->list[i].mob_delete_timer != INVALID_TIMER)
 			timer->delete(map->list[i].mob_delete_timer, map->removemobs_timer);
-		for (j=0; j<MAX_MOB_LIST_PER_MAP; j++)
-			if (map->list[i].moblist[j]) aFree(map->list[i].moblist[j]);
+		for (int j = 0; j < MAX_MOB_LIST_PER_MAP; j++) {
+			if (map->list[i].moblist[j] != NULL)
+				aFree(map->list[i].moblist[j]);
+		}
 	}
 
-	if( map->list[i].unit_count ) {
-		if( map->list[i].units ) {
-			for(v = 0; v < map->list[i].unit_count; v++) {
+	if (map->list[i].unit_count != 0) {
+		if (map->list[i].units != NULL) {
+			for (int v = 0; v < map->list[i].unit_count; v++) {
 				aFree(map->list[i].units[v]);
 			}
 			aFree(map->list[i].units);
@@ -3609,98 +3615,44 @@ static void map_clean(int i)
 		map->list[i].unit_count = 0;
 	}
 
-	if( map->list[i].skill_count ) {
-		if( map->list[i].skills ) {
-			for(v = 0; v < map->list[i].skill_count; v++) {
-					aFree(map->list[i].skills[v]);
-				}
+	if (map->list[i].skill_count != 0) {
+		if (map->list[i].skills != NULL) {
+			for (int v = 0; v < map->list[i].skill_count; v++) {
+				aFree(map->list[i].skills[v]);
+			}
 			aFree(map->list[i].skills);
 			map->list[i].skills = NULL;
 		}
 		map->list[i].skill_count = 0;
 	}
 
-	if( map->list[i].zone_mf_count ) {
-		if( map->list[i].zone_mf ) {
-			for(v = 0; v < map->list[i].zone_mf_count; v++) {
-					aFree(map->list[i].zone_mf[v]);
-				}
+	if (map->list[i].zone_mf_count != 0) {
+		if (map->list[i].zone_mf != NULL) {
+			for (int v = 0; v < map->list[i].zone_mf_count; v++) {
+				aFree(map->list[i].zone_mf[v]);
+			}
 			aFree(map->list[i].zone_mf);
 			map->list[i].zone_mf = NULL;
 		}
 		map->list[i].zone_mf_count = 0;
 	}
 
-	if( map->list[i].channel )
+	if (map->list[i].drop_list_count != 0)
+		map->list[i].drop_list_count = 0;
+	if (map->list[i].drop_list != NULL)
+		aFree(map->list[i].drop_list);
+
+	if (map->list[i].channel != NULL)
 		channel->delete(map->list[i].channel);
+
+	VECTOR_CLEAR(map->list[i].qi_list);
+	HPM->data_store_destroy(&map->list[i].hdata);
 }
 static void do_final_maps(void)
 {
-	int i, v = 0;
-
-	for( i = 0; i < map->count; i++ ) {
-
-		if(map->list[i].cell && map->list[i].cell != (struct mapcell *)0xdeadbeaf ) aFree(map->list[i].cell);
-		if(map->list[i].block) aFree(map->list[i].block);
-		if(map->list[i].block_mob) aFree(map->list[i].block_mob);
-
-		if(battle_config.dynamic_mobs) { //Dynamic mobs flag by [random]
-			int j;
-			if(map->list[i].mob_delete_timer != INVALID_TIMER)
-				timer->delete(map->list[i].mob_delete_timer, map->removemobs_timer);
-			for (j=0; j<MAX_MOB_LIST_PER_MAP; j++)
-				if (map->list[i].moblist[j]) aFree(map->list[i].moblist[j]);
-		}
-
-		if( map->list[i].unit_count ) {
-			if( map->list[i].units ) {
-				for(v = 0; v < map->list[i].unit_count; v++) {
-					aFree(map->list[i].units[v]);
-				}
-				aFree(map->list[i].units);
-				map->list[i].units = NULL;
-			}
-			map->list[i].unit_count = 0;
-		}
-
-		if( map->list[i].skill_count ) {
-			if( map->list[i].skills ) {
-				for(v = 0; v < map->list[i].skill_count; v++) {
-					aFree(map->list[i].skills[v]);
-				}
-				aFree(map->list[i].skills);
-				map->list[i].skills = NULL;
-			}
-			map->list[i].skill_count = 0;
-		}
-
-		if( map->list[i].zone_mf_count ) {
-			if( map->list[i].zone_mf ) {
-				for(v = 0; v < map->list[i].zone_mf_count; v++) {
-					aFree(map->list[i].zone_mf[v]);
-				}
-				aFree(map->list[i].zone_mf);
-				map->list[i].zone_mf = NULL;
-			}
-			map->list[i].zone_mf_count = 0;
-		}
-
-		if( map->list[i].drop_list_count ) {
-			map->list[i].drop_list_count = 0;
-		}
-		if( map->list[i].drop_list != NULL )
-			aFree(map->list[i].drop_list);
-
-		if( map->list[i].channel )
-			channel->delete(map->list[i].channel);
-
-		quest->questinfo_vector_clear(i);
-
-		HPM->data_store_destroy(&map->list[i].hdata);
-	}
-
+	for (int i = 0; i < map->count; i++)
+		map->clean(i);
 	map->zone_db_clear();
-
 }
 
 static void map_zonedb_reload(void)
@@ -3791,7 +3743,8 @@ static void map_flags_init(void)
 		map->list[i].short_damage_rate  = 100;
 		map->list[i].long_damage_rate   = 100;
 
-		VECTOR_INIT(map->list[i].qi_data);
+		VECTOR_CLEAR(map->list[i].qi_list);
+		VECTOR_INIT(map->list[i].qi_list);
 	}
 }
 
@@ -5426,6 +5379,32 @@ static bool map_zone_mf_cache(int m, char *flag, char *params)
 			else if( map->list[m].flag.nocashshop )
 				map_zone_mf_cache_add(m,"nocashshop");
 		}
+	} else if (strcmpi(flag, "nostorage") == 0) {
+		if (!state) {
+			if (map->list[m].flag.nostorage != 0) {
+				sprintf(rflag, "nostorage\t%d", map->list[m].flag.nostorage);
+				map_zone_mf_cache_add(m, rflag);
+			}
+		}
+		if (sscanf(params, "%d", &state) == 1) {
+			if (state != map->list[m].flag.nostorage) {
+				sprintf(rflag, "nostorage\t%d", state);
+				map_zone_mf_cache_add(m, rflag);
+			}
+		}
+	} else if (strcmpi(flag, "nogstorage") == 0) {
+		if (!state) {
+			if (map->list[m].flag.nogstorage != 0) {
+				sprintf(rflag, "nogstorage\t%d", map->list[m].flag.nogstorage);
+				map_zone_mf_cache_add(m, rflag);
+			}
+		}
+		if (sscanf(params, "%d", &state) == 1) {
+			if (state != map->list[m].flag.nogstorage) {
+				sprintf(rflag, "nogstorage\t%d", state);
+				map_zone_mf_cache_add(m, rflag);
+			}
+		}
 	}
 
 	return false;
@@ -6027,28 +6006,30 @@ static int map_get_new_bonus_id(void)
 	return map->bonus_id++;
 }
 
-static void map_add_questinfo(int m, struct questinfo *qi)
+static bool map_add_questinfo(int m, struct npc_data *nd)
 {
-	nullpo_retv(qi);
-	Assert_retv(m >= 0 && m < map->count);
+	nullpo_retr(false, nd);
+	Assert_retr(false, m >= 0 && m < map->count);
 
-	VECTOR_ENSURE(map->list[m].qi_data, 1, 1);
-	VECTOR_PUSH(map->list[m].qi_data, *qi);
+	if (&VECTOR_LAST(map->list[m].qi_list) == nd)
+		return false;
+
+	VECTOR_ENSURE(map->list[m].qi_list, 1, 1);
+	VECTOR_PUSH(map->list[m].qi_list, *nd);
+	return true;
 }
 
 static bool map_remove_questinfo(int m, struct npc_data *nd)
 {
-	unsigned short i;
 
 	nullpo_retr(false, nd);
 	Assert_retr(false, m >= 0 && m < map->count);
 
-	for (i = 0; i < VECTOR_LENGTH(map->list[m].qi_data); i++) {
-		struct questinfo *qi_data = &VECTOR_INDEX(map->list[m].qi_data, i);
-		if (qi_data->nd == nd) {
-			VECTOR_ERASE(map->list[m].qi_data, i);
-			return true;
-		}
+	int i;
+	ARR_FIND(0, VECTOR_LENGTH(map->list[m].qi_list), i, &VECTOR_INDEX(map->list[m].qi_list, i) == nd);
+	if (i != VECTOR_LENGTH(map->list[m].qi_list)) {
+		VECTOR_ERASE(map->list[m].qi_list, i);
+		return true;
 	}
 	return false;
 }
@@ -6189,6 +6170,7 @@ int do_final(void)
 	atcommand->final_msg();
 	skill->final();
 	status->final();
+	refine->final();
 	unit->final();
 	bg->final();
 	duel->final();
@@ -6197,6 +6179,7 @@ int do_final(void)
 	vending->final();
 	rodex->final();
 	achievement->final();
+	stylist->final();
 
 	HPM_map_do_final();
 
@@ -6404,6 +6387,8 @@ static void map_load_defaults(void)
 	achievement_defaults();
 	npc_chat_defaults();
 	rodex_defaults();
+	stylist_defaults();
+	refine_defaults();
 }
 /**
  * --run-once handler
@@ -6708,6 +6693,7 @@ int do_init(int argc, char *argv[])
 		map->read_zone_db();/* read after item and skill initialization */
 	mob->init(minimal);
 	pc->init(minimal);
+	refine->init(minimal);
 	status->init(minimal);
 	party->init(minimal);
 	guild->init(minimal);
@@ -6724,6 +6710,7 @@ int do_init(int argc, char *argv[])
 	duel->init(minimal);
 	vending->init(minimal);
 	rodex->init(minimal);
+	stylist->init(minimal);
 
 	if (map->scriptcheck) {
 		bool failed = map->extra_scripts_count > 0 ? false : true;

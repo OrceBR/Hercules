@@ -48,6 +48,7 @@
 #include "map/pc_groups.h" // groupid2name
 #include "map/pet.h"
 #include "map/quest.h"
+#include "map/refine.h"
 #include "map/script.h"
 #include "map/searchstore.h"
 #include "map/skill.h"
@@ -868,8 +869,13 @@ ACMD(speed)
  *------------------------------------------*/
 ACMD(storage)
 {
-	if (sd->npc_id || sd->state.vending || sd->state.buyingstore || sd->state.trading || sd->state.storage_flag)
+	if (sd->npc_id || sd->state.vending || sd->state.prevend || sd->state.buyingstore || sd->state.trading || sd->state.storage_flag)
 		return false;
+
+	if (!pc_has_permission(sd, PC_PERM_BYPASS_NOSTORAGE) && (map->list[sd->bl.m].flag.nostorage & 1)) { // mapflag nostorage already defined? can't open :c
+		clif->message(fd, msg_fd(fd, 1161)); // You currently cannot open your storage.
+		return false;
+	}
 
 	if (storage->open(sd) == 1) { //Already open.
 		clif->message(fd, msg_fd(fd,250)); // You have already opened your storage. Close it first.
@@ -891,7 +897,7 @@ ACMD(guildstorage)
 		return false;
 	}
 
-	if (sd->npc_id || sd->state.vending || sd->state.buyingstore || sd->state.trading)
+	if (sd->npc_id || sd->state.vending || sd->state.prevend || sd->state.buyingstore || sd->state.trading)
 		return false;
 
 	if (sd->state.storage_flag == STORAGE_FLAG_NORMAL) {
@@ -901,6 +907,11 @@ ACMD(guildstorage)
 
 	if (sd->state.storage_flag == STORAGE_FLAG_GUILD) {
 		clif->message(fd, msg_fd(fd,251)); // You have already opened your guild storage. Close it first.
+		return false;
+	}
+
+	if (!pc_has_permission(sd, PC_PERM_BYPASS_NOSTORAGE) && (map->list[sd->bl.m].flag.nogstorage & 1)) { // mapflag nogstorage already defined? can't open :c
+		clif->message(fd, msg_fd(fd, 1161)); // You currently cannot open your storage. (there is no other messages...)
 		return false;
 	}
 
@@ -1270,20 +1281,20 @@ ACMD(item2)
 	struct item_data *item_data;
 	char item_name[100];
 	int item_id, number = 0, bound = 0;
-	int identify = 0, refine = 0, attr = 0;
+	int identify = 0, refine_level = 0, attr = 0;
 	int c1 = 0, c2 = 0, c3 = 0, c4 = 0;
 
 	memset(item_name, '\0', sizeof(item_name));
 
 	if (!strcmpi(info->command,"itembound2") && (!*message || (
-		sscanf(message, "\"%99[^\"]\" %12d %12d %12d %12d %12d %12d %12d %12d %12d", item_name, &number, &identify, &refine, &attr, &c1, &c2, &c3, &c4, &bound) < 10 &&
-		sscanf(message, "%99s %12d %12d %12d %12d %12d %12d %12d %12d %12d", item_name, &number, &identify, &refine, &attr, &c1, &c2, &c3, &c4, &bound) < 10 ))) {
+		sscanf(message, "\"%99[^\"]\" %12d %12d %12d %12d %12d %12d %12d %12d %12d", item_name, &number, &identify, &refine_level, &attr, &c1, &c2, &c3, &c4, &bound) < 10 &&
+		sscanf(message, "%99s %12d %12d %12d %12d %12d %12d %12d %12d %12d", item_name, &number, &identify, &refine_level, &attr, &c1, &c2, &c3, &c4, &bound) < 10 ))) {
 		clif->message(fd, msg_fd(fd,296)); // Please enter all parameters (usage: @itembound2 <item name/ID> <quantity>
 		clif->message(fd, msg_fd(fd,297)); //   <identify_flag> <refine> <attribute> <card1> <card2> <card3> <card4> <bound_type>).
 		return false;
 	} else if (!*message
-	         || ( sscanf(message, "\"%99[^\"]\" %12d %12d %12d %12d %12d %12d %12d %12d", item_name, &number, &identify, &refine, &attr, &c1, &c2, &c3, &c4) < 9
-	           && sscanf(message, "%99s %12d %12d %12d %12d %12d %12d %12d %12d", item_name, &number, &identify, &refine, &attr, &c1, &c2, &c3, &c4) < 9
+	         || ( sscanf(message, "\"%99[^\"]\" %12d %12d %12d %12d %12d %12d %12d %12d", item_name, &number, &identify, &refine_level, &attr, &c1, &c2, &c3, &c4) < 9
+	           && sscanf(message, "%99s %12d %12d %12d %12d %12d %12d %12d %12d", item_name, &number, &identify, &refine_level, &attr, &c1, &c2, &c3, &c4) < 9
 	)) {
 		clif->message(fd, msg_fd(fd,984)); // Please enter all parameters (usage: @item2 <item name/ID> <quantity>
 		clif->message(fd, msg_fd(fd,985)); //   <identify_flag> <refine> <attribute> <card1> <card2> <card3> <card4>).
@@ -1319,20 +1330,20 @@ ACMD(item2)
 			get_count = 1;
 			if (item_data->type == IT_PETEGG) {
 				identify = 1;
-				refine = 0;
+				refine_level = 0;
 			}
 			if (item_data->type == IT_PETARMOR)
-				refine = 0;
+				refine_level = 0;
 		} else {
 			identify = 1;
-			refine = attr = 0;
+			refine_level = attr = 0;
 		}
-		refine = cap_value(refine, 0, MAX_REFINE);
+		refine_level = cap_value(refine_level, 0, MAX_REFINE);
 		for (i = 0; i < loop; i++) {
 			memset(&item_tmp, 0, sizeof(item_tmp));
 			item_tmp.nameid = item_id;
 			item_tmp.identify = identify;
-			item_tmp.refine = refine;
+			item_tmp.refine = refine_level;
 			item_tmp.attribute = attr;
 			item_tmp.bound = (unsigned char)bound;
 			item_tmp.card[0] = c1;
@@ -2215,12 +2226,12 @@ ACMD(killmonster)
  *------------------------------------------*/
 ACMD(refine)
 {
-	int j, position = 0, refine = 0, current_position, final_refine;
+	int j, position = 0, refine_level = 0, current_position, final_refine;
 	int count;
 
 	memset(atcmd_output, '\0', sizeof(atcmd_output));
 
-	if (!*message || sscanf(message, "%12d %12d", &position, &refine) < 2) {
+	if (!*message || sscanf(message, "%12d %12d", &position, &refine_level) < 2) {
 		clif->message(fd, msg_fd(fd,996)); // Please enter a position and an amount (usage: @refine <equip position> <+/- amount>).
 		safesnprintf(atcmd_output, sizeof(atcmd_output), msg_fd(fd,997), EQP_HEAD_LOW); // %d: Lower Headgear
 		clif->message(fd, atcmd_output);
@@ -2245,7 +2256,7 @@ ACMD(refine)
 		return false;
 	}
 
-	refine = cap_value(refine, -MAX_REFINE, MAX_REFINE);
+	refine_level = cap_value(refine_level, -MAX_REFINE, MAX_REFINE);
 
 	count = 0;
 	for (j = 0; j < EQI_MAX; j++) {
@@ -2263,7 +2274,7 @@ ACMD(refine)
 		if(position && !(sd->status.inventory[idx].equip & position))
 			continue;
 
-		final_refine = cap_value(sd->status.inventory[idx].refine + refine, 0, MAX_REFINE);
+		final_refine = cap_value(sd->status.inventory[idx].refine + refine_level, 0, MAX_REFINE);
 		if (sd->status.inventory[idx].refine != final_refine) {
 			sd->status.inventory[idx].refine = final_refine;
 			current_position = sd->status.inventory[idx].equip;
@@ -5277,18 +5288,43 @@ ACMD(follow)
 }
 
 /*==========================================
- * @dropall by [MouseJstr]
- * Drop all your possession on the ground
+ * @dropall by [MouseJstr] and [Xantara]
+ * Drop all your possession on the ground based on item type
  *------------------------------------------*/
 ACMD(dropall)
 {
-	for (int i = 0; i < sd->status.inventorySize; i++) {
-		if (sd->status.inventory[i].amount) {
-			if(sd->status.inventory[i].equip != 0)
-				pc->unequipitem(sd, i, PCUNEQUIPITEM_RECALC|PCUNEQUIPITEM_FORCE);
-			pc->dropitem(sd,  i, sd->status.inventory[i].amount);
+	int type = -1;
+	int count = 0;
+
+	if (message[0] != '\0') {
+		type = atoi(message);
+		if (!((type >= IT_HEALING && type <= IT_DELAYCONSUME) || type == IT_CASH || type == -1)) {
+			clif->message(fd, msg_fd(fd, 1500));
+			clif->message(fd, msg_fd(fd, 1501));
+			return false;
 		}
 	}
+
+	for (int i = 0; i < sd->status.inventorySize; i++) {
+		if (sd->status.inventory[i].amount) {
+			struct item_data *item_data = itemdb->exists(sd->status.inventory[i].nameid);
+			if (item_data == NULL) {
+				ShowWarning("Non-existant item %d on dropall list (account_id: %d, char_id: %d)\n", sd->status.inventory[i].nameid, sd->status.account_id, sd->status.char_id);
+				continue;
+			}
+			if (!pc->candrop(sd, &sd->status.inventory[i]))
+				continue;
+			if (type == -1 || type == item_data->type) {
+				if (sd->status.inventory[i].equip != 0)
+					pc->unequipitem(sd, i, PCUNEQUIPITEM_RECALC | PCUNEQUIPITEM_FORCE);
+				count += sd->status.inventory[i].amount;
+				pc->dropitem(sd, i, sd->status.inventory[i].amount);
+			}
+		}
+	}
+
+	sprintf(atcmd_output, msg_fd(fd, 1502), count); // %d items are dropped!
+	clif->message(fd, atcmd_output);
 	return true;
 }
 
@@ -5400,7 +5436,7 @@ ACMD(clearcart)
 		return false;
 	}
 
-	if (sd->state.vending) {
+	if (sd->state.vending || sd->state.prevend) {
 		clif->message(fd, msg_fd(fd,548)); // You can't clean a cart while vending!
 		return false;
 	}
@@ -5599,9 +5635,9 @@ static void atcommand_getring(struct map_session_data *sd)
 	memset(&item_tmp, 0, sizeof(item_tmp));
 	item_tmp.nameid = item_id;
 	item_tmp.identify = 1;
-	item_tmp.card[0] = 255;
-	item_tmp.card[2] = sd->status.partner_id;
-	item_tmp.card[3] = sd->status.partner_id >> 16;
+	item_tmp.card[0] = CARD0_FORGE;
+	item_tmp.card[2] = GetWord(sd->status.partner_id, 0);
+	item_tmp.card[3] = GetWord(sd->status.partner_id, 1);
 
 	if((flag = pc->additem(sd,&item_tmp,1,LOG_TYPE_COMMAND))) {
 		clif->additem(sd,0,0,flag);
@@ -7669,9 +7705,9 @@ ACMD(fakename)
 		if (sd->fakename[0])
 		{
 			sd->fakename[0] = '\0';
-			clif->charnameack(0, &sd->bl);
+			clif->blname_ack(0, &sd->bl);
 			if( sd->disguise )
-				clif->charnameack(sd->fd, &sd->bl);
+				clif->blname_ack(sd->fd, &sd->bl);
 			clif->message(sd->fd, msg_fd(fd,1307)); // Returned to real name.
 			return true;
 		}
@@ -7687,9 +7723,9 @@ ACMD(fakename)
 	}
 
 	safestrncpy(sd->fakename, message, sizeof(sd->fakename));
-	clif->charnameack(0, &sd->bl);
+	clif->blname_ack(0, &sd->bl);
 	if (sd->disguise) // Another packet should be sent so the client updates the name for sd
-		clif->charnameack(sd->fd, &sd->bl);
+		clif->blname_ack(sd->fd, &sd->bl);
 	clif->message(sd->fd, msg_fd(fd,1310)); // Fake name enabled.
 
 	return true;
@@ -7731,6 +7767,7 @@ ACMD(mapflag)
 		CHECKFLAG(nodrop);            CHECKFLAG(novending);          CHECKFLAG(loadevent);
 		CHECKFLAG(nochat);            CHECKFLAG(partylock);          CHECKFLAG(guildlock);    CHECKFLAG(src4instance);
 		CHECKFLAG(notomb);            CHECKFLAG(nocashshop);         CHECKFLAG(noviewid);     CHECKFLAG(town);
+		CHECKFLAG(nostorage);         CHECKFLAG(nogstorage);
 		clif->message(sd->fd," ");
 		clif->message(sd->fd,msg_fd(fd,1312)); // Usage: "@mapflag monster_noteleport 1" (0=Off | 1=On)
 		clif->message(sd->fd,msg_fd(fd,1313)); // Type "@mapflag available" to list the available mapflags.
@@ -7772,7 +7809,7 @@ ACMD(mapflag)
 	SETFLAG(nomvploot);         SETFLAG(nightenabled);       SETFLAG(nodrop);       SETFLAG(novending);
 	SETFLAG(loadevent);         SETFLAG(nochat);             SETFLAG(partylock);    SETFLAG(guildlock);
 	SETFLAG(src4instance);      SETFLAG(notomb);             SETFLAG(nocashshop);   SETFLAG(noviewid);
-	SETFLAG(town);
+	SETFLAG(town);              SETFLAG(nostorage);          SETFLAG(nogstorage);
 
 
 	clif->message(sd->fd, msg_fd(fd, 1314)); // Invalid flag name or flag.
@@ -7785,7 +7822,7 @@ ACMD(mapflag)
 	clif->message(sd->fd, "nozenypenalty, notrade, noskill, nowarp, nowarpto, noicewall, snow, clouds, clouds2,");
 	clif->message(sd->fd, "fog, fireworks, sakura, leaves, nobaseexp, nojobexp, nomobloot,");
 	clif->message(sd->fd, "nomvploot, nightenabled, nodrop, novending, loadevent, nochat, partylock,");
-	clif->message(sd->fd, "guildlock, src4instance, notomb, nocashshop, noviewid");
+	clif->message(sd->fd, "guildlock, src4instance, notomb, nocashshop, noviewid, nostorage, nogstorage");
 #undef CHECKFLAG
 #undef SETFLAG
 
@@ -9803,6 +9840,22 @@ ACMD(camerainfo)
 	return true;
 }
 
+ACMD(refineryui)
+{
+#if PACKETVER_MAIN_NUM >= 20161005 || PACKETVER_RE_NUM >= 20161005 || defined(PACKETVER_ZERO)
+	if (battle_config.enable_refinery_ui == 0) {
+		clif->message(fd, msg_fd(fd, 453));
+		return false;
+	}
+
+	clif->OpenRefineryUI(sd);
+	return true;
+#else
+	clif->message(fd, msg_fd(fd, 453));
+	return false;
+#endif
+}
+
 /**
  * Fills the reference of available commands in atcommand DBMap
  **/
@@ -10086,6 +10139,7 @@ static void atcommand_basecommands(void)
 		ACMD_DEF(reloadclans),
 		ACMD_DEF(setzone),
 		ACMD_DEF(camerainfo),
+		ACMD_DEF(refineryui),
 	};
 	int i;
 
@@ -10715,6 +10769,9 @@ static void do_final_atcommand(void)
 void atcommand_defaults(void)
 {
 	atcommand = &atcommand_s;
+
+	atcommand->atcmd_output = &atcmd_output;
+	atcommand->atcmd_player_name = &atcmd_player_name;
 
 	atcommand->db = NULL;
 	atcommand->alias_db = NULL;
