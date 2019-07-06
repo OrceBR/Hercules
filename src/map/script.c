@@ -24848,6 +24848,49 @@ static BUILDIN(consolemes)
 	return true;
 }
 
+static BUILDIN(setfavoriteitemidx)
+{
+	struct map_session_data *sd = script_rid2sd(st);
+	int idx = script_getnum(st, 2);
+	int value = script_getnum(st, 3);
+
+	if (sd == NULL) {
+		ShowError("buildin_setfavoriteitemidx: No player attached.\n");
+		return false;
+	}
+
+	if (idx < 0 || idx >= sd->status.inventorySize) {
+		ShowError("buildin_setfavoriteitemidx: Invalid inventory index %d (min: %d, max: %d).\n", idx, 0, (sd->status.inventorySize - 1));
+		return false;
+	} else if (sd->inventory_data[idx] == NULL || sd->inventory_data[idx]->nameid <= 0) {
+		ShowWarning("buildin_setfavoriteitemidx: Current inventory index %d has no data.\n", idx);
+		return false;
+	} else if (sd->status.inventory[idx].equip > 0) {
+		ShowWarning("buildin_setfavoriteitemidx: Cant change favorite flag of an equipped item.\n");
+		return false;
+	} else {
+		sd->status.inventory[idx].favorite = cap_value(value, 0, 1);
+		clif->favorite_item(sd, idx);
+	}
+
+	return true;
+}
+
+static BUILDIN(autofavoriteitem)
+{
+	int nameid = script_getnum(st, 2);
+	int flag = script_getnum(st, 3);
+	struct item_data *item_data;
+
+	if ((item_data = itemdb->exists(nameid)) == NULL) {
+		ShowError("buildin_autofavoriteitem: Invalid item '%d'.\n", nameid);
+		return false;
+	}
+
+	item_data->flag.auto_favorite = cap_value(flag, 0, 1);
+	return true;
+}
+
 /** place holder for the translation macro **/
 static BUILDIN(_)
 {
@@ -25469,6 +25512,75 @@ static BUILDIN(openrefineryui)
 
 	clif->OpenRefineryUI(sd);
 	script_pushint(st, 1);
+	return true;
+}
+
+/**
+ * identify(<item id>)
+ * Identifies the first unidentified <item id> item on player's inventory.
+ * Returns -2 on error, -1 if no item to identify was found, identified idx otherwise.
+ */
+static BUILDIN(identify)
+{
+	struct map_session_data *sd = script_rid2sd(st);
+
+	if (sd == NULL) {
+		script_pushint(st, -2);
+		return true;
+	}
+
+	int itemid = script_getnum(st, 2);
+	if (itemdb->exists(itemid) == NULL) {
+		ShowError("buildin_identify: Invalid item ID (%d)\n", itemid);
+		script_pushint(st, -2);
+		return true;
+	}
+
+	int idx = -1;
+	ARR_FIND(0, sd->status.inventorySize, idx, (sd->status.inventory[idx].nameid == itemid && sd->status.inventory[idx].identify == 0));
+
+	if (idx < 0 || idx >= sd->status.inventorySize) {
+		script_pushint(st, -1);
+		return true;
+	}
+
+	sd->status.inventory[idx].identify = 1;
+	clif->item_identified(sd, idx, 0);
+	script_pushint(st, idx);
+
+	return true;
+}
+
+/**
+ * identifyidx(idx)
+ * Identifies item at idx.
+ * Returns true if item is identified, false otherwise.
+ */
+static BUILDIN(identifyidx)
+{
+	struct map_session_data *sd = script_rid2sd(st);
+
+	if (sd == NULL) {
+		script_pushint(st, false);
+		return true;
+	}
+
+	int idx = script_getnum(st, 2);
+	if (idx < 0 || idx >= sd->status.inventorySize) {
+		ShowError("buildin_identifyidx: Invalid inventory index (%d), expected a value between 0 and %d\n", idx, sd->status.inventorySize);
+		script_pushint(st, false);
+		return true;
+	}
+	
+	if (sd->status.inventory[idx].nameid <= 0 || sd->status.inventory[idx].identify != 0) {
+		script_pushint(st, false);
+		return true;
+	}
+
+	sd->status.inventory[idx].identify = 1;
+	clif->item_identified(sd, idx, 0);
+	script_pushint(st, true);
+
 	return true;
 }
 
@@ -26230,6 +26342,11 @@ static void script_parse_builtin(void)
 
 		BUILDIN_DEF(closeroulette, ""),
 		BUILDIN_DEF(openrefineryui, ""),
+		BUILDIN_DEF(setfavoriteitemidx, "ii"),
+		BUILDIN_DEF(autofavoriteitem, "ii"),
+
+		BUILDIN_DEF(identify, "i"),
+		BUILDIN_DEF(identifyidx, "i"),
 	};
 	int i, len = ARRAYLENGTH(BUILDIN);
 	RECREATE(script->buildin, char *, script->buildin_count + len); // Pre-alloc to speed up

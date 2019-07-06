@@ -584,6 +584,12 @@ Opens the Identification window if any unappraised items are in your inventory.
 
 ---------------------------------------
 
+@identifyall
+
+Identifies all unappraised items in your inventory.
+
+---------------------------------------
+
 @trade <player name>
 
 Opens the trade window with the specified player.
@@ -1257,6 +1263,16 @@ Unloads all NPCs in a file.
 
 Example:
 @unloadnpcfile npc/custom/jobmaster.txt
+
+---------------------------------------
+
+@reloadnpc <path>
+
+Unloads all NPCs in a file and reload it again.
+Note: Be aware that mapflags and monsters spawned directly are not removed.
+
+Example:
+@reloadnpc npc/custom/jobmaster.txt
 
 ---------------------------------------
 
