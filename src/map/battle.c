@@ -6321,6 +6321,18 @@ static enum damage_lv battle_weapon_attack(struct block_list *src, struct block_
 	if (sd && sd->state.arrow_atk) //Consume arrow.
 		battle->consume_ammo(sd, 0, 0);
 
+	if (target->type == BL_MOB) {
+		struct mob_data *md = BL_CAST(BL_MOB, target);
+		if (md != NULL) {
+			if (md->db->dmg_taken_rate != 100) {
+				if (wd.damage > 0)
+					wd.damage = apply_percentrate64(wd.damage, md->db->dmg_taken_rate, 100);
+				if (wd.damage2 > 0)
+					wd.damage2 = apply_percentrate64(wd.damage2, md->db->dmg_taken_rate, 100);
+			}
+		}
+	}
+
 	damage = wd.damage + wd.damage2;
 	if( damage > 0 && src != target ) {
 		if( sc && sc->data[SC_DUPLELIGHT] && (wd.flag&BF_SHORT) && rnd()%100 <= 10+2*sc->data[SC_DUPLELIGHT]->val1 ){
@@ -7436,6 +7448,8 @@ static const struct battle_data {
 	{ "critical_max_limit",                 &battle_config.critical_max,                    SHRT_MAX, 1,    INT_MAX,        },
 	{ "hit_min_limit",                      &battle_config.hit_min,                         1,      1,      INT_MAX,        },
 	{ "hit_max_limit",                      &battle_config.hit_max,                         SHRT_MAX, 1,    INT_MAX,        },
+	{ "autoloot_adjust",                    &battle_config.autoloot_adjust,                 0,      0,      1,              },
+	{ "hom_bonus_exp_from_master",          &battle_config.hom_bonus_exp_from_master,      10,      0,      100,            },
 };
 
 static bool battle_set_value_sub(int index, int value)

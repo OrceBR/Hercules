@@ -886,6 +886,10 @@ struct {
 	struct HPMHookPoint *HP_clif_fame_taekwon_post;
 	struct HPMHookPoint *HP_clif_ranklist_pre;
 	struct HPMHookPoint *HP_clif_ranklist_post;
+	struct HPMHookPoint *HP_clif_ranklist_sub_pre;
+	struct HPMHookPoint *HP_clif_ranklist_sub_post;
+	struct HPMHookPoint *HP_clif_ranklist_sub2_pre;
+	struct HPMHookPoint *HP_clif_ranklist_sub2_post;
 	struct HPMHookPoint *HP_clif_update_rankingpoint_pre;
 	struct HPMHookPoint *HP_clif_update_rankingpoint_post;
 	struct HPMHookPoint *HP_clif_pRanklist_pre;
@@ -2614,8 +2618,10 @@ struct {
 	struct HPMHookPoint *HP_guild_sd_check_post;
 	struct HPMHookPoint *HP_guild_read_guildskill_tree_db_pre;
 	struct HPMHookPoint *HP_guild_read_guildskill_tree_db_post;
-	struct HPMHookPoint *HP_guild_read_castledb_pre;
-	struct HPMHookPoint *HP_guild_read_castledb_post;
+	struct HPMHookPoint *HP_guild_read_castledb_libconfig_pre;
+	struct HPMHookPoint *HP_guild_read_castledb_libconfig_post;
+	struct HPMHookPoint *HP_guild_read_castledb_libconfig_sub_pre;
+	struct HPMHookPoint *HP_guild_read_castledb_libconfig_sub_post;
 	struct HPMHookPoint *HP_guild_payexp_timer_sub_pre;
 	struct HPMHookPoint *HP_guild_payexp_timer_sub_post;
 	struct HPMHookPoint *HP_guild_send_xy_timer_sub_pre;
@@ -3866,6 +3872,8 @@ struct {
 	struct HPMHookPoint *HP_mob_final_post;
 	struct HPMHookPoint *HP_mob_reload_pre;
 	struct HPMHookPoint *HP_mob_reload_post;
+	struct HPMHookPoint *HP_mob_reload_sub_mob_pre;
+	struct HPMHookPoint *HP_mob_reload_sub_mob_post;
 	struct HPMHookPoint *HP_mob_db_pre;
 	struct HPMHookPoint *HP_mob_db_post;
 	struct HPMHookPoint *HP_mob_chat_pre;
@@ -7673,6 +7681,10 @@ struct {
 	int HP_clif_fame_taekwon_post;
 	int HP_clif_ranklist_pre;
 	int HP_clif_ranklist_post;
+	int HP_clif_ranklist_sub_pre;
+	int HP_clif_ranklist_sub_post;
+	int HP_clif_ranklist_sub2_pre;
+	int HP_clif_ranklist_sub2_post;
 	int HP_clif_update_rankingpoint_pre;
 	int HP_clif_update_rankingpoint_post;
 	int HP_clif_pRanklist_pre;
@@ -9401,8 +9413,10 @@ struct {
 	int HP_guild_sd_check_post;
 	int HP_guild_read_guildskill_tree_db_pre;
 	int HP_guild_read_guildskill_tree_db_post;
-	int HP_guild_read_castledb_pre;
-	int HP_guild_read_castledb_post;
+	int HP_guild_read_castledb_libconfig_pre;
+	int HP_guild_read_castledb_libconfig_post;
+	int HP_guild_read_castledb_libconfig_sub_pre;
+	int HP_guild_read_castledb_libconfig_sub_post;
 	int HP_guild_payexp_timer_sub_pre;
 	int HP_guild_payexp_timer_sub_post;
 	int HP_guild_send_xy_timer_sub_pre;
@@ -10653,6 +10667,8 @@ struct {
 	int HP_mob_final_post;
 	int HP_mob_reload_pre;
 	int HP_mob_reload_post;
+	int HP_mob_reload_sub_mob_pre;
+	int HP_mob_reload_sub_mob_post;
 	int HP_mob_db_pre;
 	int HP_mob_db_post;
 	int HP_mob_chat_pre;

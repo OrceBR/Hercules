@@ -2570,7 +2570,7 @@ static int mob_dead(struct mob_data *md, struct block_list *src, int type)
 
 			// Announce first, or else ditem will be freed. [Lance]
 			// By popular demand, use base drop rate for autoloot code. [Skotlex]
-			mob->item_drop(md, dlist, ditem, 0, md->db->dropitem[i].p, homkillonly);
+			mob->item_drop(md, dlist, ditem, 0, battle_config.autoloot_adjust ? drop_rate : md->db->dropitem[i].p, homkillonly);
 		}
 
 		// Ore Discovery [Celest]
@@ -4604,6 +4604,7 @@ static int mob_read_db_sub(struct config_setting_t *mobt, int n, const char *sou
 	 * AttackMotion: attack motion
 	 * DamageMotion: damage motion
 	 * MvpExp: mvp experience
+	 * DamageTakenRate: damage taken rate
 	 * MvpDrops: {
 	 *     AegisName: chance
 	 *     ...
@@ -4835,6 +4836,12 @@ static int mob_read_db_sub(struct config_setting_t *mobt, int n, const char *sou
 		if (config_setting_is_group(t)) {
 			mob->read_db_drops_sub(&md, t);
 		}
+	}
+
+	if (mob->lookup_const(mobt, "DamageTakenRate", &i32) && i32 >= 0) {
+		md.dmg_taken_rate = cap_value(i32, 1, INT_MAX);
+	} else if (!inherit) {
+		md.dmg_taken_rate = 100;
 	}
 
 	mob->read_db_additional_fields(&md, mobt, n, source);
@@ -5547,6 +5554,29 @@ static int mob_final_ratio_sub(union DBKey key, struct DBData *data, va_list ap)
 	return 0;
 }
 
+static int mob_reload_sub_mob(struct mob_data *md, va_list args)
+{
+	nullpo_ret(md);
+	md->db = mob_db(md->class_);
+
+	status_calc_mob(md, SCO_FIRST);
+
+	// If the view data was not overwritten manually
+	if (md->vd != NULL) {
+		// Get the new view data from the mob database
+		md->vd = mob_get_viewdata(md->class_);
+
+		// If they are spawned right now
+		if (md->bl.prev != NULL) {
+			// Respawn all mobs on client side so that they are displayed correctly(if their view id changed)
+			clif->clearunit_area(&md->bl, CLR_OUTSIGHT);
+			clif->spawn(&md->bl);
+		}
+	}
+
+	return 0;
+}
+
 static void mob_reload(void)
 {
 	int i;
@@ -5570,6 +5600,7 @@ static void mob_reload(void)
 	mob->destroy_drop_groups();
 
 	mob->load(false);
+	map->foreachmob(mob->reload_sub_mob);
 }
 
 /**
@@ -5726,6 +5757,7 @@ void mob_defaults(void)
 
 	/* */
 	mob->reload = mob_reload;
+	mob->reload_sub_mob = mob_reload_sub_mob;
 	mob->init = do_init_mob;
 	mob->final = do_final_mob;
 	/* */
