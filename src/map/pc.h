@@ -675,6 +675,7 @@ END_ZEROED_BLOCK;
 #define pc_iscloaking(sd)     ( !((sd)->sc.option&OPTION_CHASEWALK) && ((sd)->sc.option&OPTION_CLOAK) )
 #define pc_ischasewalk(sd)    ( (sd)->sc.option&OPTION_CHASEWALK )
 #define pc_ismuted(sc,type)   ( (sc)->data[SC_NOCHAT] && (sc)->data[SC_NOCHAT]->val1&(type) )
+#define pc_isvending(sd)      ((sd)->state.vending || (sd)->state.prevend || (sd)->state.buyingstore)
 
 #ifdef NEW_CARTS
 	#define pc_iscarton(sd)       ( (sd)->sc.data[SC_PUSH_CART] )
@@ -963,7 +964,7 @@ END_ZEROED_BLOCK; /* End */
 
 	int (*updateweightstatus) (struct map_session_data *sd);
 
-	int (*addautobonus) (struct s_autobonus *bonus,char max,const char *bonus_script,short rate,unsigned int dur,short atk_type,const char *o_script,unsigned short pos,bool onskill);
+	int (*addautobonus) (struct s_autobonus *bonus,char max,const char *bonus_script,short rate,unsigned int dur,short atk_type,const char *o_script,unsigned int pos,bool onskill);
 	int (*exeautobonus) (struct map_session_data* sd,struct s_autobonus *bonus);
 	int (*endautobonus) (int tid, int64 tick, int id, intptr_t data);
 	int (*delautobonus) (struct map_session_data* sd,struct s_autobonus *bonus,char max,bool restore);
@@ -1185,6 +1186,8 @@ END_ZEROED_BLOCK; /* End */
 	int (*have_magnifier) (struct map_session_data *sd);
 
 	bool (*process_chat_message) (struct map_session_data *sd, const char *message);
+	int (*wis_message_to_gm) (const char *sender_name, int permission, const char *message);
+	int (*wis_message_to_gm_sub) (struct map_session_data *sd, va_list va);
 	void (*check_supernovice_call) (struct map_session_data *sd, const char *message);
 	bool (*check_basicskill) (struct map_session_data *sd, int level);
 	bool (*isDeathPenaltyJob) (uint16 job);
