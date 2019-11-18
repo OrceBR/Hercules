@@ -91,7 +91,7 @@ struct guild_interface {
 	bool (*isallied) (int guild_id, int guild_id2); //Checks alliance based on guild Ids. [Skotlex]
 	/* */
 	struct guild *(*search) (int guild_id);
-	struct guild *(*searchname) (char *str);
+	struct guild *(*searchname) (const char *str);
 	struct guild_castle *(*castle_search) (int gcid);
 	/* */
 	struct guild_castle *(*mapname2gc) (const char* mapname);
@@ -166,6 +166,7 @@ struct guild_interface {
 	bool (*read_guildskill_tree_db) (char* split[], int columns, int current);
 	bool (*read_castledb_libconfig) (void);
 	bool (*read_castledb_libconfig_sub) (struct config_setting_t *it, int idx, const char *source);
+	bool (*read_castledb_libconfig_sub_warp) (struct config_setting_t *wd, const char *source, struct guild_castle *gc);
 	int (*payexp_timer_sub) (union DBKey key, struct DBData *data, va_list ap);
 	int (*send_xy_timer_sub) (union DBKey key, struct DBData *data, va_list ap);
 	int (*send_xy_timer) (int tid, int64 tick, int id, intptr_t data);

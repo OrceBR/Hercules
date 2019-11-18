@@ -105,7 +105,7 @@ static inline void SETVALUE(struct script_buf *buf, int i, int n)
 	VECTOR_INDEX(*buf, i+2) = GetByte(n, 2);
 }
 
-const char *script_op2name(int op)
+static const char *script_op2name(int op)
 {
 #define RETURN_OP_NAME(type) case type: return #type
 	switch( op ) {
@@ -2813,7 +2813,7 @@ static struct map_session_data *script_charid2sd(struct script_state *st, int ch
 static struct map_session_data *script_nick2sd(struct script_state *st, const char *name)
 {
 	struct map_session_data *sd;
-	if ((sd = map->nick2sd(name)) == NULL) {
+	if ((sd = map->nick2sd(name, false)) == NULL) {
 		ShowWarning("script_nick2sd: Player name '%s' not found!\n", name);
 		script->reportfunc(st);
 		script->reportsrc(st);
@@ -5150,7 +5150,8 @@ static uint8 script_add_language(const char *name)
 static void script_load_translations(void)
 {
 	struct config_t translations_conf;
-	const char *config_filename = "db/translations.conf"; // FIXME hardcoded name
+	char config_filename[256];
+	libconfig->format_db_path("translations.conf", config_filename, sizeof(config_filename));
 	struct config_setting_t *translations = NULL;
 	int i, size;
 	int total = 0;
@@ -5189,8 +5190,8 @@ static void script_load_translations(void)
 	size = libconfig->setting_length(translations);
 
 	for(i = 0; i < size; i++) {
-		const char *translation_file = libconfig->setting_get_string_elem(translations, i);
-		total += script->load_translation(translation_file, ++lang_id);
+		const char *translation_dir = libconfig->setting_get_string_elem(translations, i);
+		total += script->load_translation(translation_dir, ++lang_id);
 	}
 	libconfig->destroy(&translations_conf);
 
@@ -5227,39 +5228,39 @@ static void script_load_translations(void)
 }
 
 /**
- * Generates a language name from a translation filename.
+ * Generates a language name from a translation directory name.
  *
- * @param file The filename.
+ * @param directory The directory name.
  * @return The corresponding translation name.
  */
-static const char *script_get_translation_file_name(const char *file)
+static const char *script_get_translation_dir_name(const char *directory)
 {
 	const char *basename = NULL, *last_dot = NULL;
 
-	nullpo_retr("Unknown", file);
+	nullpo_retr("Unknown", directory);
 
-	basename = strrchr(file, '/');;
+	basename = strrchr(directory, '/');
 #ifdef WIN32
 	{
-		const char *basename_windows = strrchr(file, '\\');
+		const char *basename_windows = strrchr(directory, '\\');
 		if (basename_windows > basename)
 			basename = basename_windows;
 	}
 #endif // WIN32
 	if (basename == NULL)
-		basename = file;
+		basename = directory;
 	else
 		basename++; // Skip slash
 	Assert_retr("Unknown", *basename != '\0');
 
 	last_dot = strrchr(basename, '.');
 	if (last_dot != NULL) {
-		static char file_name[200];
+		static char dir_name[200];
 		if (last_dot == basename)
 			return basename + 1;
 
-		safestrncpy(file_name, basename, last_dot - basename + 1);
-		return file_name;
+		safestrncpy(dir_name, basename, last_dot - basename + 1);
+		return dir_name;
 	}
 
 	return basename;
@@ -5340,18 +5341,19 @@ static bool script_load_translation_addstring(const char *file, uint8 lang_id, c
 /**
  * Parses an individual translation file.
  *
- * @param file The filename to parse.
+ * @param directory The directory structure to read.
  * @param lang_id The language identifier.
  * @return The amount of strings loaded.
  */
-static int script_load_translation(const char *file, uint8 lang_id)
+static int script_load_translation_file(const char *file, uint8 lang_id)
 {
-	int translations = 0;
 	char line[1024];
-	char msgctxt[NAME_LENGTH*2+1] = { 0 };
-	FILE *fp;
-	int lineno = 0;
+	char msgctxt[NAME_LENGTH*2+1] = "";
 	struct script_string_buf msgid, msgstr;
+	struct script_string_buf *msg_ptr;
+	int translations = 0;
+	int lineno = 0;
+	FILE *fp;
 
 	nullpo_ret(file);
 
@@ -5363,46 +5365,53 @@ static int script_load_translation(const char *file, uint8 lang_id)
 	VECTOR_INIT(msgid);
 	VECTOR_INIT(msgstr);
 
-	script->add_language(script->get_translation_file_name(file));
-	if (lang_id >= atcommand->max_message_table)
-		atcommand->expand_message_table();
-
 	while (fgets(line, sizeof(line), fp) != NULL) {
 		int len = (int)strlen(line);
 		int i;
 		lineno++;
 
-		if(len <= 1)
+		if (len <= 1) {
+			if (VECTOR_LENGTH(msgid) > 0 && VECTOR_LENGTH(msgstr) > 0) {
+				// Add string
+				if (script->load_translation_addstring(file, lang_id, msgctxt, &msgid, &msgstr))
+					translations++;
+
+				msgctxt[0] = '\0';
+				VECTOR_TRUNCATE(msgid);
+				VECTOR_TRUNCATE(msgstr);
+			}
 			continue;
+		}
 
 		if (line[0] == '#')
 			continue;
 
-		if (VECTOR_LENGTH(msgid) > 0 && VECTOR_LENGTH(msgstr) > 0) {
+		if (VECTOR_LENGTH(msgid) > 0) {
+			if (VECTOR_LENGTH(msgstr) > 0) {
+				msg_ptr = &msgstr;
+			} else {
+				msg_ptr = &msgid;
+			}
 			if (line[0] == '"') {
 				// Continuation line
-				(void)VECTOR_POP(msgstr); // Pop final '\0'
-				for (i = 8; i < len - 2; i++) {
-					VECTOR_ENSURE(msgstr, 1, 512);
+				(void)VECTOR_POP(*msg_ptr); // Pop final '\0'
+				for (i = 1; i < len - 2; i++) {
+					VECTOR_ENSURE(*msg_ptr, 1, 512);
 					if (line[i] == '\\' && line[i+1] == '"') {
-						VECTOR_PUSH(msgstr, '"');
+						VECTOR_PUSH(*msg_ptr, '"');
+						i++;
+					} else if (line[i] == '\\' && line[i+1] == 'r') {
+						VECTOR_PUSH(*msg_ptr, '\r');
 						i++;
 					} else {
-						VECTOR_PUSH(msgstr, line[i]);
+						VECTOR_PUSH(*msg_ptr, line[i]);
 					}
 				}
-				VECTOR_ENSURE(msgstr, 1, 512);
-				VECTOR_PUSH(msgstr, '\0');
+				VECTOR_ENSURE(*msg_ptr, 1, 512);
+				VECTOR_PUSH(*msg_ptr, '\0');
 				continue;
 			}
 
-			// Add string
-			if (script->load_translation_addstring(file, lang_id, msgctxt, &msgid, &msgstr))
-				translations++;
-
-			msgctxt[0] = '\0';
-			VECTOR_TRUNCATE(msgid);
-			VECTOR_TRUNCATE(msgstr);
 		}
 
 		if (strncasecmp(line,"msgctxt \"", 9) == 0) {
@@ -5411,6 +5420,9 @@ static int script_load_translation(const char *file, uint8 lang_id)
 			for (i = 9; i < len - 2; i++) {
 				if (line[i] == '\\' && line[i+1] == '"') {
 					msgctxt[cursor] = '"';
+					i++;
+				} else if (line[i] == '\\' && line[i+1] == 'r') {
+					msgctxt[cursor] = '\r';
 					i++;
 				} else {
 					msgctxt[cursor] = line[i];
@@ -5433,6 +5445,9 @@ static int script_load_translation(const char *file, uint8 lang_id)
 				if (line[i] == '\\' && line[i+1] == '"') {
 					VECTOR_PUSH(msgid, '"');
 					i++;
+				} else if (line[i] == '\\' && line[i+1] == 'r') {
+					VECTOR_PUSH(msgid, '\r');
+					i++;
 				} else {
 					VECTOR_PUSH(msgid, line[i]);
 				}
@@ -5451,6 +5466,9 @@ static int script_load_translation(const char *file, uint8 lang_id)
 				VECTOR_ENSURE(msgstr, 1, 512);
 				if (line[i] == '\\' && line[i+1] == '"') {
 					VECTOR_PUSH(msgstr, '"');
+					i++;
+				} else if (line[i] == '\\' && line[i+1] == 'r') {
+					VECTOR_PUSH(msgstr, '\r');
 					i++;
 				} else {
 					VECTOR_PUSH(msgstr, line[i]);
@@ -5477,8 +5495,45 @@ static int script_load_translation(const char *file, uint8 lang_id)
 	VECTOR_CLEAR(msgid);
 	VECTOR_CLEAR(msgstr);
 
-	ShowStatus("Done reading '"CL_WHITE"%d"CL_RESET"' translations in '"CL_WHITE"%s"CL_RESET"'.\n", translations, file);
 	return translations;
+}
+
+struct load_translation_data {
+	uint8 lang_id;
+	int translation_count;
+};
+
+static void script_load_translation_sub(const char *filename, void *context)
+{
+	nullpo_retv(context);
+
+	struct load_translation_data *data = context;
+
+	data->translation_count += script->load_translation_file(filename, data->lang_id);
+}
+
+/**
+ * Loads a translations directory
+ *
+ * @param directory The directory structure to read.
+ * @param lang_id The language identifier.
+ * @return The amount of strings loaded.
+ */
+static int script_load_translation(const char *directory, uint8 lang_id)
+{
+	struct load_translation_data data = { 0 };
+	data.lang_id = lang_id;
+
+	nullpo_ret(directory);
+
+	script->add_language(script->get_translation_dir_name(directory));
+	if (lang_id >= atcommand->max_message_table)
+		atcommand->expand_message_table();
+
+	findfile(directory, ".po", script_load_translation_sub, &data);
+
+	ShowStatus("Done reading '"CL_WHITE"%d"CL_RESET"' translations in '"CL_WHITE"%s"CL_RESET"'.\n", data.translation_count, directory);
+	return data.translation_count;
 }
 
 /**
@@ -8780,7 +8835,7 @@ static BUILDIN(getcharid)
 	struct map_session_data *sd;
 
 	if (script_hasdata(st, 3))
-		sd = map->nick2sd(script_getstr(st, 3));
+		sd = map->nick2sd(script_getstr(st, 3), false);
 	else
 		sd = script->rid2sd(st);
 
@@ -8934,6 +8989,93 @@ static BUILDIN(getpartyleader)
 		case 4: script_pushstrcopy(st,mapindex_id2name(p->party.member[i].map)); break;
 		case 5: script_pushint(st,p->party.member[i].lv); break;
 		default: script_pushstrcopy(st,p->party.member[i].name); break;
+	}
+	return true;
+}
+
+enum guildinfo_type {
+	GUILDINFO_NAME,
+	GUILDINFO_ID,
+	GUILDINFO_LEVEL,
+	GUILDINFO_ONLINE,
+	GUILDINFO_AV_LEVEL,
+	GUILDINFO_MAX_MEMBERS,
+	GUILDINFO_EXP,
+	GUILDINFO_NEXT_EXP,
+	GUILDINFO_SKILL_POINTS,
+	GUILDINFO_MASTER_NAME,
+	GUILDINFO_MASTER_CID,
+};
+
+static BUILDIN(getguildinfo)
+{
+	struct guild *g = NULL;
+
+	if (script_hasdata(st, 3)) {
+		if (script_isstringtype(st, 3)) {
+			const char *guild_name = script_getstr(st, 3);
+			g = guild->searchname(guild_name);
+		} else {
+			int guild_id = script_getnum(st, 3);
+			g = guild->search(guild_id);
+		}
+	} else {
+		struct map_session_data *sd = script->rid2sd(st);
+		g = sd ? sd->guild : NULL;
+	}
+
+	enum guildinfo_type type = script_getnum(st, 2);
+
+	if (g == NULL) {
+		// guild does not exist
+		switch (type) {
+		case GUILDINFO_NAME:
+		case GUILDINFO_MASTER_NAME:
+			script_pushconststr(st, "");
+			break;
+		default:
+			script_pushint(st, -1);
+		}
+	} else {
+		switch (type) {
+		case GUILDINFO_NAME:
+			script_pushstrcopy(st, g->name);
+			break;
+		case GUILDINFO_ID:
+			script_pushint(st, g->guild_id);
+			break;
+		case GUILDINFO_LEVEL:
+			script_pushint(st, g->guild_lv);
+			break;
+		case GUILDINFO_ONLINE:
+			script_pushint(st, g->connect_member);
+			break;
+		case GUILDINFO_AV_LEVEL:
+			script_pushint(st, g->average_lv);
+			break;
+		case GUILDINFO_MAX_MEMBERS:
+			script_pushint(st, g->max_member);
+			break;
+		case GUILDINFO_EXP:
+			script_pushint(st, g->exp);
+			break;
+		case GUILDINFO_NEXT_EXP:
+			script_pushint(st, g->next_exp);
+			break;
+		case GUILDINFO_SKILL_POINTS:
+			script_pushint(st, g->skill_point);
+			break;
+		case GUILDINFO_MASTER_NAME:
+			script_pushstrcopy(st, g->member[0].name);
+			break;
+		case GUILDINFO_MASTER_CID:
+			script_pushint(st, g->member[0].char_id);
+			break;
+		default:
+			ShowError("script:getguildinfo: unknown info type!\n");
+			st->state = END;
+			return false;
+		}
 	}
 	return true;
 }
@@ -12629,7 +12771,7 @@ static BUILDIN(homunculus_morphembryo)
 				clif->additem(sd, 0, 0, i);
 				clif->emotion(&sd->hd->bl, E_SWT);
 			} else {
-				homun->vaporize(sd, HOM_ST_MORPH);
+				homun->vaporize(sd, HOM_ST_MORPH, true);
 				success = true;
 			}
 		} else {
@@ -15882,7 +16024,7 @@ static BUILDIN(recovery)
 	return true;
 }
 
-/* 
+/*
  * Get your current pet information
  */
 static BUILDIN(getpetinfo)
@@ -15935,7 +16077,7 @@ static BUILDIN(getpetinfo)
 	case PETINFO_ACCESSORYFLAG:
 		script_pushint(st, (pd->pet.equip != 0)? 1:0);
 		break;
-	case PETINFO_EVO_EGGID: 
+	case PETINFO_EVO_EGGID:
 		if (VECTOR_DATA(pd->petDB->evolve_data) != NULL)
 			script_pushint(st, VECTOR_DATA(pd->petDB->evolve_data)->petEggId);
 		else
@@ -16488,7 +16630,7 @@ static BUILDIN(getmapxy)
 		case 0: //Get Character Position
 			if (script_hasdata(st,6)) {
 				if (script_isstringtype(st,6))
-					sd = map->nick2sd(script_getstr(st,6));
+					sd = map->nick2sd(script_getstr(st,6), false);
 				else
 					sd = map->id2sd(script_getnum(st,6));
 			} else {
@@ -16515,7 +16657,7 @@ static BUILDIN(getmapxy)
 		case 2: //Get Pet Position
 			if (script_hasdata(st,6)) {
 				if (script_isstringtype(st,6))
-					sd = map->nick2sd(script_getstr(st,6));
+					sd = map->nick2sd(script_getstr(st,6), false);
 				else {
 					bl = map->id2bl(script_getnum(st,6));
 					break;
@@ -16537,7 +16679,7 @@ static BUILDIN(getmapxy)
 		case 4: //Get Homun Position
 			if (script_hasdata(st,6)) {
 				if (script_isstringtype(st,6)) {
-					sd = map->nick2sd(script_getstr(st,6));
+					sd = map->nick2sd(script_getstr(st,6), false);
 				} else {
 					bl = map->id2bl(script_getnum(st,6));
 					break;
@@ -16552,7 +16694,7 @@ static BUILDIN(getmapxy)
 		case 5: //Get Mercenary Position
 			if (script_hasdata(st,6)) {
 				if (script_isstringtype(st,6)) {
-					sd = map->nick2sd(script_getstr(st,6));
+					sd = map->nick2sd(script_getstr(st,6), false);
 				} else {
 					bl = map->id2bl(script_getnum(st,6));
 					break;
@@ -16567,7 +16709,7 @@ static BUILDIN(getmapxy)
 		case 6: //Get Elemental Position
 			if (script_hasdata(st,6)) {
 				if (script_isstringtype(st,6)) {
-					sd = map->nick2sd(script_getstr(st,6));
+					sd = map->nick2sd(script_getstr(st,6), false);
 				} else {
 					bl = map->id2bl(script_getnum(st,6));
 					break;
@@ -18494,10 +18636,12 @@ static BUILDIN(npcshopdelitem)
 		unsigned int nameid = script_getnum(st,i);
 
 		ARR_FIND(0, size, n, nd->u.shop.shop_item[n].nameid == nameid);
-		if (n < size) {
-			memmove(&nd->u.shop.shop_item[n], &nd->u.shop.shop_item[n+1], sizeof(nd->u.shop.shop_item[0])*(size-n));
-			size--;
+		if (n == size) {
+			continue;
+		} else if (n < size - 1) {
+			memmove(&nd->u.shop.shop_item[n], &nd->u.shop.shop_item[n+1], sizeof(nd->u.shop.shop_item[0]) * (size - n - 1));
 		}
+		size--;
 	}
 
 	RECREATE(nd->u.shop.shop_item, struct npc_item_list, size);
@@ -18804,7 +18948,7 @@ static BUILDIN(searchitem)
 	if ((items[0] = itemdb->exists(atoi(itemname)))) {
 		count = 1;
 	} else {
-		count = itemdb->search_name_array(items, ARRAYLENGTH(items), itemname, 0);
+		count = itemdb->search_name_array(items, ARRAYLENGTH(items), itemname, IT_SEARCH_NAME_PARTIAL);
 		if (count > MAX_SEARCH) count = MAX_SEARCH;
 	}
 
@@ -22744,6 +22888,19 @@ static BUILDIN(setfont)
 	return true;
 }
 
+static BUILDIN(getfont)
+{
+	struct map_session_data *sd = script->rid2sd(st);
+
+	if (sd == NULL) {
+		script_pushint(st, 0);
+		return true;
+	}
+
+	script_pushint(st, sd->status.font);
+	return true;
+}
+
 static int buildin_mobuseskill_sub(struct block_list *bl, va_list ap)
 {
 	struct mob_data *md = NULL;
@@ -23070,7 +23227,7 @@ static BUILDIN(getcharip)
 	/* check if a character name is specified */
 	if (script_hasdata(st, 2)) {
 		if (script_isstringtype(st, 2)) {
-			sd = map->nick2sd(script_getstr(st, 2));
+			sd = map->nick2sd(script_getstr(st, 2), false);
 		} else {
 			int id = script_getnum(st, 2);
 			sd = (map->id2sd(id) ? map->id2sd(id) : map->charid2sd(id));
@@ -24844,7 +25001,7 @@ static BUILDIN(showscript)
 	if (script_hasdata(st, 4))
 		if (script_getnum(st, 4) == SELF)
 			flag = SELF;
-		
+
 	clif->ShowScript(bl, msg, flag);
 	return true;
 }
@@ -25404,7 +25561,7 @@ static BUILDIN(clan_master)
 	}
 
 	nd->clan_id = clan_id;
-	clif->sc_load(&nd->bl, nd->bl.id, AREA, status->dbs->IconChangeTable[SC_CLAN_INFO], 0, clan_id, 0);
+	clif->sc_load(&nd->bl, nd->bl.id, AREA, status->get_sc_icon(SC_CLAN_INFO), 0, clan_id, 0);
 
 	script_pushint(st, true);
 	return true;
@@ -25729,7 +25886,7 @@ static BUILDIN(identifyidx)
 		script_pushint(st, false);
 		return true;
 	}
-	
+
 	if (sd->status.inventory[idx].nameid <= 0 || sd->status.inventory[idx].identify != 0) {
 		script_pushint(st, false);
 		return true;
@@ -25739,6 +25896,25 @@ static BUILDIN(identifyidx)
 	clif->item_identified(sd, idx, 0);
 	script_pushint(st, true);
 
+	return true;
+}
+
+static BUILDIN(openlapineddukddakboxui)
+{
+	struct map_session_data *sd = script_rid2sd(st);
+	if (sd == NULL)
+		return false;
+	const int item_id = script_getnum(st, 2);
+	struct item_data *it = itemdb->exists(item_id);
+	if (it == NULL) {
+		ShowError("buildin_openlapineddukddakboxui: Item %d is not valid\n", item_id);
+		script->reportfunc(st);
+		script->reportsrc(st);
+		script_pushint(st, false);
+		return true;
+	}
+	clif->lapineDdukDdak_open(sd, item_id);
+	script_pushint(st, true);
 	return true;
 }
 
@@ -25891,6 +26067,52 @@ static void script_run_item_unequip_script(struct map_session_data *sd, struct i
 	script->current_item_id = 0;
 }
 
+static void script_run_item_rental_start_script(struct map_session_data *sd, struct item_data *data, int oid) __attribute__((nonnull(1, 2)));
+
+/**
+ * Run item rental start script
+ * @param sd    player session data. Must be correct and checked before.
+ * @param data  rental item data. Must be correct and checked before.
+ * @param oid   npc id. Can be also 0 or fake npc id.
+ **/
+static void script_run_item_rental_start_script(struct map_session_data *sd, struct item_data *data, int oid)
+{
+	script->current_item_id = data->nameid;
+	script->run(data->rental_start_script, 0, sd->bl.id, oid);
+	script->current_item_id = 0;
+}
+
+static void script_run_item_rental_end_script(struct map_session_data *sd, struct item_data *data, int oid) __attribute__((nonnull(1, 2)));
+
+/**
+* Run item rental end script
+* @param sd    player session data. Must be correct and checked before.
+* @param data  rental item data. Must be correct and checked before.
+* @param oid   npc id. Can be also 0 or fake npc id.
+**/
+static void script_run_item_rental_end_script(struct map_session_data *sd, struct item_data *data, int oid)
+{
+	script->current_item_id = data->nameid;
+	script->run(data->rental_end_script, 0, sd->bl.id, oid);
+	script->current_item_id = 0;
+}
+
+static void script_run_item_lapineddukddak_script(struct map_session_data *sd, struct item_data *data, int oid) __attribute__((nonnull (1, 2)));
+
+/**
+ * Run item lapineddukddak script for item.
+ *
+ * @param sd    player session data. Must be correct and checked before.
+ * @param data  unequipped item data. Must be correct and checked before.
+ * @param oid   npc id. Can be also 0 or fake npc id.
+ */
+static void script_run_item_lapineddukddak_script(struct map_session_data *sd, struct item_data *data, int oid)
+{
+	script->current_item_id = data->nameid;
+	script->run(data->lapineddukddak->script, 0, sd->bl.id, oid);
+	script->current_item_id = 0;
+}
+
 #define BUILDIN_DEF(x,args) { buildin_ ## x , #x , args, false }
 #define BUILDIN_DEF2(x,x2,args) { buildin_ ## x , x2 , args, false }
 #define BUILDIN_DEF_DEPRECATED(x,args) { buildin_ ## x , #x , args, true }
@@ -25966,10 +26188,11 @@ static void script_parse_builtin(void)
 		BUILDIN_DEF(getpartyname,"i"),
 		BUILDIN_DEF(getpartymember,"i?"),
 		BUILDIN_DEF(getpartyleader,"i?"),
-		BUILDIN_DEF(getguildname,"i"),
-		BUILDIN_DEF(getguildmaster,"i"),
-		BUILDIN_DEF(getguildmasterid,"i"),
+		BUILDIN_DEF_DEPRECATED(getguildname,"i"),
+		BUILDIN_DEF_DEPRECATED(getguildmaster,"i"),
+		BUILDIN_DEF_DEPRECATED(getguildmasterid,"i"),
 		BUILDIN_DEF(getguildmember,"i?"),
+		BUILDIN_DEF(getguildinfo,"i?"),
 		BUILDIN_DEF(getguildonline, "i?"),
 		BUILDIN_DEF(strcharinfo,"i??"),
 		BUILDIN_DEF(strnpcinfo,"i??"),
@@ -26326,6 +26549,7 @@ static void script_parse_builtin(void)
 		BUILDIN_DEF(mercenary_set_faith,"ii"),
 		BUILDIN_DEF(readbook,"ii"),
 		BUILDIN_DEF(setfont,"i"),
+		BUILDIN_DEF(getfont, ""),
 		BUILDIN_DEF(areamobuseskill,"siiiiviiiii"),
 		BUILDIN_DEF(progressbar,"si"),
 		BUILDIN_DEF(progressbar_unit,"si?"),
@@ -26505,6 +26729,7 @@ static void script_parse_builtin(void)
 
 		BUILDIN_DEF(identify, "i"),
 		BUILDIN_DEF(identifyidx, "i"),
+		BUILDIN_DEF(openlapineddukddakboxui, "i"),
 	};
 	int i, len = ARRAYLENGTH(BUILDIN);
 	RECREATE(script->buildin, char *, script->buildin_count + len); // Pre-alloc to speed up
@@ -27078,6 +27303,24 @@ static void script_hardcoded_constants(void)
 	script->set_constant("GUILD_ONLINE_VENDOR", GUILD_ONLINE_VENDOR, false, false);
 	script->set_constant("GUILD_ONLINE_NO_VENDOR", GUILD_ONLINE_NO_VENDOR, false, false);
 
+	script->constdb_comment("Siege Types");
+	script->set_constant("SIEGE_TYPE_FE", SIEGE_TYPE_FE, false, false);
+	script->set_constant("SIEGE_TYPE_SE", SIEGE_TYPE_SE, false, false);
+	script->set_constant("SIEGE_TYPE_TE", SIEGE_TYPE_TE, false, false);
+
+	script->constdb_comment("guildinfo types");
+	script->set_constant("GUILDINFO_NAME", GUILDINFO_NAME, false, false);
+	script->set_constant("GUILDINFO_ID", GUILDINFO_ID, false, false);
+	script->set_constant("GUILDINFO_LEVEL", GUILDINFO_LEVEL, false, false);
+	script->set_constant("GUILDINFO_ONLINE", GUILDINFO_ONLINE, false, false);
+	script->set_constant("GUILDINFO_AV_LEVEL", GUILDINFO_AV_LEVEL, false, false);
+	script->set_constant("GUILDINFO_MAX_MEMBERS", GUILDINFO_MAX_MEMBERS, false, false);
+	script->set_constant("GUILDINFO_EXP", GUILDINFO_EXP, false, false);
+	script->set_constant("GUILDINFO_NEXT_EXP", GUILDINFO_NEXT_EXP, false, false);
+	script->set_constant("GUILDINFO_SKILL_POINTS", GUILDINFO_SKILL_POINTS, false, false);
+	script->set_constant("GUILDINFO_MASTER_NAME", GUILDINFO_MASTER_NAME, false, false);
+	script->set_constant("GUILDINFO_MASTER_CID", GUILDINFO_MASTER_CID, false, false);
+
 	script->constdb_comment("Renewal");
 #ifdef RENEWAL
 	script->set_constant("RENEWAL", 1, false, false);
@@ -27115,7 +27358,6 @@ static void script_hardcoded_constants(void)
 	script->set_constant("RENEWAL_ASPD", 0, false, false);
 #endif
 	script->constdb_comment(NULL);
-#include "constants.inc"
 }
 
 /**
@@ -27427,15 +27669,19 @@ void script_defaults(void)
 	script->string_dup = script_string_dup;
 	script->load_translations = script_load_translations;
 	script->load_translation_addstring = script_load_translation_addstring;
+	script->load_translation_file = script_load_translation_file;
 	script->load_translation = script_load_translation;
 	script->translation_db_destroyer = script_translation_db_destroyer;
 	script->clear_translations = script_clear_translations;
 	script->parse_cleanup_timer = script_parse_cleanup_timer;
 	script->add_language = script_add_language;
-	script->get_translation_file_name = script_get_translation_file_name;
+	script->get_translation_dir_name = script_get_translation_dir_name;
 	script->parser_clean_leftovers = script_parser_clean_leftovers;
 
 	script->run_use_script = script_run_use_script;
 	script->run_item_equip_script = script_run_item_equip_script;
 	script->run_item_unequip_script = script_run_item_unequip_script;
+	script->run_item_rental_start_script = script_run_item_rental_start_script;
+	script->run_item_rental_end_script = script_run_item_rental_end_script;
+	script->run_item_lapineddukddak_script = script_run_item_lapineddukddak_script;
 }

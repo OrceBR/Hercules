@@ -1796,6 +1796,14 @@ packet(0x96e,clif->ackmergeitems);
 // changed packet sizes
 #endif
 
+#if PACKETVER >= 20160302
+	packet(0x0a4f,clif->plapineDdukDdak_ack);
+#endif
+
+#if PACKETVER_MAIN_NUM >= 20160504 || PACKETVER_RE_NUM >= 20160504 || defined(PACKETVER_ZERO)
+	packet(0x0a70,clif->plapineDdukDdak_close);
+#endif
+
 // all 2016-05-25
 #if PACKETVER >= 20160525
 	packet(0x0a77,clif->pCameraInfo); // CZ_CAMERA_INFO
@@ -1952,6 +1960,19 @@ packet(0x96e,clif->ackmergeitems);
 #if PACKETVER_MAIN_NUM >= 20190522 || PACKETVER_RE_NUM >= 20190508 || PACKETVER_ZERO_NUM >= 20190605
 	packet(0x0b21,clif->pHotkey2);
 	packet(0x0b22,clif->pHotkeyRowShift2); // CZ_SHORTCUTKEYBAR_ROTATE
+#endif
+
+#if PACKETVER_MAIN_NUM >= 20190522 || PACKETVER_RE_NUM >= 20190522 || PACKETVER_ZERO_NUM >= 20190515
+	packet(0x0b28,clif->pGuildCastleTeleportRequest);
+	packet(0x0b2c,clif->pGuildCastleInfoRequest);
+#endif
+
+#if PACKETVER_MAIN_NUM >= 20190703 || PACKETVER_RE_NUM >= 20190703
+	packet(0x0b35,clif->pReqGearOff);
+#endif
+
+#if PACKETVER_ZERO_NUM >= 20190709
+	packet(0x0b35,clif->pReqGearOff);
 #endif
 
 #endif /* MAP_PACKETS_H */

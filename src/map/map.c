@@ -45,7 +45,6 @@
 #include "map/mapreg.h"
 #include "map/mercenary.h"
 #include "map/mob.h"
-#include "map/npc.h"
 #include "map/npc.h" // npc_setcells(), npc_unsetcells()
 #include "map/party.h"
 #include "map/path.h"
@@ -2268,30 +2267,25 @@ static struct map_session_data *map_charid2sd(int charid)
  * (without sensitive case if necessary)
  * return map_session_data pointer or NULL
  *------------------------------------------*/
-static struct map_session_data *map_nick2sd(const char *nick)
+static struct map_session_data *map_nick2sd(const char *nick, bool allow_partial)
 {
-	struct map_session_data* sd;
-	struct map_session_data* found_sd;
-	struct s_mapiterator* iter;
-	size_t nicklen;
-	int qty = 0;
-
-	if( nick == NULL )
+	if (nick == NULL)
 		return NULL;
 
-	nicklen = strlen(nick);
-	iter = mapit_getallusers();
+	struct s_mapiterator *iter = mapit_getallusers();
+	struct map_session_data *found_sd = NULL;
 
-	found_sd = NULL;
-	for (sd = BL_UCAST(BL_PC, mapit->first(iter)); mapit->exists(iter); sd = BL_UCAST(BL_PC, mapit->next(iter))) {
-		if( battle_config.partial_name_scan )
-		{// partial name search
-			if( strnicmp(sd->status.name, nick, nicklen) == 0 )
-			{
+	if (battle_config.partial_name_scan && allow_partial) {
+		int nicklen = (int)strlen(nick);
+		int qty = 0;
+
+		// partial name search
+		for (struct map_session_data *sd = BL_UCAST(BL_PC, mapit->first(iter)); mapit->exists(iter); sd = BL_UCAST(BL_PC, mapit->next(iter))) {
+			if (strnicmp(sd->status.name, nick, nicklen) == 0) {
 				found_sd = sd;
 
-				if( strcmp(sd->status.name, nick) == 0 )
-				{// Perfect Match
+				if (strcmp(sd->status.name, nick) == 0) {
+					// Perfect Match
 					qty = 1;
 					break;
 				}
@@ -2299,16 +2293,19 @@ static struct map_session_data *map_nick2sd(const char *nick)
 				qty++;
 			}
 		}
-		else if( strcasecmp(sd->status.name, nick) == 0 )
-		{// exact search only
-			found_sd = sd;
-			break;
+
+		if (qty != 1)
+			found_sd = NULL;
+	} else {
+		// exact search only
+		for (struct map_session_data *sd = BL_UCAST(BL_PC, mapit->first(iter)); mapit->exists(iter); sd = BL_UCAST(BL_PC, mapit->next(iter))) {
+			if (strcasecmp(sd->status.name, nick) == 0) {
+				found_sd = sd;
+				break;
+			}
 		}
 	}
 	mapit->free(iter);
-
-	if( battle_config.partial_name_scan && qty != 1 )
-		found_sd = NULL;
 
 	return found_sd;
 }
@@ -4057,6 +4054,7 @@ static bool map_config_read_database(const char *filename, struct config_t *conf
 		return false;
 	}
 	libconfig->setting_lookup_mutable_string(setting, "db_path", map->db_path, sizeof(map->db_path));
+	libconfig->set_db_path(map->db_path);
 	libconfig->setting_lookup_int(setting, "save_settings", &map->save_settings);
 
 	if (libconfig->setting_lookup_int(setting, "autosave_time", &map->autosave_interval) == CONFIG_TRUE) {
@@ -5576,12 +5574,8 @@ static void read_map_zone_db(void)
 {
 	struct config_t map_zone_db;
 	struct config_setting_t *zones = NULL;
-	/* TODO: #ifndef required for re/pre-re */
-#ifdef RENEWAL
-	const char *config_filename = "db/re/map_zone_db.conf"; // FIXME hardcoded name
-#else
-	const char *config_filename = "db/pre-re/map_zone_db.conf"; // FIXME hardcoded name
-#endif
+	char config_filename[256];
+	libconfig->format_db_path(DBPATH"map_zone_db.conf", config_filename, sizeof(config_filename));
 	if (!libconfig->load_file(&map_zone_db, config_filename))
 		return;
 
@@ -6307,6 +6301,7 @@ static CPCMD(gm_position)
 	map->cpsd->bl.x = x;
 	map->cpsd->bl.y = y;
 	map->cpsd->bl.m = m;
+	map->cpsd->mapindex = map_id2index(m);
 }
 static CPCMD(gm_use)
 {
@@ -6335,6 +6330,8 @@ static void map_cp_defaults(void)
 	map->cpsd->bl.x = mapindex->default_x;
 	map->cpsd->bl.y = mapindex->default_y;
 	map->cpsd->bl.m = map->mapname2mapid(mapindex->default_map);
+	Assert_retv(map->cpsd->bl.m >= 0);
+	map->cpsd->mapindex = map_id2index(map->cpsd->bl.m);
 
 	console->input->addCommand("gm:info",CPCMD_A(gm_position));
 	console->input->addCommand("gm:use",CPCMD_A(gm_use));
@@ -6704,13 +6701,13 @@ int do_init(int argc, char *argv[])
 	elemental->init(minimal);
 	quest->init(minimal);
 	achievement->init(minimal);
+	stylist->init(minimal);
 	npc->init(minimal);
 	unit->init(minimal);
 	bg->init(minimal);
 	duel->init(minimal);
 	vending->init(minimal);
 	rodex->init(minimal);
-	stylist->init(minimal);
 
 	if (map->scriptcheck) {
 		bool failed = map->extra_scripts_count > 0 ? false : true;
@@ -6776,6 +6773,7 @@ void map_defaults(void)
 	map->extra_scripts_count = 0;
 
 	sprintf(map->db_path ,"db");
+	libconfig->set_db_path(map->db_path);
 	sprintf(map->help_txt ,"conf/help.txt");
 	sprintf(map->charhelp_txt ,"conf/charhelp.txt");
 
@@ -6837,7 +6835,10 @@ void map_defaults(void)
 	map->bl_list_size = 0;
 
 	//all in a big chunk, respects order
+PRAGMA_GCC9(GCC diagnostic push)
+PRAGMA_GCC9(GCC diagnostic ignored "-Warray-bounds")
 	memset(ZEROED_BLOCK_POS(map), 0, ZEROED_BLOCK_SIZE(map));
+PRAGMA_GCC9(GCC diagnostic pop)
 
 	map->cpsd = NULL;
 	map->list = NULL;

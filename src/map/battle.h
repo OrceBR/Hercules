@@ -103,8 +103,8 @@ enum e_battle_check_target { //New definitions [Skotlex]
 enum battle_dmg_type {
 	BDT_NORMAL      = 0,  // Normal attack
 	//BDT_PICKUP      = 1,  // Pick up item
-	//BDT_SITDOWN     = 2,  // Sit down
-	//BDT_STANDUP     = 3,  // Stand up
+	BDT_SITDOWN     = 2,  // Sit down
+	BDT_STANDUP     = 3,  // Stand up
 	BDT_ENDURE      = 4,  // Damage (endure)
 	BDT_SPLASH      = 5,  // Splash
 	BDT_SKILL       = 6,  // Skill
@@ -342,7 +342,6 @@ struct Battle_Config {
 	int skill_removetrap_type;
 	int disp_experience;
 	int disp_zeny;
-	int castle_defense_rate;
 	int backstab_bow_penalty;
 	int hp_rate;
 	int sp_rate;
@@ -405,6 +404,7 @@ struct Battle_Config {
 	int mob_remove_delay; // Dynamic Mobs - delay before removing mobs from a map [Skotlex]
 	int mob_active_time; //Duration through which mobs execute their Hard AI after players leave their area of sight.
 	int boss_active_time;
+	int slave_chase_masters_chasetarget;
 
 	int show_hp_sp_drain, show_hp_sp_gain; //[Skotlex]
 	int show_katar_crit_bonus;

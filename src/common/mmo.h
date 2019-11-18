@@ -580,6 +580,7 @@ struct status_change_data {
 	unsigned short type;        ///< Status change type (@see enum sc_type)
 	int val1, val2, val3, val4; ///< Parameters (meaning depends on type).
 	int tick;                   ///< Remaining duration.
+	int total_tick;             ///< Total duration.
 };
 
 struct storage_data {
@@ -907,6 +908,14 @@ struct guild_castle {
 	int mapindex;
 	char castle_name[NAME_LENGTH];
 	char castle_event[NAME_LENGTH];
+	int siege_type;
+	bool enable_client_warp;
+	struct {
+		int x;
+		int y;
+		int zeny;
+		int zeny_siege;
+	} client_warp;
 	int guild_id;
 	int economy;
 	int defense;

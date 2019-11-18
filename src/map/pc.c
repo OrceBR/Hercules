@@ -565,72 +565,8 @@ static int pc_inventory_rental_clear(struct map_session_data *sd)
 /* assumes i is valid (from default areas where it is called, it is) */
 static void pc_rental_expire(struct map_session_data *sd, int i)
 {
-	int nameid;
-
 	nullpo_retv(sd);
 	Assert_retv(i >= 0 && i < sd->status.inventorySize);
-	nameid = sd->status.inventory[i].nameid;
-
-	/* Soon to be dropped, we got plans to integrate it with item db */
-	switch( nameid ) {
-		case ITEMID_BOARDING_HALTER:
-			status_change_end(&sd->bl,SC_ALL_RIDING,INVALID_TIMER);
-			break;
-		case ITEMID_LOVE_ANGEL:
-			if( sd->status.font == 1 ) {
-				sd->status.font = 0;
-				clif->font(sd);
-			}
-			break;
-		case ITEMID_SQUIRREL:
-			if( sd->status.font == 2 ) {
-				sd->status.font = 0;
-				clif->font(sd);
-			}
-			break;
-		case ITEMID_GOGO:
-			if( sd->status.font == 3 ) {
-				sd->status.font = 0;
-				clif->font(sd);
-			}
-			break;
-		case ITEMID_PICTURE_DIARY:
-			if( sd->status.font == 4 ) {
-				sd->status.font = 0;
-				clif->font(sd);
-			}
-			break;
-		case ITEMID_MINI_HEART:
-			if( sd->status.font == 5 ) {
-				sd->status.font = 0;
-				clif->font(sd);
-			}
-			break;
-		case ITEMID_NEWCOMER:
-			if( sd->status.font == 6 ) {
-				sd->status.font = 0;
-				clif->font(sd);
-			}
-			break;
-		case ITEMID_KID:
-			if( sd->status.font == 7 ) {
-				sd->status.font = 0;
-				clif->font(sd);
-			}
-			break;
-		case ITEMID_MAGIC_CASTLE:
-			if( sd->status.font == 8 ) {
-				sd->status.font = 0;
-				clif->font(sd);
-			}
-			break;
-		case ITEMID_BULGING_HEAD:
-			if( sd->status.font == 9 ) {
-				sd->status.font = 0;
-				clif->font(sd);
-			}
-			break;
-	}
 
 	clif->rental_expired(sd->fd, i, sd->status.inventory[i].nameid);
 	pc->delitem(sd, i, sd->status.inventory[i].amount, 0, DELITEM_NORMAL, LOG_TYPE_RENTAL);
@@ -1536,17 +1472,16 @@ static int pc_reg_received(struct map_session_data *sd)
 	if (sd->status.guild_id)
 		guild->member_joined(sd);
 
-	// pet
-	if (sd->status.pet_id > 0)
-		intif->request_petdata(sd->status.account_id, sd->status.char_id, sd->status.pet_id);
-
-	// Homunculus [albator]
-	if( sd->status.hom_id > 0 )
-		intif->homunculus_requestload(sd->status.account_id, sd->status.hom_id);
-	if( sd->status.mer_id > 0 )
-		intif->mercenary_request(sd->status.mer_id, sd->status.char_id);
-	if( sd->status.ele_id > 0 )
-		intif->elemental_request(sd->status.ele_id, sd->status.char_id);
+	if (sd->state.standalone == 0 && sd->state.autotrade == 0) { // prevents loading pets, homunculi, mercenaries or elementals if the character doesn't have a client attached
+		if (sd->status.pet_id != 0)
+			intif->request_petdata(sd->status.account_id, sd->status.char_id, sd->status.pet_id);
+		if (sd->status.hom_id != 0)
+			intif->homunculus_requestload(sd->status.account_id, sd->status.hom_id);
+		if (sd->status.mer_id != 0)
+			intif->mercenary_request(sd->status.mer_id, sd->status.char_id);
+		if (sd->status.ele_id != 0)
+			intif->elemental_request(sd->status.ele_id, sd->status.char_id);
+	}
 
 	map->addiddb(&sd->bl);
 	map->delnickdb(sd->status.char_id, sd->status.name);
@@ -2904,7 +2839,7 @@ static int pc_bonus(struct map_session_data *sd, int type, int val)
 		case SP_INTRAVISION: // Maya Purple Card effect allowing to see Hiding/Cloaking people [DracoRPG]
 			if(sd->state.lr_flag != 2) {
 				sd->special_state.intravision = 1;
-				clif->status_change(&sd->bl, SI_CLAIRVOYANCE, 1, 0, 0, 0, 0);
+				clif->status_change(&sd->bl, status->get_sc_icon(SC_CLAIRVOYANCE), status->get_sc_relevant_bl_types(SC_CLAIRVOYANCE), 1, 0, 0, 0, 0);
 			}
 			break;
 		case SP_NO_KNOCKBACK:
@@ -4506,7 +4441,7 @@ static int pc_payzeny(struct map_session_data *sd, int zeny, enum e_log_pick_typ
 
 		if (sd->state.showzeny) {
 			char output[255];
-			sprintf(output, "Removed %dz.", zeny);
+			sprintf(output, msg_sd(sd, 885), zeny); // Removed %dz.
 			clif_disp_onlyself(sd, output);
 		}
 	}
@@ -4645,7 +4580,7 @@ static int pc_getzeny(struct map_session_data *sd, int zeny, enum e_log_pick_typ
 
 		if (sd->state.showzeny) {
 			char output[255];
-			sprintf(output, "Gained %dz.", zeny);
+			sprintf(output, msg_sd(sd, 886), zeny); // Gained %dz.
 			clif_disp_onlyself(sd, output);
 		}
 	}
@@ -4790,13 +4725,15 @@ static int pc_additem(struct map_session_data *sd, const struct item *item_data,
 		pc->equipitem(sd, i, data->equip);
 
 	/* rental item check */
-	if( item_data->expire_time ) {
-		if( time(NULL) > item_data->expire_time ) {
-			pc->rental_expire(sd,i);
+	if (item_data->expire_time > 0) {
+		if (time(NULL) > item_data->expire_time) {
+			pc->rental_expire(sd, i);
 		} else {
-			int seconds = (int)( item_data->expire_time - time(NULL) );
+			int seconds = (int)(item_data->expire_time - time(NULL));
 			clif->rental_time(sd->fd, sd->status.inventory[i].nameid, seconds);
 			pc->inventory_rental_add(sd, seconds);
+			if (data->rental_start_script != NULL)
+				script->run_item_rental_start_script(sd, data, 0);
 		}
 	}
 	quest->questinfo_refresh(sd);
@@ -4827,12 +4764,21 @@ static int pc_delitem(struct map_session_data *sd, int n, int amount, int type, 
 
 	sd->status.inventory[n].amount -= amount;
 	sd->weight -= sd->inventory_data[n]->weight*amount ;
+
+	// It's here because the data would most likely get zeroed in following if [Hemagx]
+	struct item_data *itd = sd->inventory_data[n];
+	bool is_rental = (sd->status.inventory[n].expire_time > 0) ? true : false;
+
 	if( sd->status.inventory[n].amount <= 0 ){
 		if(sd->status.inventory[n].equip)
 			pc->unequipitem(sd, n, PCUNEQUIPITEM_RECALC|PCUNEQUIPITEM_FORCE);
 		memset(&sd->status.inventory[n],0,sizeof(sd->status.inventory[0]));
 		sd->inventory_data[n] = NULL;
 	}
+
+	if (is_rental && itd->rental_end_script != NULL)
+		script->run_item_rental_end_script(sd, itd, 0);
+
 	if(!(type&1))
 		clif->delitem(sd,n,amount,reason);
 	if(!(type&2))
@@ -5589,9 +5535,9 @@ static int pc_show_steal(struct block_list *bl, va_list ap)
 	nullpo_ret(sd);
 
 	if((item=itemdb->exists(itemid))==NULL)
-		sprintf(output,"%s stole an Unknown Item (id: %i).",sd->status.name, itemid);
+		sprintf(output, msg_sd(sd, 887), sd->status.name, itemid); // %s stole an Unknown Item (id: %i).
 	else
-		sprintf(output,"%s stole %s.",sd->status.name,item->jname);
+		sprintf(output, msg_sd(sd, 888), sd->status.name, item->jname); // %s stole %s.
 	clif->message(tsd->fd, output);
 
 	return 0;
@@ -5637,15 +5583,17 @@ static int pc_steal_item(struct map_session_data *sd, struct block_list *bl, uin
 
 	// Try dropping one item, in the order from first to last possible slot.
 	// Droprate is affected by the skill success rate.
-	for (i = 0; i < MAX_STEAL_DROP; i++) {
+	for (i = 0; i < MAX_MOB_DROP; i++) {
 		if (md->db->dropitem[i].nameid == 0)
 			continue;
 		if ((data = itemdb->exists(md->db->dropitem[i].nameid)) == NULL)
 			continue;
+		if (data->type == IT_CARD)
+			continue;
 		if (rnd() % 10000 < apply_percentrate(md->db->dropitem[i].p, rate, 100))
 			break;
 	}
-	if (i == MAX_STEAL_DROP)
+	if (i == MAX_MOB_DROP)
 		return 0;
 
 	itemid = md->db->dropitem[i].nameid;
@@ -6970,7 +6918,7 @@ static int pc_checkjoblevelup(struct map_session_data *sd)
 	status_calc_pc(sd,SCO_FORCE);
 	clif->misceffect(&sd->bl,1);
 	if (pc->checkskill(sd, SG_DEVIL) && !pc->nextjobexp(sd))
-		clif->status_change(&sd->bl,SI_DEVIL1, 1, 0, 0, 0, 1); //Permanent blind effect from SG_DEVIL.
+		clif->status_change(&sd->bl, status->get_sc_icon(SC_DEVIL1), status->get_sc_relevant_bl_types(SC_DEVIL1), 1, 0, 0, 0, 1); //Permanent blind effect from SG_DEVIL.
 
 	npc->script_event(sd, NPCE_JOBLVUP);
 
@@ -7138,7 +7086,7 @@ static bool pc_gainexp(struct map_session_data *sd, struct block_list *src, uint
 	if(sd->state.showexp) {
 		char output[256];
 		sprintf(output,
-			"Experience Gained Base:%"PRIu64" (%.2f%%) Job:%"PRIu64" (%.2f%%)",
+			msg_sd(sd, 889), // Experience Gained Base:%"PRIu64" (%.2f%%) Job:%"PRIu64" (%.2f%%)
 			base_exp, nextbp * (float)100, job_exp, nextjp * (float)100);
 		clif_disp_onlyself(sd, output);
 	}
@@ -7740,7 +7688,7 @@ static int pc_resetskill(struct map_session_data *sd, int flag)
 			return 0;
 
 		if( pc->checkskill(sd, SG_DEVIL) &&  !pc->nextjobexp(sd) ) //Remove perma blindness due to skill-reset. [Skotlex]
-			clif->sc_end(&sd->bl, sd->bl.id, SELF, SI_DEVIL1);
+			clif->sc_end(&sd->bl, sd->bl.id, SELF, status->get_sc_icon(SC_DEVIL1));
 		i = sd->sc.option;
 		if( i&OPTION_RIDING && pc->checkskill(sd, KN_RIDING) )
 			i &= ~OPTION_RIDING;
@@ -7765,7 +7713,7 @@ static int pc_resetskill(struct map_session_data *sd, int flag)
 			pc->setoption(sd, i);
 
 		if( homun_alive(sd->hd) && pc->checkskill(sd, AM_CALLHOMUN) )
-			homun->vaporize(sd, HOM_ST_REST);
+			homun->vaporize(sd, HOM_ST_REST, true);
 
 		if ((sd->sc.data[SC_SPRITEMABLE] && pc->checkskill(sd, SU_SPRITEMABLE)))
 			status_change_end(&sd->bl, SC_SPRITEMABLE, INVALID_TIMER);
@@ -8006,7 +7954,7 @@ static void pc_damage(struct map_session_data *sd, struct block_list *src, unsig
 	if( sd->status.pet_id > 0 && sd->pd && battle_config.pet_damage_support )
 		pet->target_check(sd,src,1);
 
-	if( sd->status.ele_id > 0 )
+	if (sd->status.ele_id != 0 && sd->ed != NULL)
 		elemental->set_target(sd,src);
 
 	if (battle_config.prevent_logout_trigger & PLT_DAMAGE)
@@ -8054,7 +8002,7 @@ static int pc_dead(struct map_session_data *sd, struct block_list *src)
 
 	if (sd->status.hom_id > 0){
 	    if(battle_config.homunculus_auto_vapor && sd->hd)
-		    homun->vaporize(sd, HOM_ST_REST);
+		    homun->vaporize(sd, HOM_ST_REST, true);
 	}
 
 	if( sd->md )
@@ -8110,7 +8058,7 @@ static int pc_dead(struct map_session_data *sd, struct block_list *src)
 
 	/* e.g. not killed through pc->damage */
 	if( pc_issit(sd) ) {
-		clif->sc_end(&sd->bl,sd->bl.id,SELF,SI_SIT);
+		clif->sc_end(&sd->bl, sd->bl.id, SELF, status->get_sc_icon(SC_SIT));
 	}
 
 	pc_setdead(sd);
@@ -9069,7 +9017,7 @@ static int pc_jobchange(struct map_session_data *sd, int class, int upper)
 		pc->setoption(sd, i);
 
 	if(homun_alive(sd->hd) && !pc->checkskill(sd, AM_CALLHOMUN))
-		homun->vaporize(sd, HOM_ST_REST);
+		homun->vaporize(sd, HOM_ST_REST, true);
 
 	if ((sd->sc.data[SC_SPRITEMABLE] && pc->checkskill(sd, SU_SPRITEMABLE)))
 		status_change_end(&sd->bl, SC_SPRITEMABLE, INVALID_TIMER);
@@ -9209,11 +9157,11 @@ static int pc_setoption(struct map_session_data *sd, int type)
 
 	if( (type&OPTION_RIDING && !(p_type&OPTION_RIDING)) || (type&OPTION_DRAGON && !(p_type&OPTION_DRAGON) && pc->checkskill(sd,RK_DRAGONTRAINING) > 0) ) {
 		// Mounting
-		clif->sc_load(&sd->bl,sd->bl.id,AREA,SI_RIDING, 0, 0, 0);
+		clif->sc_load(&sd->bl, sd->bl.id, AREA, status->get_sc_icon(SC_RIDING), 0, 0, 0);
 		status_calc_pc(sd,SCO_NONE);
 	} else if( (!(type&OPTION_RIDING) && p_type&OPTION_RIDING) || (!(type&OPTION_DRAGON) && p_type&OPTION_DRAGON) ) {
 		// Dismount
-		clif->sc_end(&sd->bl,sd->bl.id,AREA,SI_RIDING);
+		clif->sc_end(&sd->bl, sd->bl.id, AREA, status->get_sc_icon(SC_RIDING));
 		status_calc_pc(sd,SCO_NONE);
 	}
 
@@ -9233,15 +9181,15 @@ static int pc_setoption(struct map_session_data *sd, int type)
 #endif
 
 	if (type&OPTION_FALCON && !(p_type&OPTION_FALCON)) //Falcon ON
-		clif->sc_load(&sd->bl,sd->bl.id,AREA,SI_FALCON, 0, 0, 0);
+		clif->sc_load(&sd->bl, sd->bl.id, AREA, status->get_sc_icon(SC_FALCON), 0, 0, 0);
 	else if (!(type&OPTION_FALCON) && p_type&OPTION_FALCON) //Falcon OFF
-		clif->sc_end(&sd->bl,sd->bl.id,AREA,SI_FALCON);
+		clif->sc_end(&sd->bl, sd->bl.id, AREA, status->get_sc_icon(SC_FALCON));
 
 	if( type&OPTION_WUGRIDER && !(p_type&OPTION_WUGRIDER) ) { // Mounting
-		clif->sc_load(&sd->bl,sd->bl.id,AREA,SI_WUGRIDER, 0, 0, 0);
+		clif->sc_load(&sd->bl, sd->bl.id, AREA, status->get_sc_icon(SC_WUGRIDER), 0, 0, 0);
 		status_calc_pc(sd,SCO_NONE);
 	} else if( !(type&OPTION_WUGRIDER) && p_type&OPTION_WUGRIDER ) { // Dismount
-		clif->sc_end(&sd->bl,sd->bl.id,AREA,SI_WUGRIDER);
+		clif->sc_end(&sd->bl, sd->bl.id, AREA, status->get_sc_icon(SC_WUGRIDER));
 		status_calc_pc(sd,SCO_NONE);
 	}
 
@@ -9329,7 +9277,7 @@ static int pc_setcart(struct map_session_data *sd, int type)
 				clif->cartList(sd);
 			clif->updatestatus(sd, SP_CARTINFO);
 			sc_start(NULL,&sd->bl, SC_PUSH_CART, 100, type, 0);
-			clif->sc_load(&sd->bl, sd->bl.id, AREA, SI_ON_PUSH_CART, type, 0, 0);
+			clif->sc_load(&sd->bl, sd->bl.id, AREA, status->get_sc_icon(SC_ON_PUSH_CART), type, 0, 0);
 			if( sd->sc.data[SC_PUSH_CART] )/* forcefully update */
 				sd->sc.data[SC_PUSH_CART]->val1 = type;
 			break;
@@ -10967,7 +10915,7 @@ static int pc_daynight_timer_sub(struct map_session_data *sd, va_list ap)
 {
 	nullpo_ret(sd);
 	if (sd->state.night != map->night_flag && map->list[sd->bl.m].flag.nightenabled) { //Night/day state does not match.
-		clif->status_change(&sd->bl, SI_SKE, map->night_flag, 0, 0, 0, 0); //New night effect by dynamix [Skotlex]
+		clif->status_change(&sd->bl, status->get_sc_icon(SC_SKE), status->get_sc_relevant_bl_types(SC_SKE), map->night_flag, 0, 0, 0, 0); //New night effect by dynamix [Skotlex]
 		sd->state.night = map->night_flag;
 		return 1;
 	}
@@ -11020,7 +10968,7 @@ static void pc_setstand(struct map_session_data *sd)
 	nullpo_retv(sd);
 
 	status_change_end(&sd->bl, SC_TENSIONRELAX, INVALID_TIMER);
-	clif->sc_end(&sd->bl,sd->bl.id,SELF,SI_SIT);
+	clif->sc_end(&sd->bl, sd->bl.id, SELF, status->get_sc_icon(SC_SIT));
 	//Reset sitting tick.
 	sd->ssregen.tick.hp = sd->ssregen.tick.sp = 0;
 	if (pc_isdead(sd)) {
@@ -11587,12 +11535,9 @@ static bool pc_read_exp_db(void)
 	struct config_t exp_db_conf;
 	struct config_setting_t *edb = NULL;
 	int entry_count = 0;
-
-#ifdef RENEWAL
-	const char *config_filename = "db/re/exp_group_db.conf";
-#else
-	const char *config_filename = "db/pre-re/exp_group_db.conf";
-#endif
+	char config_filename[256];
+	
+	libconfig->format_db_path(DBPATH"exp_group_db.conf", config_filename, sizeof(config_filename));
 
 	if (!libconfig->load_file(&exp_db_conf, config_filename))
 		return false;
@@ -12215,6 +12160,29 @@ static int pc_have_magnifier(struct map_session_data *sd)
 }
 
 /**
+ * checks if player have any item that listed in item chain
+ * @param sd map_session_data of Player
+ * @param chain_id unsigned short of item chain id
+ * @return index of inventory, INDEX_NOT_FOUND if it is not found
+ */
+static int pc_have_item_chain(struct map_session_data *sd, unsigned short chain_id)
+{
+	if (chain_id >= itemdb->chain_count) {
+		ShowError("itemdb_chain_item: unknown chain id %d\n", chain_id);
+		return INDEX_NOT_FOUND;
+	}
+
+	for (int n = 0; n < itemdb->chains[chain_id].qty; n++) {
+		struct item_chain_entry *entry = &itemdb->chains[chain_id].items[n];
+		int index = pc->search_inventory(sd, entry->id);
+		if (index != INDEX_NOT_FOUND)
+			return index;
+	}
+
+	return INDEX_NOT_FOUND;
+}
+
+/**
  * Checks if player have basic skills learned.
  * @param  sd Player Data
  * @param  level Required Level of Novice Skill
@@ -12823,6 +12791,7 @@ void pc_defaults(void)
 	pc->update_idle_time = pc_update_idle_time;
 
 	pc->have_magnifier = pc_have_magnifier;
+	pc->have_item_chain = pc_have_item_chain;
 
 	pc->check_basicskill = pc_check_basicskill;
 

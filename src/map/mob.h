@@ -40,7 +40,6 @@ struct hplugin_data_store;
 //The number of drops all mobs have and the max drop-slot that the steal skill will attempt to steal from.
 #define MAX_MOB_DROP 10
 #define MAX_MVP_DROP 3
-#define MAX_STEAL_DROP 7
 
 //Min time between AI executions
 #define MIN_MOBTHINKTIME 100
@@ -529,6 +528,7 @@ struct mob_interface {
 	int (*ai_sub_hard_bg_ally) (struct block_list *bl, va_list ap);
 	int (*ai_sub_hard_lootsearch) (struct block_list *bl, va_list ap);
 	int (*warpchase_sub) (struct block_list *bl, va_list ap);
+	bool (*is_in_battle_state) (const struct mob_data *md);
 	int (*ai_sub_hard_slavemob) (struct mob_data *md, int64 tick);
 	int (*unlocktarget) (struct mob_data *md, int64 tick);
 	int (*randomwalk) (struct mob_data *md, int64 tick);

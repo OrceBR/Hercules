@@ -152,7 +152,8 @@ static bool guild_read_castledb_libconfig(void)
 {
 	struct config_t castle_conf;
 	struct config_setting_t *castle_db = NULL, *it = NULL;
-	const char *config_filename = "db/castle_db.conf"; // FIXME hardcoded name
+	char config_filename[256];
+	libconfig->format_db_path("castle_db.conf", config_filename, sizeof(config_filename));
 	int i = 0;
 
 	if (libconfig->load_file(&castle_conf, config_filename) == 0)
@@ -169,7 +170,7 @@ static bool guild_read_castledb_libconfig(void)
 	}
 
 	libconfig->destroy(&castle_conf);
-	ShowStatus("Done reading '"CL_WHITE"%d"CL_RESET"' entries in '"CL_WHITE"%s"CL_RESET"'.\n", i, config_filename);
+	ShowStatus("Done reading '"CL_WHITE"%u"CL_RESET"' entries in '"CL_WHITE"%s"CL_RESET"'.\n", db_size(guild->castle_db), config_filename);
 	return true;
 }
 
@@ -217,7 +218,56 @@ static bool guild_read_castledb_libconfig_sub(struct config_setting_t *it, int i
 	}
 	safestrncpy(gc->castle_event, name, sizeof(gc->castle_event));
 
+	if (itemdb->lookup_const(it, "SiegeType", &i32) && (i32 >= SIEGE_TYPE_MAX || i32 < 0)) {
+		ShowWarning("guild_read_castledb_libconfig_sub: Invalid SiegeType in \"%s\", entry #%d, defaulting to SIEGE_TYPE_FE.\n", source, idx);
+		gc->siege_type = SIEGE_TYPE_FE;
+	} else {
+		gc->siege_type = i32;
+	}
+
+	libconfig->setting_lookup_bool_real(it, "EnableClientWarp", &gc->enable_client_warp);
+	if (gc->enable_client_warp == true) {
+		struct config_setting_t *wd = libconfig->setting_get_member(it, "ClientWarp");
+		guild->read_castledb_libconfig_sub_warp(wd, source, gc);
+	}
 	idb_put(guild->castle_db, gc->castle_id, gc);
+	return true;
+}
+
+static bool guild_read_castledb_libconfig_sub_warp(struct config_setting_t *wd, const char *source, struct guild_castle *gc)
+{
+	nullpo_retr(false, wd);
+	nullpo_retr(false, gc);
+	nullpo_retr(false, source);
+
+	int64 i64 = 0;
+	struct config_setting_t *it = libconfig->setting_get_member(wd, "Position");
+	if (config_setting_is_list(it)) {
+		int m = map->mapindex2mapid(gc->mapindex);
+
+		gc->client_warp.x = libconfig->setting_get_int_elem(it, 0);
+		gc->client_warp.y = libconfig->setting_get_int_elem(it, 1);
+		if (gc->client_warp.x < 0 || gc->client_warp.x >= map->list[m].xs || gc->client_warp.y < 0 || gc->client_warp.y >= map->list[m].ys) {
+			ShowWarning("guild_read_castledb_libconfig_sub_warp: Invalid Position in \"%s\", for castle (%d).\n", source, gc->castle_id);
+			return false;
+		}
+	} else {
+		ShowWarning("guild_read_castledb_libconfig_sub_warp: Invalid format for Position in \"%s\", for castle (%d).\n", source, gc->castle_id);
+		return false;
+	}
+
+	if (libconfig->setting_lookup_int64(wd, "ZenyCost", &i64)) {
+		if (i64 > MAX_ZENY) {
+			ShowWarning("guild_read_castledb_libconfig_sub_warp: ZenyCost is too big in \"%s\", for castle (%d), capping to MAX_ZENY.\n", source, gc->castle_id);
+		}
+		gc->client_warp.zeny = cap_value((int)i64, 0, MAX_ZENY);
+	}
+	if (libconfig->setting_lookup_int64(wd, "ZenyCostSiegeTime", &i64)) {
+		if (i64 > MAX_ZENY) {
+			ShowWarning("guild_read_castledb_libconfig_sub_warp: ZenyCostSiegeTime is too big in \"%s\", for castle (%d), capping to MAX_ZENY.\n", source, gc->castle_id);
+		}
+		gc->client_warp.zeny_siege = cap_value((int)i64, 0, MAX_ZENY);
+	}
 	return true;
 }
 
@@ -228,7 +278,7 @@ static struct guild *guild_search(int guild_id)
 }
 
 /// lookup: guild name -> guild*
-static struct guild *guild_searchname(char *str)
+static struct guild *guild_searchname(const char *str)
 {
 	struct guild* g;
 	struct DBIterator *iter = db_iterator(guild->db);
@@ -516,6 +566,7 @@ static int guild_check_member(const struct guild *g)
 		if (i == INDEX_NOT_FOUND) {
 			sd->status.guild_id=0;
 			sd->guild_emblem_id=0;
+			sd->guild = NULL;
 			ShowWarning("guild: check_member %d[%s] is not member\n",sd->status.account_id,sd->status.name);
 		}
 	}
@@ -532,8 +583,11 @@ static int guild_recv_noinfo(int guild_id)
 
 	iter = mapit_getallusers();
 	for (sd = BL_UCAST(BL_PC, mapit->first(iter)); mapit->exists(iter); sd = BL_UCAST(BL_PC, mapit->next(iter))) {
-		if( sd->status.guild_id == guild_id )
+		if (sd->status.guild_id == guild_id) {
 			sd->status.guild_id = 0; // erase guild
+			sd->guild_emblem_id = 0;
+			sd->guild = NULL;
+		}
 	}
 	mapit->free(iter);
 
@@ -605,7 +659,7 @@ static int guild_recv_info(const struct guild *sg)
 		before=*sg;
 		//Perform the check on the user because the first load
 		guild->check_member(sg);
-		if ((sd = map->nick2sd(sg->master)) != NULL) {
+		if ((sd = map->nick2sd(sg->master, false)) != NULL) {
 			//If the guild master is online the first time the guild_info is received,
 			//that means he was the first to join, so apply guild skill blocking here.
 			if( battle_config.guild_skill_relog_delay == 1)
@@ -823,6 +877,8 @@ static void guild_member_joined(struct map_session_data *sd)
 	i = guild->getindex(g, sd->status.account_id, sd->status.char_id);
 	if (i == INDEX_NOT_FOUND) {
 		sd->status.guild_id = 0;
+		sd->guild_emblem_id = 0;
+		sd->guild = NULL;
 	} else {
 		g->member[i].sd = sd;
 		sd->guild = g;
@@ -2497,6 +2553,7 @@ void guild_defaults(void)
 	guild->read_guildskill_tree_db = guild_read_guildskill_tree_db;
 	guild->read_castledb_libconfig = guild_read_castledb_libconfig;
 	guild->read_castledb_libconfig_sub = guild_read_castledb_libconfig_sub;
+	guild->read_castledb_libconfig_sub_warp = guild_read_castledb_libconfig_sub_warp;
 	guild->payexp_timer_sub = guild_payexp_timer_sub;
 	guild->send_xy_timer_sub = guild_send_xy_timer_sub;
 	guild->send_xy_timer = guild_send_xy_timer;

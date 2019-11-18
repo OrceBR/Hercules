@@ -239,6 +239,14 @@ static void mvptomb_destroy(struct mob_data *md)
 
 		m = nd->bl.m;
 
+		struct s_mapiterator *iter = mapit_geteachpc();
+		for (struct map_session_data *sd = BL_UCAST(BL_PC, mapit->first(iter)); mapit->exists(iter); sd = BL_UCAST(BL_PC, mapit->next(iter))) {
+			if (sd->npc_id == nd->bl.id) {
+				sd->state.npc_unloaded = 1;
+			}
+		}
+		mapit->free(iter);
+
 		clif->clearunit_area(&nd->bl,CLR_OUTSIGHT);
 
 		map->delblock(&nd->bl);
@@ -471,7 +479,7 @@ static bool mob_ksprotected(struct block_list *src, struct block_list *target)
 		// Message to KS
 		if( DIFF_TICK(sd->ks_floodprotect_tick, tick) <= 0 )
 		{
-			sprintf(output, "[KS Warning!! - Owner : %s]", pl_sd->status.name);
+			sprintf(output, msg_sd(sd, 890), pl_sd->status.name); // [KS Warning!! - Owner : %s]
 			clif_disp_onlyself(sd, output);
 
 			sd->ks_floodprotect_tick = tick + 2000;
@@ -480,7 +488,7 @@ static bool mob_ksprotected(struct block_list *src, struct block_list *target)
 		// Message to Owner
 		if( DIFF_TICK(pl_sd->ks_floodprotect_tick, tick) <= 0 )
 		{
-			sprintf(output, "[Watch out! %s is trying to KS you!]", sd->status.name);
+			sprintf(output, msg_sd(pl_sd, 891), sd->status.name); // [Watch out! %s is trying to KS you!]
 			clif_disp_onlyself(pl_sd, output);
 
 			pl_sd->ks_floodprotect_tick = tick + 2000;
@@ -1165,13 +1173,15 @@ static int mob_ai_sub_hard_activesearch(struct block_list *bl, va_list ap)
 				battle->check_range(&md->bl,bl,md->db->range2)
 			) { //Pick closest target?
 #ifdef ACTIVEPATHSEARCH
-			struct walkpath_data wpd;
-			if (!path->search(&wpd, &md->bl, md->bl.m, md->bl.x, md->bl.y, bl->x, bl->y, 0, CELL_CHKNOPASS)) // Count walk path cells
-				return 0;
-			//Standing monsters use range2, walking monsters use range3
-			if ((md->ud.walktimer == INVALID_TIMER && wpd.path_len > md->db->range2)
-				|| (md->ud.walktimer != INVALID_TIMER && wpd.path_len > md->db->range3))
-				return 0;
+				struct walkpath_data wpd;
+				bool is_standing = (md->ud.walktimer == INVALID_TIMER);
+				if (!path->search(&wpd, &md->bl, md->bl.m, md->bl.x, md->bl.y, bl->x, bl->y, 0, CELL_CHKNOPASS) // Count walk path cells
+				    || (is_standing && wpd.path_len > md->db->range2) //Standing monsters use range2, walking monsters use range3
+				    || (!is_standing && wpd.path_len > md->db->range3)) {
+					if (!check_distance_bl(&md->bl, bl, md->status.rhw.range)
+					    || !path->search_long(NULL, &md->bl, md->bl.m, md->bl.x, md->bl.y, bl->x, bl->y, CELL_CHKWALL))
+						return 0;
+				}
 #endif
 				(*target) = bl;
 				md->target_id=bl->id;
@@ -1289,6 +1299,27 @@ static int mob_warpchase_sub(struct block_list *bl, va_list ap)
 	}
 	return 0;
 }
+
+/**
+ * Checks if a monster is currently involved in battle,
+ * may it be due to aggression or being attacked.
+ * @param bl: monster's bl
+ * @return true if in battle, false otherwise
+ */
+static bool mob_is_in_battle_state(const struct mob_data *md)
+{
+	nullpo_retr(false, md);
+	switch (md->state.skillstate) {
+	case MSS_BERSERK:
+	case MSS_ANGRY:
+	case MSS_RUSH:
+	case MSS_FOLLOW:
+		return true;
+	default:
+		return false;
+	}
+}
+
 /*==========================================
  * Processing of slave monsters
  *------------------------------------------*/
@@ -1333,8 +1364,11 @@ static int mob_ai_sub_hard_slavemob(struct mob_data *md, int64 tick)
 		) {
 			short x = bl->x, y = bl->y;
 			mob_stop_attack(md);
-			if(map->search_freecell(&md->bl, bl->m, &x, &y, MOB_SLAVEDISTANCE, MOB_SLAVEDISTANCE, 1)
-				&& unit->walktoxy(&md->bl, x, y, 0))
+			const struct mob_data *m_md = BL_CCAST(BL_MOB, bl); // Can be NULL due to master being BL_PC
+			// If master is BL_MOB and in battle, lock & chase to master's target instead, unless configured not to.
+			if ((battle_config.slave_chase_masters_chasetarget == 0 || (m_md != NULL && !mob->is_in_battle_state(m_md)))
+			    && map->search_freecell(&md->bl, bl->m, &x, &y, MOB_SLAVEDISTANCE, MOB_SLAVEDISTANCE, 1)
+			    && unit->walktoxy(&md->bl, x, y, 0))
 				return 1;
 		}
 	} else if (bl->m != md->bl.m && map_flag_gvg(md->bl.m)) {
@@ -1345,26 +1379,28 @@ static int mob_ai_sub_hard_slavemob(struct mob_data *md, int64 tick)
 
 	//Avoid attempting to lock the master's target too often to avoid unnecessary overload. [Skotlex]
 	if (DIFF_TICK(md->last_linktime, tick) < MIN_MOBLINKTIME && !md->target_id) {
-		struct unit_data *ud = unit->bl2ud(bl);
+		struct unit_data  *ud = unit->bl2ud(bl);
+		struct mob_data *m_md = BL_CAST(BL_MOB, bl); // Can be NULL due to master being BL_PC
+		nullpo_retr(0, ud);
 		md->last_linktime = tick;
+		struct block_list *tbl = NULL;
 
-		if (ud) {
-			struct block_list *tbl=NULL;
-			if (ud->target && ud->state.attack_continue)
-				tbl=map->id2bl(ud->target);
-			else if (ud->skilltarget) {
-				tbl = map->id2bl(ud->skilltarget);
-				//Required check as skilltarget is not always an enemy. [Skotlex]
-				if (tbl && battle->check_target(&md->bl, tbl, BCT_ENEMY) <= 0)
-					tbl = NULL;
-			}
-			if (tbl && status->check_skilluse(&md->bl, tbl, 0, 0)) {
-				md->target_id=tbl->id;
-				md->min_chase=md->db->range3+distance_bl(&md->bl, tbl);
-				if(md->min_chase>MAX_MINCHASE)
-					md->min_chase=MAX_MINCHASE;
-				return 1;
-			}
+		if (battle_config.slave_chase_masters_chasetarget == 1 && m_md != NULL && m_md->target_id != 0) { // possibly chasing something
+			tbl = map->id2bl(m_md->target_id);
+		} else if (ud->target != 0 && ud->state.attack_continue != 0) {
+			tbl = map->id2bl(ud->target);
+		} else if (ud->skilltarget != 0) {
+			tbl = map->id2bl(ud->skilltarget);
+			//Required check as skilltarget is not always an enemy. [Skotlex]
+			if (tbl != NULL && battle->check_target(&md->bl, tbl, BCT_ENEMY) <= 0)
+				tbl = NULL;
+		}
+		if (tbl != NULL && status->check_skilluse(&md->bl, tbl, 0, 0) != 0) {
+			md->target_id = tbl->id;
+			md->min_chase = md->db->range3 + distance_bl(&md->bl, tbl);
+			if (md->min_chase > MAX_MINCHASE)
+				md->min_chase = MAX_MINCHASE;
+			return 1;
 		}
 	}
 	return 0;
@@ -1902,7 +1938,7 @@ static int mob_ai_hard(int tid, int64 tick, int id, intptr_t data)
 
 /**
  * Adds random options of a given options drop group into item.
- * 
+ *
  * @param item : item receiving random options
  * @param options : Random Option Drop Group to be used
  */
@@ -1910,7 +1946,7 @@ static void mob_setdropitem_options(struct item *item, struct optdrop_group *opt
 {
 	nullpo_retv(item);
 	nullpo_retv(options);
-	
+
 	for (int i = 0; i < options->optslot_count; i++) {
 		if (rnd() % 10000 >= options->optslot_rate[i])
 			continue;
@@ -1942,7 +1978,7 @@ static struct item_drop *mob_setdropitem(int nameid, struct optdrop_group *optio
 	drop->item_data.nameid = nameid;
 	drop->item_data.amount = qty;
 	drop->item_data.identify = data ? itemdb->isidentified2(data) : itemdb->isidentified(nameid);
-	
+
 	// Set item options [KirieZ]
 	if (options != NULL)
 		mob->setdropitem_options(&drop->item_data, options);
@@ -2200,6 +2236,14 @@ static void mob_log_damage(struct mob_data *md, struct block_list *src, int dama
 			md->dmglog[minpos].flag= flag;
 			md->dmglog[minpos].dmg = damage;
 		}
+#if (PACKETVER >= 20120404 && PACKETVER < 20131223)
+		// Show HP bar to all chars who hit the mob (fixes TF_STEAL not showing HP bar right away but only when target leaves/re-enters sight range)
+		if (battle_config.show_monster_hp_bar != 0 && (md->status.mode & MD_BOSS) == 0) {
+			struct map_session_data *sd = map->charid2sd(char_id);
+			if (sd != NULL && check_distance_bl(&md->bl, &sd->bl, AREA_SIZE)) // check if in range
+				clif->monster_hp_bar(md, sd);
+		}
+#endif
 	}
 	return;
 }
@@ -3926,7 +3970,7 @@ static bool mob_read_optdrops_option(struct config_setting_t *option, struct opt
 		ShowWarning("mob_read_optdrops_option: Invalid option \"%s\" for option slot %d of %s group, skipping.\n", name, slot, group);
 		return false;
 	}
-	
+
 	int min = 0, max = 0, opt_rate = 0;
 	if (config_setting_is_number(option)) {
 		// OptionName: value
@@ -3935,13 +3979,13 @@ static bool mob_read_optdrops_option(struct config_setting_t *option, struct opt
 		// OptionName: [min, max]
 		// OptionName: [min, max, rate]
 		int slen = libconfig->setting_length(option);
-		
+
 		if (slen >= 2) {
 			// [min, max,...]
 			min = libconfig->setting_get_int_elem(option, 0);
 			max = libconfig->setting_get_int_elem(option, 1);
 		}
-		
+
 		if (slen == 3) {
 			// [min, max, rate]
 			opt_rate = libconfig->setting_get_int_elem(option, 2);
@@ -3953,7 +3997,7 @@ static bool mob_read_optdrops_option(struct config_setting_t *option, struct opt
 
 	if (max < min)
 		max = min;
-	
+
 	entry->options[*idx].id = opt_id;
 	entry->options[*idx].min = min;
 	entry->options[*idx].max = max;
@@ -3981,7 +4025,7 @@ static bool mob_read_optdrops_optslot(struct config_setting_t *optslot, int n, i
 	nullpo_retr(false, group);
 	Assert_retr(false, group_id >= 0 && group_id < mob->opt_drop_groups_count);
 	Assert_retr(false, n >= 0 && n < MAX_ITEM_OPTIONS);
-	
+
 	// Structure:
 	//	{
 	//		Rate: chance of option 1 (int)
@@ -4005,7 +4049,7 @@ static bool mob_read_optdrops_optslot(struct config_setting_t *optslot, int n, i
 
 	struct optdrop_group_optslot *entry = &(mob->opt_drop_groups[group_id].optslot[n]);
 	entry->options = aCalloc(sizeof(struct optdrop_group_option), count);
-	
+
 	int idx = 0;
 	int i = 0;
 	struct config_setting_t *opt = NULL;
@@ -4017,7 +4061,7 @@ static bool mob_read_optdrops_optslot(struct config_setting_t *optslot, int n, i
 	entry->option_count = idx;
 	mob->opt_drop_groups[group_id].optslot_count++;
 	mob->opt_drop_groups[group_id].optslot_rate[n] = drop_rate;
-	
+
 	// If there're empty rates, calculate them
 	if (calc_rate == true) {
 		for (int j = 0; j < idx; ++j) {
@@ -4070,10 +4114,8 @@ static bool mob_read_optdrops_group(struct config_setting_t *group, int n)
  */
 static bool mob_read_optdrops_db(void)
 {
-	const char *filename = "option_drop_groups.conf"; // FIXME hardcoded name
-
 	char filepath[256];
-	safesnprintf(filepath, sizeof(filepath), "%s/%s", map->db_path, filename);
+	libconfig->format_db_path("option_drop_groups.conf", filepath, sizeof(filepath));
 
 	struct config_t option_groups;
 	if (libconfig->load_file(&option_groups, filepath) == CONFIG_FALSE) {
@@ -4186,7 +4228,7 @@ static uint32 mob_read_db_mode_sub(struct mob_db *entry, struct config_setting_t
 
 /**
  * Process an entry of mob/mvp drops that contains a random option drop group.
- * 
+ *
  * @param entry : mob db entry being read (used in error messages)
  * @param item_name : AegisName of the item in this entry (used in error messages)
  * @param drop : drop data entry
@@ -4209,7 +4251,7 @@ static struct optdrop_group *mob_read_db_drops_option(struct mob_db *entry, cons
 	int i32;
 	if (mob->get_const(libconfig->setting_get_elem(drop, 0), &i32) && i32 >= 0)
 		*drop_rate = i32;
-		
+
 	const char *group_name = libconfig->setting_get_string_elem(drop, 1);
 	if (group_name == NULL || *group_name == '\0') {
 		ShowError("mob_read_db_optdrops: Missing option drop group name on item \"%s\" in monster %d, skipping.\n", item_name, entry->mob_id);
@@ -4254,7 +4296,7 @@ static void mob_read_db_mvpdrops_sub(struct mob_db *entry, struct config_setting
 			i++;
 			continue;
 		}
-		
+
 		struct optdrop_group *drop_option = NULL;
 		if (config_setting_is_number(drop)) {
 			// Setting is a number, item doesn't contain options
@@ -4334,7 +4376,7 @@ static void mob_read_db_drops_sub(struct mob_db *entry, struct config_setting_t 
 			// (Drop Rate, "Opt Drop Group")
 			drop_option = mob->read_db_drops_option(entry, name, drop, &value);
 		}
-		
+
 		if (value <= 0) {
 			ShowWarning("mob_read_db: wrong drop chance %d for drop item %s in monster %d\n", value, name, entry->mob_id);
 			i++;
@@ -5662,7 +5704,7 @@ static void mob_destroy_drop_groups(void)
 {
 	for (int i = 0; i < mob->opt_drop_groups_count; i++) {
 		struct optdrop_group *group = &mob->opt_drop_groups[i];
-		
+
 		for (int j = 0; j < group->optslot_count; j++) {
 			aFree(group->optslot[j].options);
 		}
@@ -5797,6 +5839,7 @@ void mob_defaults(void)
 	mob->ai_sub_hard_bg_ally = mob_ai_sub_hard_bg_ally;
 	mob->ai_sub_hard_lootsearch = mob_ai_sub_hard_lootsearch;
 	mob->warpchase_sub = mob_warpchase_sub;
+	mob->is_in_battle_state = mob_is_in_battle_state;
 	mob->ai_sub_hard_slavemob = mob_ai_sub_hard_slavemob;
 	mob->unlocktarget = mob_unlocktarget;
 	mob->randomwalk = mob_randomwalk;

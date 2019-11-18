@@ -1324,6 +1324,20 @@
 - `SC_DAILYSENDMAILCNT`: 653
 - `SC_DRESS_UP`: 652
 - `SC_CLAN_INFO`: 654
+- `SC_SIT`: 655
+- `SC_MOON`: 656
+- `SC_TING`: 657
+- `SC_DEVIL1`: 658
+- `SC_RIDING`: 659
+- `SC_FALCON`: 660
+- `SC_WUGRIDER`: 661
+- `SC_POSTDELAY`: 662
+- `SC_ON_PUSH_CART`: 663
+- `SC_RESIST_PROPERTY_WATER`: 664
+- `SC_RESIST_PROPERTY_GROUND`: 665
+- `SC_RESIST_PROPERTY_FIRE`: 666
+- `SC_RESIST_PROPERTY_WIND`: 667
+- `SC_CLIENT_ONLY_EQUIP_ARROW`: 668
 
 ### Emotes
 
@@ -3969,601 +3983,7 @@
 
 - `INVENTORY_INCREASE_STEP`: 10
 
-
-## Hardcoded Constants (source)
-
-
-### Boolean
-
-- `true`: 1
-- `false`: 0
-
-### Server defines
-
-- `PACKETVER`: 20141022
-- `MAX_LEVEL`: 175
-- `MAX_STORAGE`: 600
-- `MAX_GUILD_STORAGE`: 600
-- `MAX_CART`: 100
-- `MAX_INVENTORY`: 100
-- `FIXED_INVENTORY_SIZE`: 100
-- `MAX_ZENY`: 2147483647
-- `MAX_BANK_ZENY`: 2147483647
-- `MAX_BG_MEMBERS`: 30
-- `MAX_CHAT_USERS`: 20
-- `MAX_REFINE`: 20
-- `MAX_ITEM_ID`: 65535
-- `MAX_MENU_OPTIONS`: 255
-- `MAX_MENU_LENGTH`: 2048
-- `MOB_CLONE_START`: 4001
-- `MOB_CLONE_END`: 5000
-- `MAX_NPC_PER_MAP`: 512
-
-### status options
-
-- `Option_Nothing`: 0
-- `Option_Sight`: 1
-- `Option_Hide`: 2
-- `Option_Cloak`: 4
-- `Option_Falcon`: 16
-- `Option_Riding`: 32
-- `Option_Invisible`: 64
-- `Option_Orcish`: 2048
-- `Option_Wedding`: 4096
-- `Option_Chasewalk`: 16384
-- `Option_Flying`: 32768
-- `Option_Xmas`: 65536
-- `Option_Transform`: 131072
-- `Option_Summer`: 262144
-- `Option_Dragon1`: 524288
-- `Option_Wug`: 1048576
-- `Option_Wugrider`: 2097152
-- `Option_Madogear`: 4194304
-- `Option_Dragon2`: 8388608
-- `Option_Dragon3`: 16777216
-- `Option_Dragon4`: 33554432
-- `Option_Dragon5`: 67108864
-- `Option_Hanbok`: 134217728
-- `Option_Oktoberfest`: 268435456
-- `Option_Summer2`: 536870912
-
-### status option compounds
-
-- `Option_Dragon`: 126353408
-- `Option_Costume`: 939855872
-
-### send_target
-
-- `ALL_CLIENT`: 0
-- `ALL_SAMEMAP`: 1
-- `AREA`: 2
-- `AREA_WOS`: 3
-- `AREA_WOC`: 4
-- `AREA_WOSC`: 5
-- `AREA_CHAT_WOC`: 6
-- `CHAT`: 8
-- `CHAT_WOS`: 9
-- `PARTY`: 10
-- `PARTY_WOS`: 11
-- `PARTY_SAMEMAP`: 12
-- `PARTY_SAMEMAP_WOS`: 13
-- `PARTY_AREA`: 14
-- `PARTY_AREA_WOS`: 15
-- `GUILD`: 16
-- `GUILD_WOS`: 17
-- `GUILD_SAMEMAP`: 18
-- `GUILD_SAMEMAP_WOS`: 19
-- `GUILD_AREA`: 20
-- `GUILD_AREA_WOS`: 21
-- `GUILD_NOBG`: 22
-- `DUEL`: 23
-- `DUEL_WOS`: 24
-- `SELF`: 25
-- `BG`: 26
-- `BG_WOS`: 27
-- `BG_SAMEMAP`: 28
-- `BG_SAMEMAP_WOS`: 29
-- `BG_AREA`: 30
-- `BG_AREA_WOS`: 31
-- `BG_QUEUE`: 32
-
-### LOOK_ constants, use in setlook/changelook script commands
-
-- `LOOK_BASE`: 0
-- `LOOK_HAIR`: 1
-- `LOOK_WEAPON`: 2
-- `LOOK_HEAD_BOTTOM`: 3
-- `LOOK_HEAD_TOP`: 4
-- `LOOK_HEAD_MID`: 5
-- `LOOK_HAIR_COLOR`: 6
-- `LOOK_CLOTHES_COLOR`: 7
-- `LOOK_SHIELD`: 8
-- `LOOK_SHOES`: 9
-- `LOOK_BODY`: 10
-- `LOOK_FLOOR`: 11
-- `LOOK_ROBE`: 12
-- `LOOK_BODY2`: 13
-
-### Equip Position in Bits,  use with *getiteminfo type 5, or @inventorylist_equip
-
-- `EQP_HEAD_LOW`: 1
-- `EQP_HEAD_MID`: 512
-- `EQP_HEAD_TOP`: 256
-- `EQP_HAND_R`: 2
-- `EQP_HAND_L`: 32
-- `EQP_ARMOR`: 16
-- `EQP_SHOES`: 64
-- `EQP_GARMENT`: 4
-- `EQP_ACC_L`: 8
-- `EQP_ACC_R`: 128
-- `EQP_COSTUME_HEAD_TOP`: 1024
-- `EQP_COSTUME_HEAD_MID`: 2048
-- `EQP_COSTUME_HEAD_LOW`: 4096
-- `EQP_COSTUME_GARMENT`: 8192
-- `EQP_AMMO`: 32768
-- `EQP_SHADOW_ARMOR`: 65536
-- `EQP_SHADOW_WEAPON`: 131072
-- `EQP_SHADOW_SHIELD`: 262144
-- `EQP_SHADOW_SHOES`: 524288
-- `EQP_SHADOW_ACC_R`: 1048576
-- `EQP_SHADOW_ACC_L`: 2097152
-- `EQP_WEAPON`: 2
-- `EQP_SHIELD`: 32
-- `EQP_ARMS`: 34
-- `EQP_HELM`: 769
-- `EQP_ACC`: 136
-- `EQP_COSTUME`: 15360
-- `EQP_SHADOW_ACC`: 3145728
-- `EQP_SHADOW_ARMS`: 393216
-
-### Item Option Types
-
-- `IT_OPT_INDEX`: 0
-- `IT_OPT_VALUE`: 1
-- `IT_OPT_PARAM`: 2
-
-### Maximum Item Options
-
-- `MAX_ITEM_OPTIONS`: 5
-
-### Navigation constants, use with *navigateto*
-
-- `NAV_NONE`: 0
-- `NAV_AIRSHIP_ONLY`: 1
-- `NAV_SCROLL_ONLY`: 10
-- `NAV_AIRSHIP_AND_SCROLL`: 11
-- `NAV_KAFRA_ONLY`: 100
-- `NAV_KAFRA_AND_AIRSHIP`: 101
-- `NAV_KAFRA_AND_SCROLL`: 110
-- `NAV_ALL`: 111
-
-### BL types
-
-- `BL_PC`: 1
-- `BL_MOB`: 2
-- `BL_PET`: 4
-- `BL_HOM`: 8
-- `BL_MER`: 16
-- `BL_ITEM`: 32
-- `BL_SKILL`: 64
-- `BL_NPC`: 128
-- `BL_CHAT`: 256
-- `BL_ELEM`: 512
-- `BL_CHAR`: 539
-- `BL_ALL`: 4095
-
-### Refine Chance Types
-
-- `REFINE_CHANCE_TYPE_NORMAL`: 0
-- `REFINE_CHANCE_TYPE_ENRICHED`: 1
-- `REFINE_CHANCE_TYPE_E_NORMAL`: 2
-- `REFINE_CHANCE_TYPE_E_ENRICHED`: 3
-
-### Player permissions
-
-- `PERM_TRADE`: 1
-- `PERM_PARTY`: 2
-- `PERM_ALL_SKILL`: 4
-- `PERM_USE_ALL_EQUIPMENT`: 8
-- `PERM_SKILL_UNCONDITIONAL`: 16
-- `PERM_JOIN_ALL_CHAT`: 32
-- `PERM_NO_CHAT_KICK`: 64
-- `PERM_HIDE_SESSION`: 128
-- `PERM_RECEIVE_HACK_INFO`: 512
-- `PERM_WARP_ANYWHERE`: 1024
-- `PERM_VIEW_HPMETER`: 2048
-- `PERM_VIEW_EQUIPMENT`: 4096
-- `PERM_USE_CHECK`: 8192
-- `PERM_USE_CHANGEMAPTYPE`: 16384
-- `PERM_USE_ALL_COMMANDS`: 32768
-- `PERM_RECEIVE_REQUESTS`: 65536
-- `PERM_SHOW_BOSS`: 131072
-- `PERM_DISABLE_PVM`: 262144
-- `PERM_DISABLE_PVP`: 524288
-- `PERM_DISABLE_CMD_DEAD`: 1048576
-- `PERM_HCHSYS_ADMIN`: 2097152
-- `PERM_TRADE_BOUND`: 4194304
-- `PERM_DISABLE_PICK_UP`: 8388608
-- `PERM_DISABLE_STORE`: 16777216
-- `PERM_DISABLE_EXP`: 33554432
-- `PERM_DISABLE_SKILL_USAGE`: 67108864
-- `PERM_BYPASS_NOSTORAGE`: 134217728
-
-### Data types
-
-- `DATATYPE_NIL`: 128
-- `DATATYPE_STR`: 256
-- `DATATYPE_INT`: 512
-- `DATATYPE_CONST`: 1024
-- `DATATYPE_PARAM`: 2048
-- `DATATYPE_VAR`: 4096
-- `DATATYPE_LABEL`: 8192
-
-### Logmes types
-
-- `LOGMES_NPC`: 0
-- `LOGMES_ATCOMMAND`: 1
-
-### Item Subtypes (Weapon types)
-
-- `W_FIST`: 0
-- `W_DAGGER`: 1
-- `W_1HSWORD`: 2
-- `W_2HSWORD`: 3
-- `W_1HSPEAR`: 4
-- `W_2HSPEAR`: 5
-- `W_1HAXE`: 6
-- `W_2HAXE`: 7
-- `W_MACE`: 8
-- `W_2HMACE`: 9
-- `W_STAFF`: 10
-- `W_BOW`: 11
-- `W_KNUCKLE`: 12
-- `W_MUSICAL`: 13
-- `W_WHIP`: 14
-- `W_BOOK`: 15
-- `W_KATAR`: 16
-- `W_REVOLVER`: 17
-- `W_RIFLE`: 18
-- `W_GATLING`: 19
-- `W_SHOTGUN`: 20
-- `W_GRENADE`: 21
-- `W_HUUMA`: 22
-- `W_2HSTAFF`: 23
-
-### Item Subtypes (Ammunition types)
-
-- `A_ARROW`: 1
-- `A_DAGGER`: 2
-- `A_BULLET`: 3
-- `A_SHELL`: 4
-- `A_GRENADE`: 5
-- `A_SHURIKEN`: 6
-- `A_KUNAI`: 7
-- `A_CANNONBALL`: 8
-- `A_THROWWEAPON`: 9
-
-### Item Upper Masks
-
-- `ITEMUPPER_NONE`: 0
-- `ITEMUPPER_NORMAL`: 1
-- `ITEMUPPER_UPPER`: 2
-- `ITEMUPPER_BABY`: 4
-- `ITEMUPPER_THIRD`: 8
-- `ITEMUPPER_THIRDUPPER`: 16
-- `ITEMUPPER_THIRDBABY`: 32
-- `ITEMUPPER_ALL`: 63
-
-### dressroom modes
-
-- `DRESSROOM_OPEN`: 1
-- `DRESSROOM_CLOSE`: 0
-
-### getmapinfo options
-
-- `MAPINFO_NAME`: 0
-- `MAPINFO_ID`: 1
-- `MAPINFO_SIZE_X`: 2
-- `MAPINFO_SIZE_Y`: 3
-- `MAPINFO_ZONE`: 4
-- `MAPINFO_NPC_COUNT`: 5
-
-### consolemes options
-
-- `CONSOLEMES_DEBUG`: 0
-- `CONSOLEMES_ERROR`: 1
-- `CONSOLEMES_WARNING`: 2
-- `CONSOLEMES_INFO`: 3
-- `CONSOLEMES_STATUS`: 4
-- `CONSOLEMES_NOTICE`: 5
-
-### set/getiteminfo options
-
-- `ITEMINFO_BUYPRICE`: 0
-- `ITEMINFO_SELLPRICE`: 1
-- `ITEMINFO_TYPE`: 2
-- `ITEMINFO_MAXCHANCE`: 3
-- `ITEMINFO_SEX`: 4
-- `ITEMINFO_LOC`: 5
-- `ITEMINFO_WEIGHT`: 6
-- `ITEMINFO_ATK`: 7
-- `ITEMINFO_DEF`: 8
-- `ITEMINFO_RANGE`: 9
-- `ITEMINFO_SLOTS`: 10
-- `ITEMINFO_SUBTYPE`: 11
-- `ITEMINFO_ELV`: 12
-- `ITEMINFO_WLV`: 13
-- `ITEMINFO_VIEWID`: 14
-- `ITEMINFO_MATK`: 15
-- `ITEMINFO_VIEWSPRITE`: 16
-- `ITEMINFO_TRADE`: 17
-- `ITEMINFO_ELV_MAX`: 18
-- `ITEMINFO_DROPEFFECT_MODE`: 19
-- `ITEMINFO_DELAY`: 20
-- `ITEMINFO_CLASS_BASE_1`: 21
-- `ITEMINFO_CLASS_BASE_2`: 22
-- `ITEMINFO_CLASS_BASE_3`: 23
-- `ITEMINFO_CLASS_UPPER`: 24
-- `ITEMINFO_FLAG_NO_REFINE`: 25
-- `ITEMINFO_FLAG_DELAY_CONSUME`: 26
-- `ITEMINFO_FLAG_AUTOEQUIP`: 27
-- `ITEMINFO_FLAG_AUTO_FAVORITE`: 28
-- `ITEMINFO_FLAG_BUYINGSTORE`: 29
-- `ITEMINFO_FLAG_BINDONEQUIP`: 30
-- `ITEMINFO_FLAG_KEEPAFTERUSE`: 31
-- `ITEMINFO_FLAG_FORCE_SERIAL`: 32
-- `ITEMINFO_FLAG_NO_OPTIONS`: 33
-- `ITEMINFO_FLAG_DROP_ANNOUNCE`: 34
-- `ITEMINFO_FLAG_SHOWDROPEFFECT`: 35
-- `ITEMINFO_STACK_AMOUNT`: 36
-- `ITEMINFO_STACK_FLAG`: 37
-- `ITEMINFO_ITEM_USAGE_FLAG`: 38
-- `ITEMINFO_ITEM_USAGE_OVERRIDE`: 39
-- `ITEMINFO_GM_LV_TRADE_OVERRIDE`: 40
-
-### getmercinfo options
-
-- `MERCINFO_ID,`: 0
-- `MERCINFO_CLASS`: 1
-- `MERCINFO_NAME`: 2
-- `MERCINFO_FAITH`: 3
-- `MERCINFO_CALLS`: 4
-- `MERCINFO_KILLCOUNT`: 5
-- `MERCINFO_LIFETIME`: 6
-- `MERCINFO_LEVEL`: 7
-- `MERCINFO_GID`: 8
-
-### getpetinfo options
-
-- `PETINFO_ID`: 0
-- `PETINFO_CLASS`: 1
-- `PETINFO_NAME`: 2
-- `PETINFO_INTIMACY`: 3
-- `PETINFO_HUNGRY`: 4
-- `PETINFO_RENAME`: 5
-- `PETINFO_GID`: 6
-- `PETINFO_EGGITEM`: 7
-- `PETINFO_FOODITEM`: 8
-- `PETINFO_ACCESSORYITEM`: 9
-- `PETINFO_ACCESSORYFLAG`: 10
-- `PETINFO_EVO_EGGID`: 11
-- `PETINFO_AUTOFEED`: 12
-
-### monster skill states
-
-- `MSS_ANY`: -1
-- `MSS_IDLE`: 0
-- `MSS_WALK`: 1
-- `MSS_LOOT`: 2
-- `MSS_DEAD`: 3
-- `MSS_BERSERK`: 4
-- `MSS_ANGRY`: 5
-- `MSS_RUSH`: 6
-- `MSS_FOLLOW`: 7
-- `MSS_ANYTARGET`: 8
-
-### monster skill conditions
-
-- `MSC_ANY`: -1
-- `MSC_ALWAYS`: 0
-- `MSC_MYHPLTMAXRATE`: 1
-- `MSC_MYHPINRATE`: 2
-- `MSC_FRIENDHPLTMAXRATE`: 3
-- `MSC_FRIENDHPINRATE`: 4
-- `MSC_MYSTATUSON`: 5
-- `MSC_MYSTATUSOFF`: 6
-- `MSC_FRIENDSTATUSON`: 7
-- `MSC_FRIENDSTATUSOFF`: 8
-- `MSC_ATTACKPCGT`: 9
-- `MSC_ATTACKPCGE`: 10
-- `MSC_SLAVELT`: 11
-- `MSC_SLAVELE`: 12
-- `MSC_CLOSEDATTACKED`: 13
-- `MSC_LONGRANGEATTACKED`: 14
-- `MSC_SKILLUSED`: 16
-- `MSC_AFTERSKILL`: 15
-- `MSC_CASTTARGETED`: 17
-- `MSC_RUDEATTACKED`: 18
-- `MSC_MASTERHPLTMAXRATE`: 19
-- `MSC_MASTERATTACKED`: 20
-- `MSC_ALCHEMIST`: 21
-- `MSC_SPAWN`: 22
-
-### monster skill targets
-
-- `MST_TARGET`: 0
-- `MST_RANDOM`: 1
-- `MST_SELF`: 2
-- `MST_FRIEND`: 3
-- `MST_MASTER`: 4
-- `MST_AROUND5`: 5
-- `MST_AROUND6`: 6
-- `MST_AROUND7`: 7
-- `MST_AROUND8`: 8
-- `MST_AROUND1`: 9
-- `MST_AROUND2`: 10
-- `MST_AROUND3`: 11
-- `MST_AROUND4`: 12
-- `MST_AROUND`: 12
-
-### pc block constants, use with *setpcblock* and *checkpcblock*
-
-- `PCBLOCK_NONE`: 0
-- `PCBLOCK_MOVE`: 1
-- `PCBLOCK_ATTACK`: 2
-- `PCBLOCK_SKILL`: 4
-- `PCBLOCK_USEITEM`: 8
-- `PCBLOCK_CHAT`: 16
-- `PCBLOCK_IMMUNE`: 32
-- `PCBLOCK_SITSTAND`: 64
-- `PCBLOCK_COMMANDS`: 128
-
-### private airship responds
-
-- `P_AIRSHIP_NONE`: 0
-- `P_AIRSHIP_RETRY`: 1
-- `P_AIRSHIP_INVALID_START_MAP`: 4
-- `P_AIRSHIP_INVALID_END_MAP`: 3
-- `P_AIRSHIP_ITEM_NOT_ENOUGH`: 2
-- `P_AIRSHIP_ITEM_INVALID`: 5
-
-### questinfo types
-
-- `QINFO_JOB`: 0
-- `QINFO_SEX`: 1
-- `QINFO_BASE_LEVEL`: 2
-- `QINFO_JOB_LEVEL`: 3
-- `QINFO_ITEM`: 4
-- `QINFO_HOMUN_LEVEL`: 5
-- `QINFO_HOMUN_TYPE`: 6
-- `QINFO_QUEST`: 7
-- `QINFO_MERCENARY_CLASS`: 8
-
-### function types
-
-- `FUNCTION_IS_COMMAND`: 1
-- `FUNCTION_IS_GLOBAL`: 2
-- `FUNCTION_IS_LOCAL`: 3
-- `FUNCTION_IS_LABEL`: 4
-
-### item trade restrictions
-
-- `ITR_NONE`: 0
-- `ITR_NODROP`: 1
-- `ITR_NOTRADE`: 2
-- `ITR_PARTNEROVERRIDE`: 4
-- `ITR_NOSELLTONPC`: 8
-- `ITR_NOCART`: 16
-- `ITR_NOSTORAGE`: 32
-- `ITR_NOGSTORAGE`: 64
-- `ITR_NOMAIL`: 128
-- `ITR_NOAUCTION`: 256
-- `ITR_ALL`: 511
-
-### inventory expand ack responds
-
-- `EXPAND_INV_ASK_CONFIRMATION`: 0
-- `EXPAND_INV_FAILED`: 1
-- `EXPAND_INV_OTHER_WORK`: 2
-- `EXPAND_INV_MISSING_ITEM`: 3
-- `EXPAND_INV_MAX_SIZE`: 4
-
-### inventory expand final responds
-
-- `EXPAND_INV_RESULT_SUCCESS`: 0
-- `EXPAND_INV_RESULT_FAILED`: 1
-- `EXPAND_INV_RESULT_OTHER_WORK`: 2
-- `EXPAND_INV_RESULT_MISSING_ITEM`: 3
-- `EXPAND_INV_RESULT_MAX_SIZE`: 4
-
-### trader type
-
-- `NST_ZENY`: 0
-- `NST_CASH`: 1
-- `NST_MARKET`: 2
-- `NST_CUSTOM`: 3
-- `NST_BARTER`: 4
-
-### script unit data types
-
-- `UDT_TYPE`: 0
-- `UDT_SIZE`: 1
-- `UDT_LEVEL`: 2
-- `UDT_HP`: 3
-- `UDT_MAXHP`: 4
-- `UDT_SP`: 5
-- `UDT_MAXSP`: 6
-- `UDT_MASTERAID`: 7
-- `UDT_MASTERCID`: 8
-- `UDT_MAPIDXY`: 9 **(DEPRECATED)**
-- `UDT_WALKTOXY`: 10 **(DEPRECATED)**
-- `UDT_SPEED`: 11
-- `UDT_MODE`: 12
-- `UDT_AI`: 13
-- `UDT_SCOPTION`: 14
-- `UDT_SEX`: 15
-- `UDT_CLASS`: 16
-- `UDT_HAIRSTYLE`: 17
-- `UDT_HAIRCOLOR`: 18
-- `UDT_HEADBOTTOM`: 19
-- `UDT_HEADMIDDLE`: 20
-- `UDT_HEADTOP`: 21
-- `UDT_CLOTHCOLOR`: 22
-- `UDT_SHIELD`: 23
-- `UDT_WEAPON`: 24
-- `UDT_LOOKDIR`: 25
-- `UDT_CANMOVETICK`: 26
-- `UDT_STR`: 27
-- `UDT_AGI`: 28
-- `UDT_VIT`: 29
-- `UDT_INT`: 30
-- `UDT_DEX`: 31
-- `UDT_LUK`: 32
-- `UDT_ATKRANGE`: 33
-- `UDT_ATKMIN`: 34
-- `UDT_ATKMAX`: 35
-- `UDT_MATKMIN`: 36
-- `UDT_MATKMAX`: 37
-- `UDT_DEF`: 38
-- `UDT_MDEF`: 39
-- `UDT_HIT`: 40
-- `UDT_FLEE`: 41
-- `UDT_PDODGE`: 42
-- `UDT_CRIT`: 43
-- `UDT_RACE`: 44
-- `UDT_ELETYPE`: 45
-- `UDT_ELELEVEL`: 46
-- `UDT_AMOTION`: 47
-- `UDT_ADELAY`: 48
-- `UDT_DMOTION`: 49
-- `UDT_HUNGER`: 50
-- `UDT_INTIMACY`: 51
-- `UDT_LIFETIME`: 52
-- `UDT_MERC_KILLCOUNT`: 53
-- `UDT_STATPOINT`: 54
-- `UDT_ROBE`: 55
-- `UDT_BODY2`: 56
-- `UDT_GROUP`: 57
-- `UDT_DAMAGE_TAKEN_RATE`: 58
-
-### getguildonline types
-
-- `GUILD_ONLINE_ALL`: 0
-- `GUILD_ONLINE_VENDOR`: 1
-- `GUILD_ONLINE_NO_VENDOR`: 2
-
-### Renewal
-
-- `RENEWAL`: 1
-- `RENEWAL_CAST`: 1
-- `RENEWAL_DROP`: 1
-- `RENEWAL_EXP`: 1
-- `RENEWAL_LVDMG`: 1
-- `RENEWAL_EDP`: 1
-- `RENEWAL_ASPD`: 1
-
-
-### Status Icons
+### Status Effect Icons
 
 - `SI_BLANK`: -1
 - `SI_PROVOKE`: 0
@@ -5193,8 +4613,10 @@
 - `SI_MTF_HITFLEE`: 796
 - `SI_FLOWERSMOKE`: 822
 - `SI_FSTONE`: 823
+- `SI_DAILYSENDMAILCNT`: 824
 - `SI_LJOSALFAR`: 826
 - `SI_HAPPINESS_STAR`: 849
+- `SI_DRESS_UP`: 856
 - `SI_MAPLE_FALLS`: 857
 - `SI_MERMAID_LONGING`: 863
 - `SI_MAGICAL_FEATHER`: 864
@@ -5203,6 +4625,10 @@
 - `SI_CATNIPPOWDER`: 894
 - `SI_BLOSSOM_FLUTTERING`: 895
 - `SI_SV_ROOTTWIST`: 896
+- `SI_RESIST_PROPERTY_WATER`: 908
+- `SI_RESIST_PROPERTY_GROUND`: 909
+- `SI_RESIST_PROPERTY_FIRE`: 910
+- `SI_RESIST_PROPERTY_WIND`: 911
 - `SI_BITESCAR`: 917
 - `SI_ARCLOUSEDASH`: 918
 - `SI_TUNAPARTY`: 919
@@ -5210,7 +4636,620 @@
 - `SI_FRESHSHRIMP`: 921
 - `SI_SUHIDE`: 933
 - `SI_SPRITEMABLE`: 937
-- `SI_MAX`: 938
+
+
+## Hardcoded Constants (source)
+
+
+### Boolean
+
+- `true`: 1
+- `false`: 0
+
+### Server defines
+
+- `PACKETVER`: 20141022
+- `MAX_LEVEL`: 175
+- `MAX_STORAGE`: 600
+- `MAX_GUILD_STORAGE`: 600
+- `MAX_CART`: 100
+- `MAX_INVENTORY`: 100
+- `FIXED_INVENTORY_SIZE`: 100
+- `MAX_ZENY`: 2147483647
+- `MAX_BANK_ZENY`: 2147483647
+- `MAX_BG_MEMBERS`: 30
+- `MAX_CHAT_USERS`: 20
+- `MAX_REFINE`: 20
+- `MAX_ITEM_ID`: 65535
+- `MAX_MENU_OPTIONS`: 255
+- `MAX_MENU_LENGTH`: 2048
+- `MOB_CLONE_START`: 4001
+- `MOB_CLONE_END`: 5000
+- `MAX_NPC_PER_MAP`: 512
+
+### status options
+
+- `Option_Nothing`: 0
+- `Option_Sight`: 1
+- `Option_Hide`: 2
+- `Option_Cloak`: 4
+- `Option_Falcon`: 16
+- `Option_Riding`: 32
+- `Option_Invisible`: 64
+- `Option_Orcish`: 2048
+- `Option_Wedding`: 4096
+- `Option_Chasewalk`: 16384
+- `Option_Flying`: 32768
+- `Option_Xmas`: 65536
+- `Option_Transform`: 131072
+- `Option_Summer`: 262144
+- `Option_Dragon1`: 524288
+- `Option_Wug`: 1048576
+- `Option_Wugrider`: 2097152
+- `Option_Madogear`: 4194304
+- `Option_Dragon2`: 8388608
+- `Option_Dragon3`: 16777216
+- `Option_Dragon4`: 33554432
+- `Option_Dragon5`: 67108864
+- `Option_Hanbok`: 134217728
+- `Option_Oktoberfest`: 268435456
+- `Option_Summer2`: 536870912
+
+### status option compounds
+
+- `Option_Dragon`: 126353408
+- `Option_Costume`: 939855872
+
+### send_target
+
+- `ALL_CLIENT`: 0
+- `ALL_SAMEMAP`: 1
+- `AREA`: 2
+- `AREA_WOS`: 3
+- `AREA_WOC`: 4
+- `AREA_WOSC`: 5
+- `AREA_CHAT_WOC`: 6
+- `CHAT`: 8
+- `CHAT_WOS`: 9
+- `PARTY`: 10
+- `PARTY_WOS`: 11
+- `PARTY_SAMEMAP`: 12
+- `PARTY_SAMEMAP_WOS`: 13
+- `PARTY_AREA`: 14
+- `PARTY_AREA_WOS`: 15
+- `GUILD`: 16
+- `GUILD_WOS`: 17
+- `GUILD_SAMEMAP`: 18
+- `GUILD_SAMEMAP_WOS`: 19
+- `GUILD_AREA`: 20
+- `GUILD_AREA_WOS`: 21
+- `GUILD_NOBG`: 22
+- `DUEL`: 23
+- `DUEL_WOS`: 24
+- `SELF`: 25
+- `BG`: 26
+- `BG_WOS`: 27
+- `BG_SAMEMAP`: 28
+- `BG_SAMEMAP_WOS`: 29
+- `BG_AREA`: 30
+- `BG_AREA_WOS`: 31
+- `BG_QUEUE`: 32
+
+### LOOK_ constants, use in setlook/changelook script commands
+
+- `LOOK_BASE`: 0
+- `LOOK_HAIR`: 1
+- `LOOK_WEAPON`: 2
+- `LOOK_HEAD_BOTTOM`: 3
+- `LOOK_HEAD_TOP`: 4
+- `LOOK_HEAD_MID`: 5
+- `LOOK_HAIR_COLOR`: 6
+- `LOOK_CLOTHES_COLOR`: 7
+- `LOOK_SHIELD`: 8
+- `LOOK_SHOES`: 9
+- `LOOK_BODY`: 10
+- `LOOK_FLOOR`: 11
+- `LOOK_ROBE`: 12
+- `LOOK_BODY2`: 13
+
+### Equip Position in Bits,  use with *getiteminfo type 5, or @inventorylist_equip
+
+- `EQP_HEAD_LOW`: 1
+- `EQP_HEAD_MID`: 512
+- `EQP_HEAD_TOP`: 256
+- `EQP_HAND_R`: 2
+- `EQP_HAND_L`: 32
+- `EQP_ARMOR`: 16
+- `EQP_SHOES`: 64
+- `EQP_GARMENT`: 4
+- `EQP_ACC_L`: 8
+- `EQP_ACC_R`: 128
+- `EQP_COSTUME_HEAD_TOP`: 1024
+- `EQP_COSTUME_HEAD_MID`: 2048
+- `EQP_COSTUME_HEAD_LOW`: 4096
+- `EQP_COSTUME_GARMENT`: 8192
+- `EQP_AMMO`: 32768
+- `EQP_SHADOW_ARMOR`: 65536
+- `EQP_SHADOW_WEAPON`: 131072
+- `EQP_SHADOW_SHIELD`: 262144
+- `EQP_SHADOW_SHOES`: 524288
+- `EQP_SHADOW_ACC_R`: 1048576
+- `EQP_SHADOW_ACC_L`: 2097152
+- `EQP_WEAPON`: 2
+- `EQP_SHIELD`: 32
+- `EQP_ARMS`: 34
+- `EQP_HELM`: 769
+- `EQP_ACC`: 136
+- `EQP_COSTUME`: 15360
+- `EQP_SHADOW_ACC`: 3145728
+- `EQP_SHADOW_ARMS`: 393216
+
+### Item Option Types
+
+- `IT_OPT_INDEX`: 0
+- `IT_OPT_VALUE`: 1
+- `IT_OPT_PARAM`: 2
+
+### Maximum Item Options
+
+- `MAX_ITEM_OPTIONS`: 5
+
+### Navigation constants, use with *navigateto*
+
+- `NAV_NONE`: 0
+- `NAV_AIRSHIP_ONLY`: 1
+- `NAV_SCROLL_ONLY`: 10
+- `NAV_AIRSHIP_AND_SCROLL`: 11
+- `NAV_KAFRA_ONLY`: 100
+- `NAV_KAFRA_AND_AIRSHIP`: 101
+- `NAV_KAFRA_AND_SCROLL`: 110
+- `NAV_ALL`: 111
+
+### BL types
+
+- `BL_PC`: 1
+- `BL_MOB`: 2
+- `BL_PET`: 4
+- `BL_HOM`: 8
+- `BL_MER`: 16
+- `BL_ITEM`: 32
+- `BL_SKILL`: 64
+- `BL_NPC`: 128
+- `BL_CHAT`: 256
+- `BL_ELEM`: 512
+- `BL_CHAR`: 539
+- `BL_ALL`: 4095
+
+### Refine Chance Types
+
+- `REFINE_CHANCE_TYPE_NORMAL`: 0
+- `REFINE_CHANCE_TYPE_ENRICHED`: 1
+- `REFINE_CHANCE_TYPE_E_NORMAL`: 2
+- `REFINE_CHANCE_TYPE_E_ENRICHED`: 3
+
+### Player permissions
+
+- `PERM_TRADE`: 1
+- `PERM_PARTY`: 2
+- `PERM_ALL_SKILL`: 4
+- `PERM_USE_ALL_EQUIPMENT`: 8
+- `PERM_SKILL_UNCONDITIONAL`: 16
+- `PERM_JOIN_ALL_CHAT`: 32
+- `PERM_NO_CHAT_KICK`: 64
+- `PERM_HIDE_SESSION`: 128
+- `PERM_RECEIVE_HACK_INFO`: 512
+- `PERM_WARP_ANYWHERE`: 1024
+- `PERM_VIEW_HPMETER`: 2048
+- `PERM_VIEW_EQUIPMENT`: 4096
+- `PERM_USE_CHECK`: 8192
+- `PERM_USE_CHANGEMAPTYPE`: 16384
+- `PERM_USE_ALL_COMMANDS`: 32768
+- `PERM_RECEIVE_REQUESTS`: 65536
+- `PERM_SHOW_BOSS`: 131072
+- `PERM_DISABLE_PVM`: 262144
+- `PERM_DISABLE_PVP`: 524288
+- `PERM_DISABLE_CMD_DEAD`: 1048576
+- `PERM_HCHSYS_ADMIN`: 2097152
+- `PERM_TRADE_BOUND`: 4194304
+- `PERM_DISABLE_PICK_UP`: 8388608
+- `PERM_DISABLE_STORE`: 16777216
+- `PERM_DISABLE_EXP`: 33554432
+- `PERM_DISABLE_SKILL_USAGE`: 67108864
+- `PERM_BYPASS_NOSTORAGE`: 134217728
+
+### Data types
+
+- `DATATYPE_NIL`: 128
+- `DATATYPE_STR`: 256
+- `DATATYPE_INT`: 512
+- `DATATYPE_CONST`: 1024
+- `DATATYPE_PARAM`: 2048
+- `DATATYPE_VAR`: 4096
+- `DATATYPE_LABEL`: 8192
+
+### Logmes types
+
+- `LOGMES_NPC`: 0
+- `LOGMES_ATCOMMAND`: 1
+
+### Item Subtypes (Weapon types)
+
+- `W_FIST`: 0
+- `W_DAGGER`: 1
+- `W_1HSWORD`: 2
+- `W_2HSWORD`: 3
+- `W_1HSPEAR`: 4
+- `W_2HSPEAR`: 5
+- `W_1HAXE`: 6
+- `W_2HAXE`: 7
+- `W_MACE`: 8
+- `W_2HMACE`: 9
+- `W_STAFF`: 10
+- `W_BOW`: 11
+- `W_KNUCKLE`: 12
+- `W_MUSICAL`: 13
+- `W_WHIP`: 14
+- `W_BOOK`: 15
+- `W_KATAR`: 16
+- `W_REVOLVER`: 17
+- `W_RIFLE`: 18
+- `W_GATLING`: 19
+- `W_SHOTGUN`: 20
+- `W_GRENADE`: 21
+- `W_HUUMA`: 22
+- `W_2HSTAFF`: 23
+
+### Item Subtypes (Ammunition types)
+
+- `A_ARROW`: 1
+- `A_DAGGER`: 2
+- `A_BULLET`: 3
+- `A_SHELL`: 4
+- `A_GRENADE`: 5
+- `A_SHURIKEN`: 6
+- `A_KUNAI`: 7
+- `A_CANNONBALL`: 8
+- `A_THROWWEAPON`: 9
+
+### Item Upper Masks
+
+- `ITEMUPPER_NONE`: 0
+- `ITEMUPPER_NORMAL`: 1
+- `ITEMUPPER_UPPER`: 2
+- `ITEMUPPER_BABY`: 4
+- `ITEMUPPER_THIRD`: 8
+- `ITEMUPPER_THIRDUPPER`: 16
+- `ITEMUPPER_THIRDBABY`: 32
+- `ITEMUPPER_ALL`: 63
+
+### dressroom modes
+
+- `DRESSROOM_OPEN`: 1
+- `DRESSROOM_CLOSE`: 0
+
+### getmapinfo options
+
+- `MAPINFO_NAME`: 0
+- `MAPINFO_ID`: 1
+- `MAPINFO_SIZE_X`: 2
+- `MAPINFO_SIZE_Y`: 3
+- `MAPINFO_ZONE`: 4
+- `MAPINFO_NPC_COUNT`: 5
+
+### consolemes options
+
+- `CONSOLEMES_DEBUG`: 0
+- `CONSOLEMES_ERROR`: 1
+- `CONSOLEMES_WARNING`: 2
+- `CONSOLEMES_INFO`: 3
+- `CONSOLEMES_STATUS`: 4
+- `CONSOLEMES_NOTICE`: 5
+
+### set/getiteminfo options
+
+- `ITEMINFO_BUYPRICE`: 0
+- `ITEMINFO_SELLPRICE`: 1
+- `ITEMINFO_TYPE`: 2
+- `ITEMINFO_MAXCHANCE`: 3
+- `ITEMINFO_SEX`: 4
+- `ITEMINFO_LOC`: 5
+- `ITEMINFO_WEIGHT`: 6
+- `ITEMINFO_ATK`: 7
+- `ITEMINFO_DEF`: 8
+- `ITEMINFO_RANGE`: 9
+- `ITEMINFO_SLOTS`: 10
+- `ITEMINFO_SUBTYPE`: 11
+- `ITEMINFO_ELV`: 12
+- `ITEMINFO_WLV`: 13
+- `ITEMINFO_VIEWID`: 14
+- `ITEMINFO_MATK`: 15
+- `ITEMINFO_VIEWSPRITE`: 16
+- `ITEMINFO_TRADE`: 17
+- `ITEMINFO_ELV_MAX`: 18
+- `ITEMINFO_DROPEFFECT_MODE`: 19
+- `ITEMINFO_DELAY`: 20
+- `ITEMINFO_CLASS_BASE_1`: 21
+- `ITEMINFO_CLASS_BASE_2`: 22
+- `ITEMINFO_CLASS_BASE_3`: 23
+- `ITEMINFO_CLASS_UPPER`: 24
+- `ITEMINFO_FLAG_NO_REFINE`: 25
+- `ITEMINFO_FLAG_DELAY_CONSUME`: 26
+- `ITEMINFO_FLAG_AUTOEQUIP`: 27
+- `ITEMINFO_FLAG_AUTO_FAVORITE`: 28
+- `ITEMINFO_FLAG_BUYINGSTORE`: 29
+- `ITEMINFO_FLAG_BINDONEQUIP`: 30
+- `ITEMINFO_FLAG_KEEPAFTERUSE`: 31
+- `ITEMINFO_FLAG_FORCE_SERIAL`: 32
+- `ITEMINFO_FLAG_NO_OPTIONS`: 33
+- `ITEMINFO_FLAG_DROP_ANNOUNCE`: 34
+- `ITEMINFO_FLAG_SHOWDROPEFFECT`: 35
+- `ITEMINFO_STACK_AMOUNT`: 36
+- `ITEMINFO_STACK_FLAG`: 37
+- `ITEMINFO_ITEM_USAGE_FLAG`: 38
+- `ITEMINFO_ITEM_USAGE_OVERRIDE`: 39
+- `ITEMINFO_GM_LV_TRADE_OVERRIDE`: 40
+
+### getmercinfo options
+
+- `MERCINFO_ID,`: 0
+- `MERCINFO_CLASS`: 1
+- `MERCINFO_NAME`: 2
+- `MERCINFO_FAITH`: 3
+- `MERCINFO_CALLS`: 4
+- `MERCINFO_KILLCOUNT`: 5
+- `MERCINFO_LIFETIME`: 6
+- `MERCINFO_LEVEL`: 7
+- `MERCINFO_GID`: 8
+
+### getpetinfo options
+
+- `PETINFO_ID`: 0
+- `PETINFO_CLASS`: 1
+- `PETINFO_NAME`: 2
+- `PETINFO_INTIMACY`: 3
+- `PETINFO_HUNGRY`: 4
+- `PETINFO_RENAME`: 5
+- `PETINFO_GID`: 6
+- `PETINFO_EGGITEM`: 7
+- `PETINFO_FOODITEM`: 8
+- `PETINFO_ACCESSORYITEM`: 9
+- `PETINFO_ACCESSORYFLAG`: 10
+- `PETINFO_EVO_EGGID`: 11
+- `PETINFO_AUTOFEED`: 12
+
+### monster skill states
+
+- `MSS_ANY`: -1
+- `MSS_IDLE`: 0
+- `MSS_WALK`: 1
+- `MSS_LOOT`: 2
+- `MSS_DEAD`: 3
+- `MSS_BERSERK`: 4
+- `MSS_ANGRY`: 5
+- `MSS_RUSH`: 6
+- `MSS_FOLLOW`: 7
+- `MSS_ANYTARGET`: 8
+
+### monster skill conditions
+
+- `MSC_ANY`: -1
+- `MSC_ALWAYS`: 0
+- `MSC_MYHPLTMAXRATE`: 1
+- `MSC_MYHPINRATE`: 2
+- `MSC_FRIENDHPLTMAXRATE`: 3
+- `MSC_FRIENDHPINRATE`: 4
+- `MSC_MYSTATUSON`: 5
+- `MSC_MYSTATUSOFF`: 6
+- `MSC_FRIENDSTATUSON`: 7
+- `MSC_FRIENDSTATUSOFF`: 8
+- `MSC_ATTACKPCGT`: 9
+- `MSC_ATTACKPCGE`: 10
+- `MSC_SLAVELT`: 11
+- `MSC_SLAVELE`: 12
+- `MSC_CLOSEDATTACKED`: 13
+- `MSC_LONGRANGEATTACKED`: 14
+- `MSC_SKILLUSED`: 16
+- `MSC_AFTERSKILL`: 15
+- `MSC_CASTTARGETED`: 17
+- `MSC_RUDEATTACKED`: 18
+- `MSC_MASTERHPLTMAXRATE`: 19
+- `MSC_MASTERATTACKED`: 20
+- `MSC_ALCHEMIST`: 21
+- `MSC_SPAWN`: 22
+
+### monster skill targets
+
+- `MST_TARGET`: 0
+- `MST_RANDOM`: 1
+- `MST_SELF`: 2
+- `MST_FRIEND`: 3
+- `MST_MASTER`: 4
+- `MST_AROUND5`: 5
+- `MST_AROUND6`: 6
+- `MST_AROUND7`: 7
+- `MST_AROUND8`: 8
+- `MST_AROUND1`: 9
+- `MST_AROUND2`: 10
+- `MST_AROUND3`: 11
+- `MST_AROUND4`: 12
+- `MST_AROUND`: 12
+
+### pc block constants, use with *setpcblock* and *checkpcblock*
+
+- `PCBLOCK_NONE`: 0
+- `PCBLOCK_MOVE`: 1
+- `PCBLOCK_ATTACK`: 2
+- `PCBLOCK_SKILL`: 4
+- `PCBLOCK_USEITEM`: 8
+- `PCBLOCK_CHAT`: 16
+- `PCBLOCK_IMMUNE`: 32
+- `PCBLOCK_SITSTAND`: 64
+- `PCBLOCK_COMMANDS`: 128
+
+### private airship responds
+
+- `P_AIRSHIP_NONE`: 0
+- `P_AIRSHIP_RETRY`: 1
+- `P_AIRSHIP_INVALID_START_MAP`: 4
+- `P_AIRSHIP_INVALID_END_MAP`: 3
+- `P_AIRSHIP_ITEM_NOT_ENOUGH`: 2
+- `P_AIRSHIP_ITEM_INVALID`: 5
+
+### questinfo types
+
+- `QINFO_JOB`: 0
+- `QINFO_SEX`: 1
+- `QINFO_BASE_LEVEL`: 2
+- `QINFO_JOB_LEVEL`: 3
+- `QINFO_ITEM`: 4
+- `QINFO_HOMUN_LEVEL`: 5
+- `QINFO_HOMUN_TYPE`: 6
+- `QINFO_QUEST`: 7
+- `QINFO_MERCENARY_CLASS`: 8
+
+### function types
+
+- `FUNCTION_IS_COMMAND`: 1
+- `FUNCTION_IS_GLOBAL`: 2
+- `FUNCTION_IS_LOCAL`: 3
+- `FUNCTION_IS_LABEL`: 4
+
+### item trade restrictions
+
+- `ITR_NONE`: 0
+- `ITR_NODROP`: 1
+- `ITR_NOTRADE`: 2
+- `ITR_PARTNEROVERRIDE`: 4
+- `ITR_NOSELLTONPC`: 8
+- `ITR_NOCART`: 16
+- `ITR_NOSTORAGE`: 32
+- `ITR_NOGSTORAGE`: 64
+- `ITR_NOMAIL`: 128
+- `ITR_NOAUCTION`: 256
+- `ITR_ALL`: 511
+
+### inventory expand ack responds
+
+- `EXPAND_INV_ASK_CONFIRMATION`: 0
+- `EXPAND_INV_FAILED`: 1
+- `EXPAND_INV_OTHER_WORK`: 2
+- `EXPAND_INV_MISSING_ITEM`: 3
+- `EXPAND_INV_MAX_SIZE`: 4
+
+### inventory expand final responds
+
+- `EXPAND_INV_RESULT_SUCCESS`: 0
+- `EXPAND_INV_RESULT_FAILED`: 1
+- `EXPAND_INV_RESULT_OTHER_WORK`: 2
+- `EXPAND_INV_RESULT_MISSING_ITEM`: 3
+- `EXPAND_INV_RESULT_MAX_SIZE`: 4
+
+### trader type
+
+- `NST_ZENY`: 0
+- `NST_CASH`: 1
+- `NST_MARKET`: 2
+- `NST_CUSTOM`: 3
+- `NST_BARTER`: 4
+
+### script unit data types
+
+- `UDT_TYPE`: 0
+- `UDT_SIZE`: 1
+- `UDT_LEVEL`: 2
+- `UDT_HP`: 3
+- `UDT_MAXHP`: 4
+- `UDT_SP`: 5
+- `UDT_MAXSP`: 6
+- `UDT_MASTERAID`: 7
+- `UDT_MASTERCID`: 8
+- `UDT_MAPIDXY`: 9 **(DEPRECATED)**
+- `UDT_WALKTOXY`: 10 **(DEPRECATED)**
+- `UDT_SPEED`: 11
+- `UDT_MODE`: 12
+- `UDT_AI`: 13
+- `UDT_SCOPTION`: 14
+- `UDT_SEX`: 15
+- `UDT_CLASS`: 16
+- `UDT_HAIRSTYLE`: 17
+- `UDT_HAIRCOLOR`: 18
+- `UDT_HEADBOTTOM`: 19
+- `UDT_HEADMIDDLE`: 20
+- `UDT_HEADTOP`: 21
+- `UDT_CLOTHCOLOR`: 22
+- `UDT_SHIELD`: 23
+- `UDT_WEAPON`: 24
+- `UDT_LOOKDIR`: 25
+- `UDT_CANMOVETICK`: 26
+- `UDT_STR`: 27
+- `UDT_AGI`: 28
+- `UDT_VIT`: 29
+- `UDT_INT`: 30
+- `UDT_DEX`: 31
+- `UDT_LUK`: 32
+- `UDT_ATKRANGE`: 33
+- `UDT_ATKMIN`: 34
+- `UDT_ATKMAX`: 35
+- `UDT_MATKMIN`: 36
+- `UDT_MATKMAX`: 37
+- `UDT_DEF`: 38
+- `UDT_MDEF`: 39
+- `UDT_HIT`: 40
+- `UDT_FLEE`: 41
+- `UDT_PDODGE`: 42
+- `UDT_CRIT`: 43
+- `UDT_RACE`: 44
+- `UDT_ELETYPE`: 45
+- `UDT_ELELEVEL`: 46
+- `UDT_AMOTION`: 47
+- `UDT_ADELAY`: 48
+- `UDT_DMOTION`: 49
+- `UDT_HUNGER`: 50
+- `UDT_INTIMACY`: 51
+- `UDT_LIFETIME`: 52
+- `UDT_MERC_KILLCOUNT`: 53
+- `UDT_STATPOINT`: 54
+- `UDT_ROBE`: 55
+- `UDT_BODY2`: 56
+- `UDT_GROUP`: 57
+- `UDT_DAMAGE_TAKEN_RATE`: 58
+
+### getguildonline types
+
+- `GUILD_ONLINE_ALL`: 0
+- `GUILD_ONLINE_VENDOR`: 1
+- `GUILD_ONLINE_NO_VENDOR`: 2
+
+### Siege Types
+
+- `SIEGE_TYPE_FE`: 0
+- `SIEGE_TYPE_SE`: 1
+- `SIEGE_TYPE_TE`: 2
+
+### guildinfo types
+
+- `GUILDINFO_NAME`: 0
+- `GUILDINFO_ID`: 1
+- `GUILDINFO_LEVEL`: 2
+- `GUILDINFO_ONLINE`: 3
+- `GUILDINFO_AV_LEVEL`: 4
+- `GUILDINFO_MAX_MEMBERS`: 5
+- `GUILDINFO_EXP`: 6
+- `GUILDINFO_NEXT_EXP`: 7
+- `GUILDINFO_SKILL_POINTS`: 8
+- `GUILDINFO_MASTER_NAME`: 9
+- `GUILDINFO_MASTER_CID`: 10
+
+### Renewal
+
+- `RENEWAL`: 1
+- `RENEWAL_CAST`: 1
+- `RENEWAL_DROP`: 1
+- `RENEWAL_EXP`: 1
+- `RENEWAL_LVDMG`: 1
+- `RENEWAL_EDP`: 1
+- `RENEWAL_ASPD`: 1
+
 
 ## Parameters (source)
 
@@ -7700,6 +7739,7 @@
 - `DUMMY_100`: 2410
 - `DUMMY_150`: 2411
 - `DUMMY_10_FIRE`: 2413
+- `RUNAWAY_BOOK`: 2414
 - `MG_ZOMBIE`: 2464
 - `MG_WRAITH`: 2465
 - `MG_GHOUL`: 2466
@@ -9194,9 +9234,11 @@
 - `Thanos_Knuckle`: 1836
 - `Scarlet_Knuckle`: 1839
 - `Combo_Battle_Glove_IL`: 1846
+- `Iron_Nail_K`: 1847
 - `Rebeginer_SR_Nuckle`: 1848
 - `Burning_Knuckle_OS`: 1862
 - `Evt_Iron_Nail_K`: 1864
+- `Ein_1HKNUCK`: 1867
 - `Violin_of_Vicious_Mind`: 1900
 - `Violin`: 1901
 - `Violin_`: 1902
@@ -9313,8 +9355,10 @@
 - `Staff_of_Vicious_Mind`: 2026
 - `Wizardy_Staff_IL`: 2039
 - `Rebeginer_WL_Staff`: 2046
+- `Iron_Staff`: 2048
 - `Survival_Staff_IL`: 2051
 - `Evt_Iron_Staff`: 2054
+- `Ein_BHSTAFF`: 2058
 - `Guard`: 2101
 - `Guard_`: 2102
 - `Buckler`: 2103
@@ -13677,6 +13721,11 @@
 - `Phreeoni_Egg`: 9111
 - `Moonlight_Flower_Egg`: 9112
 - `Skelion_Egg`: 9113
+- `Ein_Ddbox`: 9514
+- `Metal_Rifine_Ticket`: 9523
+- `Ein_Ddbox2`: 9529
+- `Gemstone_Of_Time`: 9550
+- `Time_Unseal_Key`: 9551
 - `Skull_Helm`: 10001
 - `Monster_Oxygen_Mask`: 10002
 - `Transparent_Headgear`: 10003
@@ -15054,6 +15103,8 @@
 - `Huuma_Fluttering_Snow_IL`: 13337
 - `Huuma_Bird_Wing_IL`: 13338
 - `Rebeginer_KO_Humma`: 13341
+- `Humma_Clear`: 13345
+- `Ein_BHHuuma`: 13346
 - `Cutlas_`: 13400
 - `Excalibur_C`: 13401
 - `Cutlas_C`: 13402
@@ -15099,6 +15150,7 @@
 - `Saber_of_Vicious_Mind`: 13455
 - `Immaterial_Sword_IL`: 13469
 - `Rebeginer_GN_Sword`: 13483
+- `Sword_Of_Bluefire`: 13485
 - `Cannon_Rapier_OS`: 13493
 - `Evt_Bluefire_Sword`: 13495
 - `Insurance60_Package`: 13500
@@ -16156,13 +16208,28 @@
 - `True_Hunting_Mail`: 15246
 - `R_Hunting_Mail`: 15247
 - `Rebeginer_Suits`: 15250
+- `Overwhelm_Str_Armor`: 15278
+- `Overwhelm_Int_Armor`: 15279
 - `S_CriticalHit_Armor`: 15280
+- `Overwhelm_Luk_Armor`: 15346
+- `Overwhelm_Vit_Armor`: 15347
 - `Goibne_Armor_IL`: 15348
+- `Overwhelm_Agi_Armor`: 15353
+- `Overwhelm_Dex_Armor`: 15354
 - `Illusion_Armor_A`: 15376
 - `Illusion_Armor_B`: 15377
+- `Lava_Leather_Armor`: 15378
+- `Lava_Leather_Suits`: 15379
+- `Lava_Leather_Robe`: 15380
 - `Time_Overload_Robe`: 15383
 - `Schmidt_Suits`: 15388
 - `Schmidt_Manteau`: 15389
+- `DragonA_Red`: 15391
+- `DragonA_Green`: 15392
+- `DragonA_Gold`: 15393
+- `DragonA_Purple`: 15394
+- `DragonA_Blue`: 15395
+- `DragonA_Silver`: 15396
 - `Erde`: 16000
 - `Red_Square_Bag`: 16001
 - `Stunner_C`: 16002
@@ -16204,6 +16271,7 @@
 - `Rebeginer_N2_Mace`: 16076
 - `Saphir_Hall_OS`: 16088
 - `Ultio_Spes_OS`: 16089
+- `Ein_1HHAMMER`: 16099
 - `Lady_Tanee_Doll_Box`: 16131
 - `Lunatic_Hat_Box`: 16132
 - `King_Frog_Hat_Box`: 16134
@@ -16619,6 +16687,7 @@
 - `Infinity_Bow`: 18128
 - `Scarlet_Bow`: 18130
 - `Balistar_IL`: 18149
+- `Royal_Bow_K`: 18164
 - `Rebeginer_RN_Bow`: 18165
 - `Rebeginer_WM_Bow`: 18166
 - `Neev_Bow_Of_Rogue`: 18170
@@ -16628,6 +16697,7 @@
 - `AC_B44_OS`: 18180
 - `Evt_Royal_Bow_K`: 18182
 - `Evt_Narcis_Bow`: 18183
+- `Ein_BHBOW`: 18190
 - `Cheer_Scarf6`: 18500
 - `Cheer_Scarf8`: 18501
 - `Cheer_Scarf10`: 18502
@@ -17849,10 +17919,17 @@
 - `C_Magic_Circle`: 20515
 - `C_Wings_of_Michael`: 20516
 - `C_GiantCatBag_TW`: 20517
+- `C_Full_BloomCherry_Tree`: 20519
 - `C_GoldButterfly_Wing`: 20528
 - `C_Wings_of_Gabriel`: 20530
 - `C_PinkButterfly_Wing_T`: 20533
 - `C_Digital_Space`: 20535
+- `C_Halloween_Poring_Bag`: 20543
+- `C_Backside_Ribbon_Bell`: 20546
+- `C_HeartChocoBag`: 20570
+- `C_WingOfHeart`: 20572
+- `C_Cat_Fork`: 20576
+- `C_Big_Foxtail`: 20584
 - `Fantastic_Aura`: 20600
 - `Egir_Manteau`: 20700
 - `TE_Woe_Muffler`: 20702
@@ -17905,6 +17982,13 @@
 - `Time_Overload_Hood`: 20939
 - `Violet_Halo`: 20940
 - `Fairy_Cloth`: 20944
+- `Drag_Manteau`: 20946
+- `Temporal_M_Str`: 20963
+- `Temporal_M_Agi`: 20964
+- `Temporal_M_Vit`: 20965
+- `Temporal_M_Int`: 20966
+- `Temporal_M_Dex`: 20967
+- `Temporal_M_Luk`: 20968
 - `Upg_Twohand_Sword`: 21000
 - `Velum_Claymore`: 21001
 - `Velum_Katzbalger`: 21002
@@ -17925,8 +18009,11 @@
 - `Lindy_Hop`: 21018
 - `Onimaru`: 21019
 - `Rebeginer_RK_T_Sword`: 21037
+- `Oriental_Sword`: 21038
 - `Beam_Claymore_OS`: 21047
 - `Evt_Oriental_Sword`: 21049
+- `Taegoolyeon_IL`: 21050
+- `Ein_BHSWORD`: 21054
 - `Temporal_Str_Boots`: 22000
 - `Temporal_Int_Boots`: 22001
 - `Temporal_Agi_Boots`: 22002
@@ -17978,6 +18065,7 @@
 - `Illusion_Leg_A`: 22196
 - `Illusion_Leg_B`: 22197
 - `Time_Overload_Boots`: 22204
+- `Dragon_Boots`: 22208
 - `Para_Team_Mark_`: 22508
 - `Candy_Holder`: 22514
 - `Key_Of_Twisted_Time`: 22515
@@ -18044,10 +18132,12 @@
 - `Buy_Arbeit1_2Lv_`: 23358
 - `Buy_Arbeit1_3Lv_`: 23359
 - `Green_Scroll_K2`: 23405
+- `Shadow_Refine_Hammer`: 23436
 - `Sentimental_Scroll`: 23440
 - `July_Hair_Box`: 23444
 - `Savage_Trap`: 23446
 - `Infinity_Scroll`: 23473
+- `InfinityShadow_Mix`: 23474
 - `Infinity_Drink`: 23475
 - `Firstaid_Box_5`: 23484
 - `Firstaid_Box_10`: 23485
@@ -18074,6 +18164,9 @@
 - `White_Potion_B_20`: 23506
 - `Vote_Rose`: 23533
 - `Bloody_Scroll`: 23537
+- `Silver_Statue`: 23545
+- `Cursed_Blood`: 23546
+- `Gold_Statue`: 23547
 - `Snow_Cookie`: 23549
 - `Winter_Cookie`: 23550
 - `Festi_Cookie`: 23551
@@ -18095,11 +18188,22 @@
 - `2017_Special_Scroll`: 23618
 - `Ice_Scroll`: 23650
 - `2018_New_Year_Scroll`: 23661
+- `PhysicalMagical_Mix`: 23665
+- `ImmunedAthena_Mix`: 23666
+- `HardChamption_Mix`: 23667
+- `KingbirdAncient_Mix`: 23668
+- `CriticalHit_Mix`: 23669
+- `Geffen_Magic_Scroll`: 23675
+- `Gray_Charcoal_Melee`: 23676
+- `Gray_Charcoal_Magic`: 23677
+- `Gray_Charcoal_Range`: 23678
+- `Geffen_Magic_Scroll2`: 23679
 - `EVT_JAN02KR`: 23683
 - `Lunar_New_Year_Scroll`: 23700
 - `Reactor_Z`: 23706
 - `Reactor_Z_`: 23707
 - `2018_Spring_Scroll`: 23710
+- `Shadow_Random_Mix`: 23720
 - `Melon_Bread`: 23723
 - `Costama_EggV02`: 23765
 - `Mysterious_Plastic`: 23771
@@ -18107,15 +18211,101 @@
 - `EP17_1_SPC02`: 23773
 - `EP17_1_SPC03`: 23774
 - `EP17_1_SPC04`: 23775
+- `EP17_1_SPC05`: 23776
+- `EP17_1_SPC06`: 23777
+- `EP17_1_SPC07`: 23778
+- `EP17_1_SPC08`: 23779
+- `EP17_1_SPC09`: 23780
+- `EP17_1_SPC10`: 23781
+- `Magma_Essence`: 23815
 - `Bs_Making_Scrolls`: 23817
+- `Bs_Item_M_S_2`: 23818
+- `Bs_Item_M_S_8`: 23819
+- `Bs_Item_M_S_10`: 23820
+- `Bs_Item_M_S_11`: 23821
+- `Bs_Item_M_S_34`: 23822
+- `Bs_Item_M_S_41`: 23823
+- `Bs_Item_M_S_42`: 23824
+- `Bs_Item_M_S_43`: 23825
+- `Bs_Item_M_S_44`: 23826
+- `Bs_Sha_M_S_1`: 23827
+- `Bs_Sha_M_S_17`: 23828
+- `Bs_Sha_M_S_18`: 23829
+- `Bs_Sha_M_S_19`: 23830
+- `Bs_Sha_M_S_20`: 23831
+- `Bs_Item_M_S_4`: 23832
+- `Bs_Item_M_S_6`: 23833
+- `Bs_Item_M_S_7`: 23834
+- `Bs_Item_M_S_12`: 23835
+- `Bs_Item_M_S_13`: 23836
+- `Bs_Item_M_S_15`: 23837
+- `Bs_Item_M_S_28`: 23838
+- `Bs_Item_M_S_29`: 23839
+- `Bs_Item_M_S_31`: 23840
+- `Bs_Item_M_S_32`: 23841
+- `Bs_Item_M_S_33`: 23842
+- `Bs_Item_M_S_36`: 23843
+- `Bs_Item_M_S_37`: 23844
+- `Bs_Item_M_S_38`: 23845
+- `Bs_Item_M_S_39`: 23846
+- `Bs_Item_M_S_40`: 23847
+- `Bs_Item_M_S_45`: 23848
+- `Bs_Item_M_S_46`: 23849
+- `Bs_Item_M_S_47`: 23850
+- `Bs_Item_M_S_48`: 23851
+- `Bs_Item_M_S_49`: 23852
+- `Bs_Item_M_S_50`: 23853
+- `Bs_Sha_M_S_2`: 23854
+- `Bs_Sha_M_S_5`: 23855
+- `Bs_Sha_M_S_6`: 23856
+- `Bs_Sha_M_S_7`: 23857
+- `Bs_Sha_M_S_8`: 23858
+- `Bs_Sha_M_S_13`: 23859
+- `Bs_Sha_M_S_15`: 23860
+- `Bs_Sha_M_S_16`: 23861
+- `Bs_Sha_M_S_23`: 23862
+- `Bs_Item_M_S_5`: 23863
+- `Bs_Item_M_S_9`: 23864
+- `Bs_Item_M_S_14`: 23865
+- `Bs_Item_M_S_16`: 23866
+- `Bs_Item_M_S_17`: 23867
+- `Bs_Item_M_S_19`: 23868
+- `Bs_Item_M_S_27`: 23869
+- `Bs_Item_M_S_35`: 23870
+- `Bs_Sha_M_S_9`: 23871
+- `Bs_Sha_M_S_10`: 23872
+- `Bs_Sha_M_S_11`: 23873
+- `Bs_Sha_M_S_21`: 23874
+- `Bs_Sha_M_S_22`: 23875
+- `Bs_Item_M_S_1`: 23876
+- `Bs_Item_M_S_3`: 23877
 - `StarSoul_Scroll`: 23878
+- `Bs_Item_M_S_18`: 23879
+- `Bs_Item_M_S_20`: 23880
+- `Bs_Item_M_S_21`: 23881
+- `Bs_Item_M_S_22`: 23882
+- `Bs_Item_M_S_23`: 23883
+- `Bs_Item_M_S_24`: 23884
+- `Bs_Item_M_S_25`: 23885
+- `Bs_Item_M_S_26`: 23886
+- `Bs_Item_M_S_30`: 23887
+- `Bs_Sha_M_S_3`: 23888
+- `Bs_Sha_M_S_4`: 23889
+- `Bs_Sha_M_S_12`: 23890
+- `Bs_Sha_M_S_14`: 23891
+- `Bs_Sha_M_S_24`: 23892
+- `Bs_Sha_M_S_25`: 23893
+- `Bs_Item_M_S_51`: 23894
 - `2018_Jump_Thx_Box`: 23897
 - `Comp_Power_Booster`: 23898
 - `Comp_Almighty`: 23899
 - `Time_Overload_Box`: 23900
 - `110LVUP`: 23901
 - `Season_Evt_Reward`: 23921
+- `Shadow_9_Refine_Hammer`: 23926
 - `Malang_Cat_Can2`: 23962
+- `EnchantStone_Recipe_9m`: 23967
+- `Abyss_Ddbox`: 23981
 - `T1_Shadow_Armor`: 24000
 - `T1_Shadow_Weapon`: 24001
 - `T1_Shadow_Shield`: 24002
@@ -18404,6 +18594,167 @@
 - `S_Timeoverload_Shoes`: 24419
 - `S_Timeoverload_Earing`: 24420
 - `S_Timeoverload_Pandent`: 24421
+- `S_Tempest_Weapon`: 24423
+- `S_Tempest_Armor`: 24424
+- `S_PerfectSize_Weapon`: 24425
+- `S_PerfectSize_Armor`: 24426
+- `S_M_Exo_Co_Weapon`: 24427
+- `S_M_Viv_Dr_Weapon`: 24428
+- `S_M_Sci_Hu_Weapon`: 24429
+- `S_M_Fis_In_Weapon`: 24430
+- `S_M_Exe_Ho_Weapon`: 24431
+- `S_Penetration_Weapon`: 24432
+- `S_Penetration_Armor`: 24433
+- `S_Exe_Ho_Weapon`: 24434
+- `S_Fis_In_Weapon`: 24435
+- `S_Sci_Hu_Weapon`: 24436
+- `S_Viv_Dr_Weapon`: 24437
+- `S_Exo_Co_Weapon`: 24438
+- `S_Hasty_Weapon`: 24439
+- `S_Sonic_Armor`: 24440
+- `S_Sonic_Shield`: 24441
+- `S_Sonic_Shoes`: 24442
+- `S_Ignition_Weapon`: 24443
+- `S_Ignition_Pendant`: 24444
+- `S_Ignition_Earing`: 24445
+- `S_W_Breath_Armor`: 24446
+- `S_W_Breath_Shield`: 24447
+- `S_W_Breath_Shoes`: 24448
+- `S_F_Breath_Weapon`: 24449
+- `S_F_Breath_Pendant`: 24450
+- `S_F_Breath_Earing`: 24451
+- `S_Cluster_Armor`: 24452
+- `S_Cluster_Shield`: 24453
+- `S_Cluster_Shoes`: 24454
+- `S_Aimed_Weapon`: 24455
+- `S_Aimed_Pendant`: 24456
+- `S_Aimed_Earing`: 24457
+- `S_Arrow_Armor`: 24458
+- `S_Arrow_Shield`: 24459
+- `S_Arrow_Shoes`: 24460
+- `S_Shooting_Weapon`: 24461
+- `S_Shooting_Pendant`: 24462
+- `S_Shooting_Earing`: 24463
+- `S_Tornado_Armor`: 24464
+- `S_Tornado_Shield`: 24465
+- `S_Tornado_Shoes`: 24466
+- `S_Boomerang_Weapon`: 24467
+- `S_Boomerang_Pendant`: 24468
+- `S_Boomerang_Earing`: 24469
+- `S_Vulcan_Armor`: 24470
+- `S_Vulcan_Shield`: 24471
+- `S_Vulcan_Shoes`: 24472
+- `S_Arms_Weapon`: 24473
+- `S_Arms_Pendant`: 24474
+- `S_Arms_Earing`: 24475
+- `S_Rampage_Armor`: 24476
+- `S_Rampage_Shield`: 24477
+- `S_Rampage_Shoes`: 24478
+- `S_Skynetblow_Weapon`: 24479
+- `S_Skynetblow_Pendant`: 24480
+- `S_Skynetblow_Earing`: 24481
+- `S_Knucklearrow_Armor`: 24482
+- `S_Knucklearrow_Shield`: 24483
+- `S_Knucklearrow_Shoes`: 24484
+- `S_TigerCannon_Weapon`: 24485
+- `S_Tigercannon_Pendant`: 24486
+- `S_Tigercannon_Earing`: 24487
+- `S_Duplelight_Armor`: 24488
+- `S_Duplelight_Shield`: 24489
+- `S_Duplelight_Shoes`: 24490
+- `S_Adoramus_Weapon`: 24491
+- `S_Adoramus_Pendant`: 24492
+- `S_Adoramus_Earing`: 24493
+- `S_Judex_Armor`: 24494
+- `S_Judex_Shield`: 24495
+- `S_Judex_Shoes`: 24496
+- `S_Magnus_Weapon`: 24497
+- `S_Magnus_Pendant`: 24498
+- `S_Magnus_Earing`: 24499
+- `S_Rainstorm_Armor`: 24500
+- `S_Rainstorm_Shield`: 24501
+- `S_Rainstorm_Shoes`: 24502
+- `S_Arrowvulcan_Weapon`: 24503
+- `S_Arrowvulcan_Pendant`: 24504
+- `S_Arrowvulcan_Earing`: 24505
+- `S_Metalic_Armor`: 24506
+- `S_Metalic_Shield`: 24507
+- `S_Metalic_Shoes`: 24508
+- `S_Reverberation_Weapon`: 24509
+- `S_Reverberation_Pendant`: 24510
+- `S_Reverberation_Earing`: 24511
+- `S_Jack_Armor`: 24512
+- `S_Jack_Shield`: 24513
+- `S_Jack_Shoes`: 24514
+- `S_Strain_Weapon`: 24515
+- `S_Strain_Pendant`: 24516
+- `S_Strain_Earing`: 24517
+- `S_Crimson_Armor`: 24518
+- `S_Crimson_Shield`: 24519
+- `S_Crimson_Shoes`: 24520
+- `S_Chain_Weapon`: 24521
+- `S_Chain_Pendant`: 24522
+- `S_Chain_Earing`: 24523
+- `S_Triangle_Armor`: 24524
+- `S_Triangle_Shield`: 24525
+- `S_Triangle_Shoes`: 24526
+- `S_Shadowspell_Weapon`: 24527
+- `S_Shadowspell_Pendant`: 24528
+- `S_Shadowspell_Earing`: 24529
+- `S_Menace_Armor`: 24530
+- `S_Menace_Shield`: 24531
+- `S_Menace_Shoes`: 24532
+- `S_Paint_Weapon`: 24533
+- `S_Paint_Pendant`: 24534
+- `S_Paint_Earing`: 24535
+- `S_Rolling_Armor`: 24536
+- `S_Rolling_Shield`: 24537
+- `S_Rolling_Shoes`: 24538
+- `S_Katar_Weapon`: 24539
+- `S_Katar_Pendant`: 24540
+- `S_Katar_Earing`: 24541
+- `S_Slash_Armor`: 24542
+- `S_Slash_Shield`: 24543
+- `S_Slash_Shoes`: 24544
+- `S_Ripper_Weapon`: 24545
+- `S_Ripper_Pendant`: 24546
+- `S_Ripper_Earing`: 24547
+- `S_Dust_Armor`: 24548
+- `S_Dust_Shield`: 24549
+- `S_Dust_Shoes`: 24550
+- `S_Grave_Weapon`: 24551
+- `S_Grave_Pendant`: 24552
+- `S_Grave_Earing`: 24553
+- `S_Psychic_Armor`: 24554
+- `S_Psychic_Shield`: 24555
+- `S_Psychic_Shoes`: 24556
+- `S_Varetyr_Weapon`: 24557
+- `S_Varetyr_Pendant`: 24558
+- `S_Varetyr_Earing`: 24559
+- `S_Cart_Tornado_Armor`: 24560
+- `S_Cart_Tornado_Shield`: 24561
+- `S_Cart_Tornado_Shoes`: 24562
+- `S_Cannon_Cart_Weapon`: 24563
+- `S_Cannon_Cart_Pendant`: 24564
+- `S_Cannon_Cart_Earing`: 24565
+- `S_Spore_Bomb_Armor`: 24566
+- `S_Spore_Bomb_Shield`: 24567
+- `S_Spore_Bomb_Shoes`: 24568
+- `S_Crazy_Weapon`: 24569
+- `S_Crazy_Pendant`: 24570
+- `S_Crazy_Earing`: 24571
+- `S_Brand_Armor`: 24572
+- `S_Brand_Shield`: 24573
+- `S_Brand_Shoes`: 24574
+- `S_Chain_Press_Weapon`: 24575
+- `S_Chain_Press_Pendant`: 24576
+- `S_Chain_Press_Earing`: 24577
+- `S_Banish_Cannon_Armor`: 24578
+- `S_Banish_Cannon_Shield`: 24579
+- `S_Banish_Cannon_Shoes`: 24580
+- `S_Genesis_Weapon`: 24581
+- `S_Genesis_Pendant`: 24582
+- `S_Genesis_Earing`: 24583
 - `BrokenArrow`: 25258
 - `Shining_Spore`: 25265
 - `Dried_Leaf_Of_Ygg`: 25266
@@ -18510,17 +18861,58 @@
 - `GH_Cursed_Crystal`: 25739
 - `GH_Cursed_Gemstone`: 25740
 - `Inventory_Extension_Coupon`: 25793
+- `SuraStone_Robe2`: 25797
+- `SuraStone_Bottom2`: 25798
+- `SuraStone_Middle2`: 25799
+- `SuraStone_Top2`: 25800
+- `SorcererStone_Robe2`: 25801
+- `SorcererStone_Bottom2`: 25802
+- `SorcererStone_Middle2`: 25803
+- `SorcererStone_Top2`: 25804
+- `ShadowchaserStone_Robe2`: 25805
+- `ShadowchasStone_Bottom2`: 25806
+- `ShadowchasStone_Middle2`: 25807
+- `ShadowchaserStone_Top2`: 25808
+- `Ein_SOLIDDUST`: 25815
+- `Ein_RUSTHELM`: 25816
+- `Ein_EYEROCK`: 25817
+- `SoulreaperStone_Robe`: 25842
+- `SoullinkerStone_Top`: 25843
+- `SoullinkerStone_Middle`: 25844
+- `SoullinkerStone_Bottom`: 25845
+- `GladiatorStone_Top`: 25846
+- `GladiatorStone_Middle`: 25847
+- `GladiatorStone_Bottom`: 25848
+- `StaremperorStone_Robe`: 25849
+- `NinjaStone_Top`: 25850
+- `NinjaStone_Middle`: 25851
+- `NinjaStone_Bottom`: 25852
+- `KagerouStone_Robe`: 25853
+- `OboroStone_Robe`: 25854
+- `GunslingerStone_Top`: 25855
+- `GunslingerStone_Middle`: 25856
+- `GunslingerStone_Bottom`: 25857
+- `RebellionStone_Robe`: 25858
+- `DoramStone_Top`: 25859
+- `DoramStone_Middle`: 25860
+- `DoramStone_Bottom`: 25861
+- `DoramStone_Robe`: 25862
 - `Spectral_Spear_IL`: 26007
 - `Rebeginer_LG_Lance`: 26015
 - `Paradise_Foxtail_Staff_III`: 26101
 - `Staff_Of_Bordeaux_IL`: 26109
 - `CandyCaneRod`: 26110
 - `Metal_Foxtail`: 26111
+- `Shadow_Staff_K`: 26118
 - `Rebeginer_SO_Rod`: 26119
 - `Rebeginer_DO_Rod`: 26120
 - `Rutilus_Stick_OS`: 26151
+- `SoulWeight`: 26154
 - `MeawFoxtail`: 26155
 - `Evt_Shadow_Staff_K`: 26156
+- `Ein_1HWAND`: 26162
+- `ElectricFox_OS`: 26164
+- `Ein_1HWHIP`: 26215
 - `Faceworm_Queen_Card`: 27164
 - `Captain_Felock_Card`: 27182
 - `Thanos_Katar`: 28000
@@ -18533,14 +18925,18 @@
 - `Ghoul_Leg_IL`: 28023
 - `Rebeginer_GC_Katar`: 28027
 - `Meuchler_OS`: 28038
+- `Shiver_Katar_K`: 28039
 - `Evt_Shiver_Katar_K`: 28040
+- `Ein_BHKATAR`: 28045
 - `Thanos_Axe`: 28100
 - `Tornado_Axe`: 28101
 - `Infinity_Two_handed_Axe`: 28105
 - `Scarlet_Twohand_Axe`: 28106
 - `Two_Handed_Axe_of_Vicious_Mind`: 28107
+- `Avenger`: 28130
 - `Blasti_OS`: 28136
 - `Evt_Avenger`: 28137
+- `Ein_BHAXE`: 28140
 - `END_OF_HORIZON`: 28200
 - `Southern_Cross_R`: 28201
 - `Southern_Cross_R_`: 28202
@@ -18552,6 +18948,11 @@
 - `Calf_Python`: 28243
 - `Gate_KeeperDD_IL`: 28244
 - `HR_S55_OS`: 28253
+- `Butcher_IL`: 28254
+- `Master_Soul_Rifle`: 28255
+- `Demon_S_Shot`: 28256
+- `Golden_L_Launcher`: 28257
+- `The_Black_Gatling`: 28258
 - `Bless_Of_Moon`: 28306
 - `Earring_Of_Sarah_L`: 28310
 - `Earring_Of_Sarah_R`: 28311
@@ -18595,16 +18996,24 @@
 - `Rebeginer_AB_Bible`: 28616
 - `Tablet_IL`: 28626
 - `Circuit_Board_OS`: 28629
+- `Demon_Hunting_Bible_K`: 28630
 - `Time_Kamiji`: 28631
+- `Ein_1HBOOK`: 28635
 - `Infinity_Dagger`: 28703
 - `Twilight_Desert_`: 28704
 - `Scarlet_Dagger`: 28705
 - `Dagger_of_Vicious_Mind`: 28706
 - `Moonlight_Sword_IL`: 28725
 - `Rebeginer_SC_Dagger`: 28740
+- `Magic_Sword`: 28744
 - `Counter_Dagger_IL`: 28745
 - `Kuroiro_OS`: 28755
 - `Evt_Magic_Sword`: 28759
+- `Bazerald_IL`: 28762
+- `Sharp_Wind_Sword`: 28763
+- `Fog_Dew_Sword`: 28764
+- `Ein_1HDAGGER`: 28771
+- `Ein_1HMAGGER`: 28772
 - `Praetorian_Shield`: 28900
 - `Cursed_Mad_Bunny`: 28901
 - `Mad_Bunny_`: 28902
@@ -18670,6 +19079,7 @@
 - `Harvest_Festa_Hat`: 31368
 - `Straight_Long_WH_`: 31369
 - `Straight_Long_YL_`: 31370
+- `C_Cat_Ears_Punkish`: 31382
 - `Jjakk`: 31387
 - `White_Bird_Rose`: 31389
 - `Let_It_Snow`: 31390
@@ -18682,34 +19092,281 @@
 - `C_Astro_Circle`: 31433
 - `C_Baby_Penguin`: 31437
 - `C_Fluffy_Heart_Earmuffs`: 31439
+- `C_Snow_Bear_Food`: 31440
 - `White_Cat`: 31452
 - `Love_Feeling`: 31454
 - `Enchanted_Dog`: 31455
 - `C_Blessing_Sky_Lantern`: 31460
 - `C_Flying_Drone`: 31463
 - `Egg_Minihat`: 31465
+- `C_CatCoffeeCup_TW`: 31481
+- `C_CatEarRibbon_TW`: 31483
 - `C_Bouquet_Hat`: 31489
 - `C_Poring_Muffler`: 31490
 - `Volume_Low_Twin`: 31494
 - `Lolita_Two_Side_Up`: 31495
 - `C_Elephangel_TH`: 31498
+- `C_Panda_Rabbit`: 31512
 - `Mini_Melon`: 31516
 - `Pop_Popcorn_Hat_`: 31518
 - `Slurp_Slurp_Hat`: 31519
 - `C_Happy_Rabbit_Ribbon`: 31529
+- `C_Princess_Ribbon_Crown`: 31565
+- `C_OpenAir_Headset`: 31569
+- `C_Mobile_Pursuit_System`: 31572
+- `C_Mecha_Cat_Ears`: 31573
+- `C_Cyber_Income`: 31574
 - `Autumnal_Flavor`: 31580
+- `C_Poporing_Muffler`: 31586
 - `GOLD_MAJESTIC_GOUT`: 31589
+- `C_Kishu_Inu`: 31600
 - `C_Autumn_Headband`: 31606
+- `C_Fox`: 31614
+- `C_Sleep_Sheep_TW`: 31616
+- `C_HeartOfCat_TW`: 31624
+- `C_Protect_Cloth`: 31625
+- `C_LunaticMuffler`: 31693
+- `C_Pigtail_Red_Hood`: 31698
+- `C_Smiling_Eyes`: 31699
+- `C_Garnet_Tiara`: 31765
+- `C_Peony_Hair_Ornament`: 31766
+- `C_SavageB_On_Shoulder`: 31787
+- `C_Baby_Panda`: 31798
 - `Pole_Axe_IL`: 32005
 - `Metal_Stick`: 32013
+- `Undine_Spear_K`: 32018
 - `Boost_Lance_OS`: 32019
 - `Evt_Undine_Spear_K`: 32021
+- `Ein_1HSPEAR`: 32026
+- `Ein_1HLUTE`: 32110
 - `Illusion_B_R`: 32207
 - `Illusion_B_L`: 32208
 - `Illusion_BC_R`: 32209
 - `Illusion_BC_L`: 32210
 - `Time_Overload_Ring`: 32221
 - `Celine_Brooch`: 32237
+- `Gold_Lux_IL`: 32301
+- `Crimson_Rose`: 32302
+- `Ein_1HGUN`: 32303
+- `Ein_1HSWORD`: 32352
+- `Atker_Plate`: 450001
+- `Ele_Robe`: 450002
+- `Atker_Manteau`: 480000
+- `Defn_Robe`: 450003
+- `Ele_Muffler`: 480001
+- `Ran_Suits`: 450004
+- `Defn_Muffler`: 480002
+- `Ran_Manteau`: 480003
+- `Boost_Dagger`: 510001
+- `Boost_Nindo`: 510002
+- `Boost_Spl_Book`: 540000
+- `Boost_Text`: 540001
+- `Boost_Guitar`: 570000
+- `Fatalist`: 510006
+- `Trumpet_Shell_K`: 570002
+- `Boost_TH_Sword`: 600001
+- `Noblesse_Attack_Manteau`: 480012
+- `Dragonic_Slayer`: 600004
+- `Noblesse_Magic_Manteau`: 480014
+- `Noblesse_Breath_Armor`: 450018
+- `Imperial_Attack_Manteau`: 480016
+- `Noblesse_Knight_Armor`: 450019
+- `Imperial_Magic_Manteau`: 480017
+- `Noblesse_Spear_Armor`: 450020
+- `Grace_Attack_Manteau`: 480018
+- `Noblesse_Genesis_Armor`: 450021
+- `Grace_Magic_Manteau`: 480019
+- `Noblesse_Sharp_Suit`: 450022
+- `Noblesse_Aim_Suit`: 450023
+- `Noblesse_Severe_Suit`: 450024
+- `Noblesse_Reverb_Suit`: 450025
+- `Noblesse_Adora_Robe`: 450026
+- `Noblesse_Duple_Robe`: 450027
+- `Noblesse_Tonado_Armor`: 450028
+- `Noblesse_Vulcan_Armor`: 450029
+- `Noblesse_Kart_Suit`: 450030
+- `Noblesse_Kart_Suit2`: 450031
+- `Noblesse_Rolling_Suit`: 450032
+- `Noblesse_Assasin_Suit`: 450033
+- `Noblesse_Fatal_Suit`: 450034
+- `Noblesse_Stalker_Suit`: 450035
+- `Noblesse_Picky_Robe`: 450036
+- `Noblesse_Carrot_Robe`: 450037
+- `Noblesse_Trip_Suit`: 450038
+- `Noblesse_Firerain_Suit`: 450039
+- `Noblesse_Crimson_Robe`: 450040
+- `Noblesse_Frost_Robe`: 450041
+- `Noblesse_Psychic_Robe`: 450042
+- `Noblesse_Dust_Robe`: 450043
+- `Noblesse_Sun_Suit`: 450044
+- `Noblesse_Moon_Suit`: 450045
+- `Noblesse_Ninja_Suit`: 450046
+- `Noblesse_Kunai_Suit`: 450047
+- `Noblesse_Swhoo_Robe`: 450048
+- `Noblesse_Explosion_Robe`: 450049
+- `Noblesse_Knuckle_Suit`: 450050
+- `Noblesse_Tiger_Suit`: 450051
+- `Imperial_Breath_Armor`: 450052
+- `Imperial_Knight_Armor`: 450053
+- `Imperial_Spear_Armor`: 450054
+- `Imperial_Genesis_Armor`: 450055
+- `Imperial_Sharp_Suit`: 450056
+- `Imperial_Aim_Suit`: 450057
+- `Imperial_Severe_Suit`: 450058
+- `Imperial_Reverb_Suit`: 450059
+- `Imperial_Adora_Robe`: 450060
+- `Imperial_Duple_Robe`: 450061
+- `WarlockStone_Robe2`: 1000213
+- `Imperial_Knuckle_Suit`: 450062
+- `WarlockStone_Top2`: 1000214
+- `Imperial_Tiger_Suit`: 450063
+- `WarlockStone_Middle2`: 1000215
+- `Imperial_Tonado_Armor`: 450064
+- `WarlockStone_Bottom2`: 1000216
+- `Imperial_Vulcan_Armor`: 450065
+- `RoyalguardStone_Robe2`: 1000217
+- `Imperial_Kart_Suit`: 450066
+- `PaladinStone_Top2`: 1000218
+- `Imperial_Kart_Suit2`: 450067
+- `PaladinStone_Middle2`: 1000219
+- `Imperial_Rolling_Suit`: 450068
+- `PaladinStone_Bottom2`: 1000220
+- `Imperial_Assasin_Suit`: 450069
+- `GuillcrossStone_Robe2`: 1000221
+- `Imperial_Fatal_Suit`: 450070
+- `AssacrossStone_Top2`: 1000222
+- `IDTest_Special`: 100000
+- `Imperial_Stalker_Suit`: 450071
+- `AssacrossStone_Middle2`: 1000223
+- `Imperial_Picky_Robe`: 450072
+- `AssacrossStone_Bottom2`: 1000224
+- `Imperial_Carrot_Robe`: 450073
+- `ILL_Piece_A`: 100003
+- `Imperial_Trip_Suit`: 450074
+- `ILL_Piece_B`: 100004
+- `Imperial_Firerain_Suit`: 450075
+- `Imperial_Crimson_Robe`: 450076
+- `Imperial_Frost_Robe`: 450077
+- `Imperial_Psychic_Robe`: 450078
+- `Imperial_Dust_Robe`: 450079
+- `Joy_Of_Victory`: 100009
+- `Imperial_Sun_Suit`: 450080
+- `PerfectSize_Mix`: 100010
+- `Imperial_Moon_Suit`: 450081
+- `MagicPiercing_Mix`: 100011
+- `Imperial_Ninja_Suit`: 450082
+- `Imperial_Kunai_Suit`: 450083
+- `Imperial_Swhoo_Robe`: 450084
+- `Imperial_Explosion_Robe`: 450085
+- `Grace_Breath_Armor`: 450086
+- `Grace_Knight_Armor`: 450087
+- `Grace_Spear_Armor`: 450088
+- `Grace_Genesis_Armor`: 450089
+- `Grace_Sharp_Suit`: 450090
+- `Grace_Aim_Suit`: 450091
+- `Grace_Severe_Suit`: 450092
+- `Victory_Wing_Ear_`: 400002
+- `Grace_Reverb_Suit`: 450093
+- `Ancient_Hero_Bravery`: 100023
+- `Grace_Adora_Robe`: 450094
+- `Grace_Duple_Robe`: 450095
+- `Ancient_Hero_Wisdom`: 100025
+- `Grace_Knuckle_Suit`: 450096
+- `Grace_Tiger_Suit`: 450097
+- `Grace_Tonado_Armor`: 450098
+- `Grace_Vulcan_Armor`: 450099
+- `Boost_Axe`: 520000
+- `Grace_Kart_Suit`: 450100
+- `Grace_Kart_Suit2`: 450101
+- `Grace_Rolling_Suit`: 450102
+- `Boost_Soul_Rod`: 550001
+- `Grace_Assasin_Suit`: 450103
+- `Boost_Foxtail`: 550002
+- `Boost_Whip`: 580000
+- `Grace_Fatal_Suit`: 450104
+- `Grace_Stalker_Suit`: 450105
+- `Barb_Wire_K`: 580002
+- `Boost_Katar`: 610000
+- `Grace_Picky_Robe`: 450106
+- `Grace_Carrot_Robe`: 450107
+- `Ein_1H_Foxtail`: 550006
+- `Boost_Staff`: 640000
+- `Grace_Trip_Suit`: 450108
+- `Freezing_Rod`: 550007
+- `Blade_Katar`: 610003
+- `Grace_Firerain_Suit`: 450109
+- `Grace_Crimson_Robe`: 450110
+- `C_BeachBall`: 400020
+- `Grace_Frost_Robe`: 450111
+- `Blue_Crystal_Staff`: 640004
+- `Grace_Psychic_Robe`: 450112
+- `Boost_Bow`: 700001
+- `Grace_Dust_Robe`: 450113
+- `Boost_Up_1`: 100043
+- `Grace_Sun_Suit`: 450114
+- `Scalet_Dragon_L_Bow`: 700003
+- `Boost_Up_2`: 100044
+- `Grace_Moon_Suit`: 450115
+- `Grace_Ninja_Suit`: 450116
+- `Grace_Kunai_Suit`: 450117
+- `Grace_Swhoo_Robe`: 450118
+- `Grace_Explosion_Robe`: 450119
+- `Noblesse_Snovice_Suit`: 450121
+- `Noblesse_Snovice_Robe`: 450122
+- `Imperial_Snovice_Suit`: 450123
+- `Piercing_Mix`: 100053
+- `Imperial_Snovice_Robe`: 450124
+- `Grace_Snovice_Suit`: 450125
+- `Grace_Snovice_Robe`: 450126
+- `Hasty_Mix`: 100058
+- `EnchantStone_Recipe_4m`: 100060
+- `RangerStone_Top2`: 1000008
+- `RangerStone_Middle2`: 1000009
+- `RangerStone_Bottom2`: 1000010
+- `RangerStone_Robe2`: 1000011
+- `MechanicStone_Top2`: 1000012
+- `MechanicStone_Middle2`: 1000013
+- `MechanicStone_Bottom2`: 1000014
+- `MechanicStone_Robe2`: 1000015
+- `HighpriestStone_Top2`: 1000016
+- `HighpriestStone_Middle2`: 1000017
+- `HighpriestStone_Bottom2`: 1000018
+- `ArchbishopStone_Robe2`: 1000019
+- `C_SharkHead`: 440000
+- `Atker_Greave`: 470000
+- `Ele_Shoes`: 470001
+- `Defn_Shoes`: 470002
+- `Ran_Boots`: 470003
+- `Boost_Sword`: 500001
+- `Boost_Spear`: 530000
+- `Light_Blade`: 500003
+- `Slate_Sword`: 500004
+- `Boost_Knuckle`: 560000
+- `Boost_Hall`: 590000
+- `Noblesse_Rifine_Ticket`: 100128
+- `Imperial_Rifine_Ticket`: 100129
+- `Meteor_Striker`: 590002
+- `Grace_Rifine_Ticket`: 100130
+- `Ray_Knuckle`: 560005
+- `Saint_Hall`: 590003
+- `Imperial_Convert1`: 100131
+- `Imperial_Convert2`: 100132
+- `Grace_Convert1`: 100133
+- `Grace_Convert2`: 100134
+- `Imperial_Convert3`: 100135
+- `Noblesse_Attack_Boots`: 470016
+- `Imperial_Convert4`: 100136
+- `Noblesse_Magic_Boots`: 470017
+- `Grace_Convert3`: 100137
+- `Imperial_Attack_Boots`: 470018
+- `Grace_Convert4`: 100138
+- `Imperial_Magic_Boots`: 470019
+- `Grace_Attack_Boots`: 470020
+- `Grace_Magic_Boots`: 470021
+- `Abyss_Ddbox2`: 100142
+- `Boost_Gatling`: 830000
+- `Abyss_Ddbox3`: 100144
+- `Abyss_Ddbox4`: 100145
 
 > End of list
 
