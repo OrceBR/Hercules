@@ -2,8 +2,8 @@
  * This file is part of Hercules.
  * http://herc.ws - http://github.com/HerculesWS/Hercules
  *
- * Copyright (C) 2012-2018  Hercules Dev Team
- * Copyright (C)  Athena Dev Teams
+ * Copyright (C) 2012-2021 Hercules Dev Team
+ * Copyright (C) Athena Dev Teams
  *
  * Hercules is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -1552,6 +1552,11 @@ static void itemdb_read_chains(void)
 	else
 		itemdb->chain_cache[ECC_SIEGFRIED] = i;
 
+	if (!script->get_constant("ITMCHAIN_NEO_INSURANCE", &i))
+		ShowWarning("itemdb_read_chains: failed to find 'ITMCHAIN_NEO_INSURANCE' chain to link to cache!\n");
+	else
+		itemdb->chain_cache[ECC_NEO_INSURANCE] = i;
+
 	ShowStatus("Done reading '"CL_WHITE"%d"CL_RESET"' entries in '"CL_WHITE"%s"CL_RESET"'.\n", count, config_filename);
 }
 
@@ -1559,7 +1564,7 @@ static bool itemdb_read_combodb_libconfig(void)
 {
 	struct config_t combo_conf;
 	char filepath[256];
-	safesnprintf(filepath, sizeof(filepath), "%s/%s/%s", map->db_path, DBPATH, "item_combo_db.conf");
+	safesnprintf(filepath, sizeof(filepath), "%s/%s", map->db_path, DBPATH"item_combo_db.conf");
 
 	if (libconfig->load_file(&combo_conf, filepath) == CONFIG_FALSE) {
 		ShowError("itemdb_read_combodb_libconfig: can't read %s\n", filepath);

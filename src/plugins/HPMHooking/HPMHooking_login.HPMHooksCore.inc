@@ -2,7 +2,7 @@
  * This file is part of Hercules.
  * http://herc.ws - http://github.com/HerculesWS/Hercules
  *
- * Copyright (C) 2013-2019  Hercules Dev Team
+ * Copyright (C) 2013-2021 Hercules Dev Team
  *
  * Hercules is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -520,6 +520,10 @@ struct {
 	struct HPMHookPoint *HP_mutex_cond_signal_post;
 	struct HPMHookPoint *HP_mutex_cond_broadcast_pre;
 	struct HPMHookPoint *HP_mutex_cond_broadcast_post;
+	struct HPMHookPoint *HP_nullpo_init_pre;
+	struct HPMHookPoint *HP_nullpo_init_post;
+	struct HPMHookPoint *HP_nullpo_final_pre;
+	struct HPMHookPoint *HP_nullpo_final_post;
 	struct HPMHookPoint *HP_nullpo_assert_report_pre;
 	struct HPMHookPoint *HP_nullpo_assert_report_post;
 	struct HPMHookPoint *HP_packets_init_pre;
@@ -772,6 +776,8 @@ struct {
 	struct HPMHookPoint *HP_sysinfo_vcsrevision_src_post;
 	struct HPMHookPoint *HP_sysinfo_vcsrevision_scripts_pre;
 	struct HPMHookPoint *HP_sysinfo_vcsrevision_scripts_post;
+	struct HPMHookPoint *HP_sysinfo_build_revision_pre;
+	struct HPMHookPoint *HP_sysinfo_build_revision_post;
 	struct HPMHookPoint *HP_sysinfo_vcsrevision_reload_pre;
 	struct HPMHookPoint *HP_sysinfo_vcsrevision_reload_post;
 	struct HPMHookPoint *HP_sysinfo_is_superuser_pre;
@@ -1325,6 +1331,10 @@ struct {
 	int HP_mutex_cond_signal_post;
 	int HP_mutex_cond_broadcast_pre;
 	int HP_mutex_cond_broadcast_post;
+	int HP_nullpo_init_pre;
+	int HP_nullpo_init_post;
+	int HP_nullpo_final_pre;
+	int HP_nullpo_final_post;
 	int HP_nullpo_assert_report_pre;
 	int HP_nullpo_assert_report_post;
 	int HP_packets_init_pre;
@@ -1577,6 +1587,8 @@ struct {
 	int HP_sysinfo_vcsrevision_src_post;
 	int HP_sysinfo_vcsrevision_scripts_pre;
 	int HP_sysinfo_vcsrevision_scripts_post;
+	int HP_sysinfo_build_revision_pre;
+	int HP_sysinfo_build_revision_post;
 	int HP_sysinfo_vcsrevision_reload_pre;
 	int HP_sysinfo_vcsrevision_reload_post;
 	int HP_sysinfo_is_superuser_pre;

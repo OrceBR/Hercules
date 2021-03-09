@@ -2,8 +2,8 @@
  * This file is part of Hercules.
  * http://herc.ws - http://github.com/HerculesWS/Hercules
  *
- * Copyright (C) 2012-2018  Hercules Dev Team
- * Copyright (C)  Athena Dev Teams
+ * Copyright (C) 2012-2021 Hercules Dev Team
+ * Copyright (C) Athena Dev Teams
  *
  * Hercules is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -853,6 +853,15 @@ typedef enum sc_type {
 	SC_RESIST_PROPERTY_FIRE,
 	SC_RESIST_PROPERTY_WIND,
 	SC_CLIENT_ONLY_EQUIP_ARROW,
+	SC_MADOGEAR,
+	SC_POPECOOKIE,
+	SC_VITALIZE_POTION,
+	SC_SKF_MATK,
+	SC_SKF_ATK,
+	SC_SKF_ASPD,
+	SC_SKF_CAST,
+	SC_ALMIGHTY,
+	SC_NO_RECOVER_STATE,
 #ifndef SC_MAX
 	SC_MAX, //Automatically updated max, used in for's to check we are within bounds.
 #endif
@@ -1078,46 +1087,48 @@ struct status_data {
 
 //Additional regen data that only players have.
 struct regen_data_sub {
-	unsigned short
-		hp,sp;
+	int hp;
+	int sp;
 
 	//tick accumulation before healing.
 	struct {
-		unsigned int hp,sp;
+		unsigned int hp;
+		unsigned int sp;
 	} tick;
 
-	//Regen rates (where every 1 means +100% regen)
+	//Regen rates on a base of 100
 	struct {
-		unsigned char hp,sp;
+		int hp;
+		int sp;
 	} rate;
 };
 
 struct regen_data {
-
 	unsigned short flag; //Marks what stuff you may heal or not.
-	unsigned short
-		hp,sp,shp,ssp;
+	int hp;
+	int sp;
 
 	//tick accumulation before healing.
 	struct {
-		unsigned int hp,sp,shp,ssp;
+		unsigned int hp;
+		unsigned int sp;
 	} tick;
 
-	//Regen rates (where every 1 means +100% regen)
+	//Regen rates on a base of 100
 	struct {
-		unsigned char
-		hp,sp,shp,ssp;
+		int hp;
+		int sp;
 	} rate;
 
 	struct {
 		unsigned walk:1;        //Can you regen even when walking?
-		unsigned gc:1;          //Tags when you should have double regen due to GVG castle
 		unsigned overweight :2; //overweight state (1: 50%, 2: 90%)
 		unsigned block :2;      //Block regen flag (1: Hp, 2: Sp)
 	} state;
 
 	//skill-regen, sitting-skill-regen (since not all chars with regen need it)
-	struct regen_data_sub *sregen, *ssregen;
+	struct regen_data_sub *skill;
+	struct regen_data_sub *sitting;
 };
 
 struct sc_display_entry {
@@ -1206,7 +1217,7 @@ struct status_change {
 #define sc_start2(src, bl, type, rate, val1, val2, tick)             (status->change_start((src),(bl),(type),100*(rate),(val1),(val2),0,0,(tick),SCFLAG_NONE))
 #define sc_start4(src, bl, type, rate, val1, val2, val3, val4, tick) (status->change_start((src),(bl),(type),100*(rate),(val1),(val2),(val3),(val4),(tick),SCFLAG_NONE))
 
-#define status_change_end(bl,type,tid) (status->change_end_((bl),(type),(tid),__FILE__,__LINE__))
+#define status_change_end(bl,type,tid) (status->change_end_((bl),(type),(tid)))
 
 #define status_calc_bl(bl, flag)        (status->calc_bl_((bl), (enum scb_flag)(flag), SCO_NONE))
 #define status_calc_mob(md, opt)        (status->calc_bl_(&(md)->bl, SCB_ALL, (opt)))
@@ -1300,7 +1311,7 @@ struct status_interface {
 	int (*get_sc_def) (struct block_list *src, struct block_list *bl, enum sc_type type, int rate, int tick, int flag);
 	int (*change_start) (struct block_list *src, struct block_list *bl, enum sc_type type, int rate, int val1, int val2, int val3, int val4, int tick, int flag);
 	int (*change_start_sub) (struct block_list *src, struct block_list *bl, enum sc_type type, int rate, int val1, int val2, int val3, int val4, int tick, int total_tick, int flag);
-	int (*change_end_) (struct block_list* bl, enum sc_type type, int tid, const char* file, int line);
+	int (*change_end_) (struct block_list* bl, enum sc_type type, int tid);
 	bool (*is_immune_to_status) (struct status_change* sc, enum sc_type type);
 	bool (*is_boss_resist_sc) (enum sc_type type);
 	bool (*end_sc_before_start) (struct block_list *bl, struct status_data *st, struct status_change* sc, enum sc_type type, int undead_flag, int val1, int val2, int val3, int val4);
@@ -1324,8 +1335,16 @@ struct status_interface {
 	int (*calc_mercenary_) (struct mercenary_data *md, enum e_status_calc_opt opt);
 	int (*calc_elemental_) (struct elemental_data *ed, enum e_status_calc_opt opt);
 	void (*calc_misc) (struct block_list *bl, struct status_data *st, int level);
+	void (*calc_regen_pc) (struct map_session_data *sd, struct status_data *st, struct regen_data *regen);
+	void (*calc_regen_homunculus) (struct homun_data *hd, struct status_data *st, struct regen_data *regen);
+	void (*calc_regen_mercenary) (struct mercenary_data *md, struct status_data *st, struct regen_data *regen);
+	void (*calc_regen_elemental) (struct elemental_data *md, struct status_data *st, struct regen_data *regen);
 	void (*calc_regen) (struct block_list *bl, struct status_data *st, struct regen_data *regen);
-	void (*calc_regen_rate) (struct block_list *bl, struct regen_data *regen, struct status_change *sc);
+	void (*calc_regen_rate_pc) (struct map_session_data *sd, struct regen_data *regen);
+	void (*calc_regen_rate_elemental) (struct elemental_data *md, struct regen_data *regen);
+	void (*calc_regen_rate_homunculus) (struct homun_data *hd, struct regen_data *regen);
+	void (*calc_regen_rate) (struct block_list *bl, struct regen_data *regen);
+	bool (*check_skilluse_mapzone) (struct block_list *src, struct status_data *st, uint16 skill_id);
 	int (*check_skilluse) (struct block_list *src, struct block_list *target, uint16 skill_id, int flag); // [Skotlex]
 	int (*check_visibility) (struct block_list *src, struct block_list *target); //[Skotlex]
 	int (*change_spread) (struct block_list *src, struct block_list *bl);
@@ -1385,9 +1404,10 @@ struct status_interface {
 	bool (*read_scdb_libconfig_sub) (struct config_setting_t *it, int idx, const char *source);
 	bool (*read_scdb_libconfig_sub_flag) (struct config_setting_t *it, int type, const char *source);
 	bool (*read_scdb_libconfig_sub_flag_additional) (struct config_setting_t *it, int type, const char *source);
+	bool (*read_scdb_libconfig_sub_skill) (struct config_setting_t *it, int type, const char *source);
 	void (*read_job_db) (void);
 	void (*read_job_db_sub) (int idx, const char *name, struct config_setting_t *jdb);
-	void (*set_sc) (uint16 skill_id, sc_type sc, unsigned int flag);
+	void (*set_sc) (sc_type sc, unsigned int flag);
 	void (*copy) (struct status_data *a, const struct status_data *b);
 	int (*base_matk_min) (const struct status_data *st);
 	int (*base_matk_max) (const struct status_data *st);

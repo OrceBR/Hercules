@@ -2,8 +2,8 @@
  * This file is part of Hercules.
  * http://herc.ws - http://github.com/HerculesWS/Hercules
  *
- * Copyright (C) 2012-2018  Hercules Dev Team
- * Copyright (C)  rAthena Project (www.rathena.org)
+ * Copyright (C) 2012-2021 Hercules Dev Team
+ * Copyright (C) rAthena Project (www.rathena.org)
  *
  * Hercules is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -103,14 +103,16 @@ forceinline volatile int64 InterlockedExchange64(volatile int64 *target, int64 v
 
 // The __sync functions are available on x86 or ARMv6+
 #if !defined(__x86_64__) && !defined(__i386__) \
+	&& !defined(__ppc64__) && ! defined(__powerpc64__) \
 	&& ( !defined(__ARM_ARCH_VERSION__) || __ARM_ARCH_VERSION__ < 6 )
-#error Your Target Platfrom is not supported
+#error Target platform currently not supported
 #endif
 
 static forceinline int64 InterlockedExchangeAdd64(volatile int64 *addend, int64 increment){
 	return __sync_fetch_and_add(addend, increment);
 }//end: InterlockedExchangeAdd64()
 
+#if !defined(__MINGW32__) && !defined(MINGW)
 static forceinline int32 InterlockedExchangeAdd(volatile int32 *addend, int32 increment){
 	return __sync_fetch_and_add(addend, increment);
 }//end: InterlockedExchangeAdd()
@@ -146,6 +148,8 @@ static forceinline int64 InterlockedExchange64(volatile int64 *target, int64 val
 static forceinline int32 InterlockedExchange(volatile int32 *target, int32 val){
 	return __sync_lock_test_and_set(target, val);
 }//end: InterlockedExchange()
+
+#endif  // !defined(__MINGW32__) && !defined(MINGW)
 
 #endif //endif compiler decision
 

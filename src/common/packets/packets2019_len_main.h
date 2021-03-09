@@ -2,8 +2,8 @@
  * This file is part of Hercules.
  * http://herc.ws - http://github.com/HerculesWS/Hercules
  *
- * Copyright (C) 2018-2019  Hercules Dev Team
- * Copyright (C) 2018-2019  Andrei Karas (4144)
+ * Copyright (C) 2018-2021 Hercules Dev Team
+ * Copyright (C) 2018-2020 Andrei Karas (4144)
  *
  * Hercules is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -4294,7 +4294,11 @@ packetLen(0x0af8, 11)
 packetLen(0x0af9, 6)
 
 // Packet: 0x0afa
+#if PACKETVER >= 20191204
+packetLen(0x0afa, 58)
+#elif PACKETVER >= 20190109
 packetLen(0x0afa, 54)
+#endif
 
 // Packet: 0x0afb
 packetLen(0x0afb, -1)
@@ -4612,7 +4616,9 @@ packetLen(0x0b3e, -1)
 #endif
 
 // Packet: 0x0b3f
-#if PACKETVER >= 20191016
+#if PACKETVER >= 20191224
+packetLen(0x0b3f, 64)
+#elif PACKETVER >= 20191016
 packetLen(0x0b3f, 63)
 #elif PACKETVER >= 20190724
 packetLen(0x0b3f, 64)
@@ -4624,33 +4630,43 @@ packetLen(0x0b40, -1)
 #endif
 
 // Packet: 0x0b41
-#if PACKETVER >= 20191016
+#if PACKETVER >= 20191224
+packetLen(0x0b41, 70)
+#elif PACKETVER >= 20191016
 packetLen(0x0b41, 69)
 #elif PACKETVER >= 20190724
 packetLen(0x0b41, 41)
 #endif
 
 // Packet: 0x0b42
-#if PACKETVER >= 20191016
+#if PACKETVER >= 20191224
+packetLen(0x0b42, 62)
+#elif PACKETVER >= 20191016
 packetLen(0x0b42, 61)
 #elif PACKETVER >= 20190724
 packetLen(0x0b42, 30)
 #endif
 
 // Packet: 0x0b43
-#if PACKETVER >= 20190724
+#if PACKETVER >= 20191224
+packetLen(0x0b43, 48)
+#elif PACKETVER >= 20190724
 packetLen(0x0b43, 47)
 #endif
 
 // Packet: 0x0b44
-#if PACKETVER >= 20191016
+#if PACKETVER >= 20191224
+packetLen(0x0b44, 58)
+#elif PACKETVER >= 20191016
 packetLen(0x0b44, 57)
 #elif PACKETVER >= 20190724
 packetLen(0x0b44, 32)
 #endif
 
 // Packet: 0x0b45
-#if PACKETVER >= 20191016
+#if PACKETVER >= 20191224
+packetLen(0x0b45, 58)
+#elif PACKETVER >= 20191016
 packetLen(0x0b45, 57)
 #elif PACKETVER >= 20190724
 packetLen(0x0b45, 32)
@@ -4837,13 +4853,52 @@ packetLen(0x0b65, -1)
 #endif
 
 // Packet: 0x0b66
-#if PACKETVER >= 20191106
+#if PACKETVER >= 20191224
+packetLen(0x0b66, 26)
+#elif PACKETVER >= 20191106
 packetLen(0x0b66, 25)
 #endif
 
 // Packet: 0x0b67
-#if PACKETVER >= 20191106
+#if PACKETVER >= 20191224
+packetLen(0x0b67, 33)
+#elif PACKETVER >= 20191106
 packetLen(0x0b67, 32)
+#endif
+
+// Packet: 0x0b68
+#if PACKETVER >= 20191120
+packetLen(0x0b68, 12)
+#endif
+
+// Packet: 0x0b69
+#if PACKETVER >= 20191127
+packetLen(0x0b69, 18)
+#endif
+
+// Packet: 0x0b6a
+#if PACKETVER >= 20191204
+packetLen(0x0b6a, -1)
+#endif
+
+// Packet: 0x0b6b
+#if PACKETVER >= 20191218
+packetLen(0x0b6b, 14)
+#endif
+
+// Packet: 0x0b6c
+#if PACKETVER >= 20191218
+packetLen(0x0b6c, 12)
+#endif
+
+// Packet: 0x0b6d
+#if PACKETVER >= 20191224
+packetLen(0x0b6d, 6)
+#endif
+
+// Packet: 0x0b6e
+#if PACKETVER >= 20191224
+packetLen(0x0b6e, 14)
 #endif
 
 

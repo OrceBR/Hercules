@@ -2,7 +2,7 @@
  * This file is part of Hercules.
  * http://herc.ws - http://github.com/HerculesWS/Hercules
  *
- * Copyright (C) 2013-2018  Hercules Dev Team
+ * Copyright (C) 2013-2021 Hercules Dev Team
  *
  * Hercules is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -65,6 +65,8 @@ struct {
 bool itemdb2sql_torun = false;
 /// Whether the mob_db converter will automatically run.
 bool mobdb2sql_torun = false;
+/// mysql handle for escape strings
+static struct Sql *sql_handle = NULL;
 
 /// Backup of the original item_db parser function pointer.
 int (*itemdb_readdb_libconfig_sub) (struct config_setting_t *it, int n, const char *source);
@@ -104,7 +106,7 @@ void db2sql_fileheader(void)
 			"-- This file is part of Hercules.\n"
 			"-- http://herc.ws - http://github.com/HerculesWS/Hercules\n"
 			"--\n"
-			"-- Copyright (C) 2013-%d  Hercules Dev Team\n"
+			"-- Copyright (C) 2013-%d Hercules Dev Team\n"
 			"--\n"
 			"-- Hercules is free software: you can redistribute it and/or modify\n"
 			"-- it under the terms of the GNU General Public License as published by\n"
@@ -249,11 +251,11 @@ int itemdb2sql_sub(struct config_setting_t *entry, int n, const char *source)
 		StrBuf->Printf(&buf, "'%u',", (uint32)it->nameid);
 
 		// name_english
-		SQL->EscapeString(NULL, e_name, it->name);
+		SQL->EscapeString(sql_handle, e_name, it->name);
 		StrBuf->Printf(&buf, "'%s',", e_name);
 
 		// name_japanese
-		SQL->EscapeString(NULL, e_name, it->jname);
+		SQL->EscapeString(sql_handle, e_name, it->jname);
 		StrBuf->Printf(&buf, "'%s',", e_name);
 
 		// type
@@ -397,7 +399,7 @@ int itemdb2sql_sub(struct config_setting_t *entry, int n, const char *source)
 				tosql.buf[0].len = tosql.buf[0].len + strlen(str) + 1000;
 				RECREATE(tosql.buf[0].p,char,tosql.buf[0].len);
 			}
-			SQL->EscapeString(NULL, tosql.buf[0].p, str);
+			SQL->EscapeString(sql_handle, tosql.buf[0].p, str);
 			StrBuf->Printf(&buf, "'%s',", tosql.buf[0].p);
 		} else {
 			StrBuf->AppendStr(&buf, "'',");
@@ -411,7 +413,7 @@ int itemdb2sql_sub(struct config_setting_t *entry, int n, const char *source)
 				tosql.buf[1].len = tosql.buf[1].len + strlen(str) + 1000;
 				RECREATE(tosql.buf[1].p,char,tosql.buf[1].len);
 			}
-			SQL->EscapeString(NULL, tosql.buf[1].p, str);
+			SQL->EscapeString(sql_handle, tosql.buf[1].p, str);
 			StrBuf->Printf(&buf, "'%s',", tosql.buf[1].p);
 		} else {
 			StrBuf->AppendStr(&buf, "'',");
@@ -425,7 +427,7 @@ int itemdb2sql_sub(struct config_setting_t *entry, int n, const char *source)
 				tosql.buf[2].len = tosql.buf[2].len + strlen(str) + 1000;
 				RECREATE(tosql.buf[2].p,char,tosql.buf[2].len);
 			}
-			SQL->EscapeString(NULL, tosql.buf[2].p, str);
+			SQL->EscapeString(sql_handle, tosql.buf[2].p, str);
 			StrBuf->Printf(&buf, "'%s'", tosql.buf[2].p);
 		} else {
 			StrBuf->AppendStr(&buf, "''");
@@ -453,40 +455,40 @@ void itemdb2sql_tableheader(void)
 			"\n"
 			"DROP TABLE IF EXISTS `%s`;\n"
 			"CREATE TABLE `%s` (\n"
-			"  `id` int(11) UNSIGNED NOT NULL DEFAULT '0',\n"
+			"  `id` int UNSIGNED NOT NULL DEFAULT '0',\n"
 			"  `name_english` varchar(50) NOT NULL DEFAULT '',\n"
 			"  `name_japanese` varchar(50) NOT NULL DEFAULT '',\n"
-			"  `type` tinyint(2) UNSIGNED NOT NULL DEFAULT '0',\n"
-			"  `subtype` tinyint(2) UNSIGNED DEFAULT NULL,\n"
-			"  `price_buy` mediumint(10) DEFAULT NULL,\n"
-			"  `price_sell` mediumint(10) DEFAULT NULL,\n"
-			"  `weight` smallint(5) UNSIGNED DEFAULT NULL,\n"
-			"  `atk` smallint(5) UNSIGNED DEFAULT NULL,\n"
-			"  `matk` smallint(5) UNSIGNED DEFAULT NULL,\n"
-			"  `defence` smallint(5) UNSIGNED DEFAULT NULL,\n"
-			"  `range` tinyint(2) UNSIGNED DEFAULT NULL,\n"
-			"  `slots` tinyint(2) UNSIGNED DEFAULT NULL,\n"
-			"  `equip_jobs` bigint(20) UNSIGNED DEFAULT NULL,\n"
-			"  `equip_upper` tinyint(8) UNSIGNED DEFAULT NULL,\n"
-			"  `equip_genders` tinyint(2) UNSIGNED DEFAULT NULL,\n"
-			"  `equip_locations` mediumint(8) UNSIGNED DEFAULT NULL,\n"
-			"  `weapon_level` tinyint(2) UNSIGNED DEFAULT NULL,\n"
-			"  `equip_level_min` smallint(5) UNSIGNED DEFAULT NULL,\n"
-			"  `equip_level_max` smallint(5) UNSIGNED DEFAULT NULL,\n"
-			"  `refineable` tinyint(1) UNSIGNED DEFAULT NULL,\n"
-			"  `disable_options` tinyint(1) UNSIGNED DEFAULT NULL,\n"
-			"  `view_sprite` smallint(3) UNSIGNED DEFAULT NULL,\n"
-			"  `bindonequip` tinyint(1) UNSIGNED DEFAULT NULL,\n"
-			"  `forceserial` tinyint(1) UNSIGNED DEFAULT NULL,\n"
-			"  `buyingstore` tinyint(1) UNSIGNED DEFAULT NULL,\n"
-			"  `delay` mediumint(9) UNSIGNED DEFAULT NULL,\n"
-			"  `trade_flag` smallint(4) UNSIGNED DEFAULT NULL,\n"
-			"  `trade_group` smallint(3) UNSIGNED DEFAULT NULL,\n"
-			"  `nouse_flag` smallint(4) UNSIGNED DEFAULT NULL,\n"
-			"  `nouse_group` smallint(4) UNSIGNED DEFAULT NULL,\n"
-			"  `stack_amount` mediumint(6) UNSIGNED DEFAULT NULL,\n"
-			"  `stack_flag` tinyint(2) UNSIGNED DEFAULT NULL,\n"
-			"  `sprite` mediumint(6) UNSIGNED DEFAULT NULL,\n"
+			"  `type` tinyint UNSIGNED NOT NULL DEFAULT '0',\n"
+			"  `subtype` tinyint UNSIGNED DEFAULT NULL,\n"
+			"  `price_buy` mediumint DEFAULT NULL,\n"
+			"  `price_sell` mediumint DEFAULT NULL,\n"
+			"  `weight` smallint UNSIGNED DEFAULT NULL,\n"
+			"  `atk` smallint UNSIGNED DEFAULT NULL,\n"
+			"  `matk` smallint UNSIGNED DEFAULT NULL,\n"
+			"  `defence` smallint UNSIGNED DEFAULT NULL,\n"
+			"  `range` tinyint UNSIGNED DEFAULT NULL,\n"
+			"  `slots` tinyint UNSIGNED DEFAULT NULL,\n"
+			"  `equip_jobs` bigint UNSIGNED DEFAULT NULL,\n"
+			"  `equip_upper` tinyint UNSIGNED DEFAULT NULL,\n"
+			"  `equip_genders` tinyint UNSIGNED DEFAULT NULL,\n"
+			"  `equip_locations` mediumint UNSIGNED DEFAULT NULL,\n"
+			"  `weapon_level` tinyint UNSIGNED DEFAULT NULL,\n"
+			"  `equip_level_min` smallint UNSIGNED DEFAULT NULL,\n"
+			"  `equip_level_max` smallint UNSIGNED DEFAULT NULL,\n"
+			"  `refineable` tinyint UNSIGNED DEFAULT NULL,\n"
+			"  `disable_options` tinyint UNSIGNED DEFAULT NULL,\n"
+			"  `view_sprite` smallint UNSIGNED DEFAULT NULL,\n"
+			"  `bindonequip` tinyint UNSIGNED DEFAULT NULL,\n"
+			"  `forceserial` tinyint UNSIGNED DEFAULT NULL,\n"
+			"  `buyingstore` tinyint UNSIGNED DEFAULT NULL,\n"
+			"  `delay` mediumint UNSIGNED DEFAULT NULL,\n"
+			"  `trade_flag` smallint UNSIGNED DEFAULT NULL,\n"
+			"  `trade_group` smallint UNSIGNED DEFAULT NULL,\n"
+			"  `nouse_flag` smallint UNSIGNED DEFAULT NULL,\n"
+			"  `nouse_group` smallint UNSIGNED DEFAULT NULL,\n"
+			"  `stack_amount` mediumint UNSIGNED DEFAULT NULL,\n"
+			"  `stack_flag` tinyint UNSIGNED DEFAULT NULL,\n"
+			"  `sprite` mediumint UNSIGNED DEFAULT NULL,\n"
 			"  `script` text,\n"
 			"  `equip_script` text,\n"
 			"  `unequip_script` text,\n"
@@ -563,15 +565,15 @@ int mobdb2sql_sub(struct config_setting_t *mobt, int n, const char *source)
 		StrBuf->Printf(&buf, "%d,", md->mob_id);
 
 		// Sprite
-		SQL->EscapeString(NULL, e_name, md->sprite);
+		SQL->EscapeString(sql_handle, e_name, md->sprite);
 		StrBuf->Printf(&buf, "'%s',", e_name);
 
 		// kName
-		SQL->EscapeString(NULL, e_name, md->name);
+		SQL->EscapeString(sql_handle, e_name, md->name);
 		StrBuf->Printf(&buf, "'%s',", e_name);
 
 		// iName
-		SQL->EscapeString(NULL, e_name, md->jname);
+		SQL->EscapeString(sql_handle, e_name, md->jname);
 		StrBuf->Printf(&buf, "'%s',", e_name);
 
 		// LV
@@ -705,63 +707,63 @@ void mobdb2sql_tableheader(void)
 			"\n"
 			"DROP TABLE IF EXISTS `%s`;\n"
 			"CREATE TABLE `%s` (\n"
-			"  `ID` MEDIUMINT(9) UNSIGNED NOT NULL DEFAULT '0',\n"
-			"  `Sprite` TEXT NOT NULL,\n"
-			"  `kName` TEXT NOT NULL,\n"
-			"  `iName` TEXT NOT NULL,\n"
-			"  `LV` TINYINT(6) UNSIGNED NOT NULL DEFAULT '0',\n"
-			"  `HP` INT(9) UNSIGNED NOT NULL DEFAULT '0',\n"
-			"  `SP` MEDIUMINT(9) UNSIGNED NOT NULL DEFAULT '0',\n"
-			"  `EXP` MEDIUMINT(9) UNSIGNED NOT NULL DEFAULT '0',\n"
-			"  `JEXP` MEDIUMINT(9) UNSIGNED NOT NULL DEFAULT '0',\n"
-			"  `Range1` TINYINT(4) UNSIGNED NOT NULL DEFAULT '0',\n"
-			"  `ATK1` SMALLINT(6) UNSIGNED NOT NULL DEFAULT '0',\n"
-			"  `ATK2` SMALLINT(6) UNSIGNED NOT NULL DEFAULT '0',\n"
-			"  `DEF` SMALLINT(6) UNSIGNED NOT NULL DEFAULT '0',\n"
-			"  `MDEF` SMALLINT(6) UNSIGNED NOT NULL DEFAULT '0',\n"
-			"  `STR` SMALLINT(6) UNSIGNED NOT NULL DEFAULT '0',\n"
-			"  `AGI` SMALLINT(6) UNSIGNED NOT NULL DEFAULT '0',\n"
-			"  `VIT` SMALLINT(6) UNSIGNED NOT NULL DEFAULT '0',\n"
-			"  `INT` SMALLINT(6) UNSIGNED NOT NULL DEFAULT '0',\n"
-			"  `DEX` SMALLINT(6) UNSIGNED NOT NULL DEFAULT '0',\n"
-			"  `LUK` SMALLINT(6) UNSIGNED NOT NULL DEFAULT '0',\n"
-			"  `Range2` TINYINT(4) UNSIGNED NOT NULL DEFAULT '0',\n"
-			"  `Range3` TINYINT(4) UNSIGNED NOT NULL DEFAULT '0',\n"
-			"  `Scale` TINYINT(4) UNSIGNED NOT NULL DEFAULT '0',\n"
-			"  `Race` TINYINT(4) UNSIGNED NOT NULL DEFAULT '0',\n"
-			"  `Element` TINYINT(4) UNSIGNED NOT NULL DEFAULT '0',\n"
-			"  `Mode` INT(11) UNSIGNED NOT NULL DEFAULT '0',\n"
-			"  `Speed` SMALLINT(6) UNSIGNED NOT NULL DEFAULT '0',\n"
-			"  `aDelay` SMALLINT(6) UNSIGNED NOT NULL DEFAULT '0',\n"
-			"  `aMotion` SMALLINT(6) UNSIGNED NOT NULL DEFAULT '0',\n"
-			"  `dMotion` SMALLINT(6) UNSIGNED NOT NULL DEFAULT '0',\n"
-			"  `MEXP` MEDIUMINT(9) UNSIGNED NOT NULL DEFAULT '0',\n"
-			"  `MVP1id` SMALLINT(9) UNSIGNED NOT NULL DEFAULT '0',\n"
-			"  `MVP1per` SMALLINT(9) UNSIGNED NOT NULL DEFAULT '0',\n"
-			"  `MVP2id` SMALLINT(9) UNSIGNED NOT NULL DEFAULT '0',\n"
-			"  `MVP2per` SMALLINT(9) UNSIGNED NOT NULL DEFAULT '0',\n"
-			"  `MVP3id` SMALLINT(9) UNSIGNED NOT NULL DEFAULT '0',\n"
-			"  `MVP3per` SMALLINT(9) UNSIGNED NOT NULL DEFAULT '0',\n"
-			"  `Drop1id` SMALLINT(9) UNSIGNED NOT NULL DEFAULT '0',\n"
-			"  `Drop1per` SMALLINT(9) UNSIGNED NOT NULL DEFAULT '0',\n"
-			"  `Drop2id` SMALLINT(9) UNSIGNED NOT NULL DEFAULT '0',\n"
-			"  `Drop2per` SMALLINT(9) UNSIGNED NOT NULL DEFAULT '0',\n"
-			"  `Drop3id` SMALLINT(9) UNSIGNED NOT NULL DEFAULT '0',\n"
-			"  `Drop3per` SMALLINT(9) UNSIGNED NOT NULL DEFAULT '0',\n"
-			"  `Drop4id` SMALLINT(9) UNSIGNED NOT NULL DEFAULT '0',\n"
-			"  `Drop4per` SMALLINT(9) UNSIGNED NOT NULL DEFAULT '0',\n"
-			"  `Drop5id` SMALLINT(9) UNSIGNED NOT NULL DEFAULT '0',\n"
-			"  `Drop5per` SMALLINT(9) UNSIGNED NOT NULL DEFAULT '0',\n"
-			"  `Drop6id` SMALLINT(9) UNSIGNED NOT NULL DEFAULT '0',\n"
-			"  `Drop6per` SMALLINT(9) UNSIGNED NOT NULL DEFAULT '0',\n"
-			"  `Drop7id` SMALLINT(9) UNSIGNED NOT NULL DEFAULT '0',\n"
-			"  `Drop7per` SMALLINT(9) UNSIGNED NOT NULL DEFAULT '0',\n"
-			"  `Drop8id` SMALLINT(9) UNSIGNED NOT NULL DEFAULT '0',\n"
-			"  `Drop8per` SMALLINT(9) UNSIGNED NOT NULL DEFAULT '0',\n"
-			"  `Drop9id` SMALLINT(9) UNSIGNED NOT NULL DEFAULT '0',\n"
-			"  `Drop9per` SMALLINT(9) UNSIGNED NOT NULL DEFAULT '0',\n"
-			"  `DropCardid` SMALLINT(9) UNSIGNED NOT NULL DEFAULT '0',\n"
-			"  `DropCardper` SMALLINT(9) UNSIGNED NOT NULL DEFAULT '0',\n"
+			"  `ID` mediumint UNSIGNED NOT NULL DEFAULT '0',\n"
+			"  `Sprite` text NOT NULL,\n"
+			"  `kName` text NOT NULL,\n"
+			"  `iName` text NOT NULL,\n"
+			"  `LV` tinyint UNSIGNED NOT NULL DEFAULT '0',\n"
+			"  `HP` int UNSIGNED NOT NULL DEFAULT '0',\n"
+			"  `SP` mediumint UNSIGNED NOT NULL DEFAULT '0',\n"
+			"  `EXP` mediumint UNSIGNED NOT NULL DEFAULT '0',\n"
+			"  `JEXP` mediumint UNSIGNED NOT NULL DEFAULT '0',\n"
+			"  `Range1` tinyint UNSIGNED NOT NULL DEFAULT '0',\n"
+			"  `ATK1` smallint UNSIGNED NOT NULL DEFAULT '0',\n"
+			"  `ATK2` smallint UNSIGNED NOT NULL DEFAULT '0',\n"
+			"  `DEF` smallint UNSIGNED NOT NULL DEFAULT '0',\n"
+			"  `MDEF` smallint UNSIGNED NOT NULL DEFAULT '0',\n"
+			"  `STR` smallint UNSIGNED NOT NULL DEFAULT '0',\n"
+			"  `AGI` smallint UNSIGNED NOT NULL DEFAULT '0',\n"
+			"  `VIT` smallint UNSIGNED NOT NULL DEFAULT '0',\n"
+			"  `INT` smallint UNSIGNED NOT NULL DEFAULT '0',\n"
+			"  `DEX` smallint UNSIGNED NOT NULL DEFAULT '0',\n"
+			"  `LUK` smallint UNSIGNED NOT NULL DEFAULT '0',\n"
+			"  `Range2` tinyint UNSIGNED NOT NULL DEFAULT '0',\n"
+			"  `Range3` tinyint UNSIGNED NOT NULL DEFAULT '0',\n"
+			"  `Scale` tinyint UNSIGNED NOT NULL DEFAULT '0',\n"
+			"  `Race` tinyint UNSIGNED NOT NULL DEFAULT '0',\n"
+			"  `Element` tinyint UNSIGNED NOT NULL DEFAULT '0',\n"
+			"  `Mode` int UNSIGNED NOT NULL DEFAULT '0',\n"
+			"  `Speed` smallint UNSIGNED NOT NULL DEFAULT '0',\n"
+			"  `aDelay` smallint UNSIGNED NOT NULL DEFAULT '0',\n"
+			"  `aMotion` smallint UNSIGNED NOT NULL DEFAULT '0',\n"
+			"  `dMotion` smallint UNSIGNED NOT NULL DEFAULT '0',\n"
+			"  `MEXP` mediumint UNSIGNED NOT NULL DEFAULT '0',\n"
+			"  `MVP1id` smallint UNSIGNED NOT NULL DEFAULT '0',\n"
+			"  `MVP1per` smallint UNSIGNED NOT NULL DEFAULT '0',\n"
+			"  `MVP2id` smallint UNSIGNED NOT NULL DEFAULT '0',\n"
+			"  `MVP2per` smallint UNSIGNED NOT NULL DEFAULT '0',\n"
+			"  `MVP3id` smallint UNSIGNED NOT NULL DEFAULT '0',\n"
+			"  `MVP3per` smallint UNSIGNED NOT NULL DEFAULT '0',\n"
+			"  `Drop1id` smallint UNSIGNED NOT NULL DEFAULT '0',\n"
+			"  `Drop1per` smallint UNSIGNED NOT NULL DEFAULT '0',\n"
+			"  `Drop2id` smallint UNSIGNED NOT NULL DEFAULT '0',\n"
+			"  `Drop2per` smallint UNSIGNED NOT NULL DEFAULT '0',\n"
+			"  `Drop3id` smallint UNSIGNED NOT NULL DEFAULT '0',\n"
+			"  `Drop3per` smallint UNSIGNED NOT NULL DEFAULT '0',\n"
+			"  `Drop4id` smallint UNSIGNED NOT NULL DEFAULT '0',\n"
+			"  `Drop4per` smallint UNSIGNED NOT NULL DEFAULT '0',\n"
+			"  `Drop5id` smallint UNSIGNED NOT NULL DEFAULT '0',\n"
+			"  `Drop5per` smallint UNSIGNED NOT NULL DEFAULT '0',\n"
+			"  `Drop6id` smallint UNSIGNED NOT NULL DEFAULT '0',\n"
+			"  `Drop6per` smallint UNSIGNED NOT NULL DEFAULT '0',\n"
+			"  `Drop7id` smallint UNSIGNED NOT NULL DEFAULT '0',\n"
+			"  `Drop7per` smallint UNSIGNED NOT NULL DEFAULT '0',\n"
+			"  `Drop8id` smallint UNSIGNED NOT NULL DEFAULT '0',\n"
+			"  `Drop8per` smallint UNSIGNED NOT NULL DEFAULT '0',\n"
+			"  `Drop9id` smallint UNSIGNED NOT NULL DEFAULT '0',\n"
+			"  `Drop9per` smallint UNSIGNED NOT NULL DEFAULT '0',\n"
+			"  `DropCardid` smallint UNSIGNED NOT NULL DEFAULT '0',\n"
+			"  `DropCardper` smallint UNSIGNED NOT NULL DEFAULT '0',\n"
 			"  PRIMARY KEY (`ID`)\n"
 			") ENGINE=MyISAM;\n"
 			"\n", tosql.db_name, tosql.db_name, tosql.db_name);
@@ -967,7 +969,7 @@ bool mobskilldb2sql_sub(struct config_setting_t *it, int n, int mob_id)
 	StrBuf->Printf(&buf, "%d,", mob_id);
 
 	// Info
-	SQL->EscapeString(NULL, e_name, md->name);
+	SQL->EscapeString(sql_handle, e_name, md->name);
 	StrBuf->Printf(&buf, "'%s@%s',", e_name, name);
 
 	if (mob->lookup_const(it, "SkillState", &i32) && (i32 < MSS_ANY || i32 > MSS_ANYTARGET)) {
@@ -1077,23 +1079,23 @@ void mobskilldb2sql_tableheader(void)
 			"\n"
 			"DROP TABLE IF EXISTS `%s`;\n"
 			"CREATE TABLE `%s` (\n"
-			"  `MOB_ID` SMALLINT(6) NOT NULL,\n"
-			"  `INFO` TEXT NOT NULL,\n"
-			"  `STATE` TEXT NOT NULL,\n"
-			"  `SKILL_ID` SMALLINT(6) NOT NULL,\n"
-			"  `SKILL_LV` TINYINT(4) NOT NULL,\n"
-			"  `RATE` SMALLINT(4) NOT NULL,\n"
-			"  `CASTTIME` MEDIUMINT(9) NOT NULL,\n"
-			"  `DELAY` INT(9) NOT NULL,\n"
-			"  `CANCELABLE` TEXT NOT NULL,\n"
-			"  `TARGET` TEXT NOT NULL,\n"
-			"  `CONDITION` TEXT NOT NULL,\n"
-			"  `CONDITION_VALUE` TEXT,\n"
-			"  `VAL1` INT(11) DEFAULT NULL,\n"
-			"  `VAL2` INT(11) DEFAULT NULL,\n"
-			"  `VAL3` INT(11) DEFAULT NULL,\n"
-			"  `VAL4` INT(11) DEFAULT NULL,\n"
-			"  `VAL5` INT(11) DEFAULT NULL,\n"
+			"  `MOB_ID` smallint NOT NULL,\n"
+			"  `INFO` text NOT NULL,\n"
+			"  `STATE` text NOT NULL,\n"
+			"  `SKILL_ID` smallint NOT NULL,\n"
+			"  `SKILL_LV` tinyint NOT NULL,\n"
+			"  `RATE` smallint NOT NULL,\n"
+			"  `CASTTIME` mediumint NOT NULL,\n"
+			"  `DELAY` int NOT NULL,\n"
+			"  `CANCELABLE` text NOT NULL,\n"
+			"  `TARGET` text NOT NULL,\n"
+			"  `CONDITION` text NOT NULL,\n"
+			"  `CONDITION_VALUE` text,\n"
+			"  `VAL1` int DEFAULT NULL,\n"
+			"  `VAL2` int DEFAULT NULL,\n"
+			"  `VAL3` int DEFAULT NULL,\n"
+			"  `VAL4` int DEFAULT NULL,\n"
+			"  `VAL5` int DEFAULT NULL,\n"
 			"  `EMOTION` TEXT,\n"
 			"  `CHAT` TEXT\n"
 			") ENGINE=MyISAM;\n"
@@ -1215,8 +1217,15 @@ HPExport void plugin_init(void)
 
 HPExport void server_online(void)
 {
+	sql_handle = SQL->Malloc();
 	if (itemdb2sql_torun)
 		do_itemdb2sql();
 	if (mobdb2sql_torun)
 		do_mobdb2sql();
+}
+
+HPExport void plugin_final (void)
+{
+	SQL->Free(sql_handle);
+	sql_handle = NULL;
 }

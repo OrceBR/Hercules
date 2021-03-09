@@ -2,8 +2,8 @@
  * This file is part of Hercules.
  * http://herc.ws - http://github.com/HerculesWS/Hercules
  *
- * Copyright (C) 2012-2018  Hercules Dev Team
- * Copyright (C)  Athena Dev Teams
+ * Copyright (C) 2012-2021 Hercules Dev Team
+ * Copyright (C) Athena Dev Teams
  *
  * Hercules is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -64,7 +64,7 @@
 // 20120307 - 2012-03-07aRagexeRE+ - 0x970
 
 #ifndef PACKETVER
-	#define PACKETVER 20141022
+	#define PACKETVER 20190530
 #endif // PACKETVER
 
 //Uncomment the following line if your client is ragexeRE instead of ragexe (required because of conflicting packets in ragexe vs ragexeRE).
@@ -132,7 +132,9 @@
 #endif // PACKETVER_RE && (PACKETVER == 20120410 || PACKETVER == 10120418)
 
 // Comment the following line to disable sc_data saving. [Skotlex]
+#ifndef ENABLE_SC_SAVING
 #define ENABLE_SC_SAVING
+#endif
 
 #if PACKETVER_MAIN_NUM >= 20070711 || PACKETVER_RE_NUM >= 20080827 || PACKETVER_AD_NUM >= 20070711 || PACKETVER_SAK_NUM >= 20070628 || defined(PACKETVER_ZERO)
 // Comment the following like to disable server-side hot-key saving support. [Skotlex]
@@ -174,7 +176,9 @@
 #else
 	#define MAX_BASE_CARTS 5
 #endif
+#ifndef MAX_CARTS
 #define MAX_CARTS (MAX_BASE_CARTS + MAX_CARTDECORATION_CARTS)
+#endif
 
 #ifndef MAX_INVENTORY
 #if PACKETVER_MAIN_NUM >= 20181219 || PACKETVER_RE_NUM >= 20181219 || PACKETVER_ZERO_NUM >= 20181212
@@ -204,21 +208,33 @@
 #endif
 //Number of slots carded equipment can have. Never set to less than 4 as they are also used to keep the data of forged items/equipment. [Skotlex]
 //Note: The client seems unable to receive data for more than 4 slots due to all related packets having a fixed size.
+#ifndef MAX_SLOTS
 #define MAX_SLOTS 4
+#endif
 //Max amount of a single stacked item
+#ifndef MAX_AMOUNT
 #define MAX_AMOUNT 30000
+#endif
+#ifndef MAX_ZENY
 #define MAX_ZENY INT_MAX
+#endif
 
 //Official Limit: 2.1b ( the var that stores the money doesn't go much higher than this by default )
+#ifndef MAX_BANK_ZENY
 #define MAX_BANK_ZENY INT_MAX
+#endif
 
 #ifndef MAX_LEVEL
 #define MAX_LEVEL 175
 #endif
+#ifndef MAX_FAME
 #define MAX_FAME 1000000000
+#endif
+#ifndef MAX_CART
 #define MAX_CART 100
+#endif
 #ifndef MAX_SKILL_DB
-#define MAX_SKILL_DB 1510 ///< Maximum number of skills in the skill DB (compacted array size)
+#define MAX_SKILL_DB 1314 ///< Maximum number of skills in the skill DB (compacted array size)
 #endif
 #ifndef MAX_SKILL_ID
 #define MAX_SKILL_ID 10015   // [Ind/Hercules] max used skill ID
@@ -380,7 +396,10 @@ STATIC_ASSERT(MAX_ITEM_OPTIONS <= 5, "This value is limited by the client and da
 #define JOBL_BABY  0x2000
 #define JOBL_THIRD 0x4000
 
-#define SCRIPT_VARNAME_LENGTH 32 ///< Maximum length of a script variable
+#define SCRIPT_VARNAME_LENGTH 32 ///< Maximum length of a script variable's name including affixes and excluding NULL-terminator.
+STATIC_ASSERT(SCRIPT_VARNAME_LENGTH <= 32, "This value is limited by the inter-server communication and database layout and should only be increased if you know the consequences.");
+#define SCRIPT_STRING_VAR_LENGTH 255 ///< Maximum length of strings stored in script variables excluding NULL-terminator.
+STATIC_ASSERT(SCRIPT_STRING_VAR_LENGTH <= 255, "This value is limited by the inter-server communication and database layout and should only be increased if you know the consequences.");
 
 #define INFINITE_DURATION (-1) // Infinite duration for status changes
 
@@ -449,6 +468,19 @@ struct item {
 	uint64 unique_id;
 	struct item_option option[MAX_ITEM_OPTIONS];
 };
+
+/**
+ * Prevents @ref MAX_STORAGE from causing oversized 0x3011 inter-server packets.
+ *
+ * @attention If the size of packet 0x3011 changes, this assertion check needs to be adjusted, too.
+ *
+ * @see intif_send_account_storage() @n
+ *      mapif_parse_AccountStorageSave()
+ *
+ * @anchor MAX_STORAGE_ASSERT
+ *
+ **/
+STATIC_ASSERT(MAX_STORAGE * sizeof(struct item) + 8 <= 0xFFFF, "The maximum amount of item slots per account storage is limited by the inter-server communication layout. Use a smaller value!");
 
 //Equip position constants
 enum equip_pos {
@@ -598,6 +630,19 @@ struct guild_storage {
 	struct item items[MAX_GUILD_STORAGE];
 	unsigned short lock;
 };
+
+/**
+ * Prevents @ref MAX_GUILD_STORAGE from causing oversized 0x3019 inter-server packets.
+ *
+ * @attention If the size of packet 0x3019 changes, this assertion check needs to be adjusted, too.
+ *
+ * @see intif_send_guild_storage() @n
+ *      mapif_parse_SaveGuildStorage()
+ *
+ * @anchor MAX_GUILD_STORAGE_ASSERT
+ *
+ **/
+STATIC_ASSERT(sizeof(struct guild_storage) + 12 <= 0xFFFF, "The maximum amount of item slots per guild storage is limited by the inter-server communication layout. Use a smaller value!");
 
 struct s_pet {
 	int account_id;
@@ -822,8 +867,8 @@ struct party_member {
 	int char_id;
 	char name[NAME_LENGTH];
 	int class;
+	int lv;
 	unsigned short map;
-	unsigned short lv;
 	unsigned leader : 1,
 	         online : 1;
 };
@@ -1376,6 +1421,27 @@ enum questinfo_type {
 	QINFO_HOMUN_TYPE,
 	QINFO_QUEST,
 	QINFO_MERCENARY_CLASS
+};
+
+/** Pet hunger level **/
+enum e_pet_hunger_level {
+	PET_HUNGER_STARVING = 0,
+	PET_HUNGER_VERY_HUNGRY = 10,
+	PET_HUNGER_HUNGRY = 25,
+	PET_HUNGER_NEUTRAL = 75,
+	PET_HUNGER_SATISFIED = 90,
+	PET_HUNGER_STUFFED = 100
+};
+
+/** Pet intimacy level **/
+enum e_pet_intimacy_level {
+	PET_INTIMACY_NONE = 0,
+	PET_INTIMACY_AWKWARD = 1,
+	PET_INTIMACY_SHY = 100,
+	PET_INTIMACY_NEUTRAL = 250,
+	PET_INTIMACY_CORDIAL = 750,
+	PET_INTIMACY_LOYAL = 900,
+	PET_INTIMACY_MAX = 1000
 };
 
 /* packet size constant for itemlist */

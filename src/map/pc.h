@@ -2,8 +2,8 @@
  * This file is part of Hercules.
  * http://herc.ws - http://github.com/HerculesWS/Hercules
  *
- * Copyright (C) 2012-2018  Hercules Dev Team
- * Copyright (C)  Athena Dev Teams
+ * Copyright (C) 2012-2021 Hercules Dev Team
+ * Copyright (C) Athena Dev Teams
  *
  * Hercules is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -103,6 +103,13 @@ enum pc_checkitem_types {
 	PCCHECKITEM_GSTORAGE  = 0x8
 };
 
+/** Bit flags for allowed item actions while interacting with NPC. **/
+enum item_enabled_npc_flags {
+	ITEMENABLEDNPC_NONE    = 0x0, //!< Don't allow any item actions while interacting with NPC.
+	ITEMENABLEDNPC_EQUIP   = 0x1, //!< Allow changing equipment while interacting with NPC.
+	ITEMENABLEDNPC_CONSUME = 0x2, //!< Allow consuming usable items while interacting with NPC.
+};
+
 struct weapon_data {
 	int atkmods[3];
 BEGIN_ZEROED_BLOCK; // all the variables within this block get zero'ed in each call of status_calc_pc
@@ -173,6 +180,17 @@ struct pc_combos {
 	int id; /* this combo id */
 };
 
+/** Auto-cast related data. **/
+struct autocast_data {
+	enum autocast_type type; // The auto-cast type.
+	int skill_id; // The auto-cast skill ID.
+	int skill_lv; // The auto-cast skill level.
+	bool itemskill_conditions_checked; // Used by itemskill() script command, to prevent second check of conditions after target was selected.
+	bool itemskill_check_conditions; // Used by itemskill() script command, to check skill conditions and consume them.
+	bool itemskill_instant_cast; // Used by itemskill() script command, to cast skill instantaneously.
+	bool itemskill_cast_on_self; // Used by itemskill() script command, to forcefully cast skill on invoking character.
+};
+
 struct map_session_data {
 	struct block_list bl;
 	struct unit_data ud;
@@ -180,7 +198,10 @@ struct map_session_data {
 	struct status_data base_status, battle_status;
 	struct status_change sc;
 	struct regen_data regen;
-	struct regen_data_sub sregen, ssregen;
+	struct regen_data_sub skill_regen;
+	struct regen_data_sub sitting_regen;
+	struct autocast_data auto_cast_current; // Currently processed auto-cast skill.
+	VECTOR_DECL(struct autocast_data) auto_cast; // Auto-cast vector.
 	//NOTE: When deciding to add a flag to state or special_state, take into consideration that state is preserved in
 	//status_calc_pc, while special_state is recalculated in each call. [Skotlex]
 	struct {
@@ -194,8 +215,6 @@ struct map_session_data {
 		unsigned int rest : 1;
 		unsigned int storage_flag : 2; // @see enum storage_flag
 		unsigned int snovice_dead_flag : 1; //Explosion spirits on death: 0 off, 1 used.
-		unsigned int abra_flag : 2; // Abracadabra bugfix by Aru
-		unsigned int autocast : 1; // Autospell flag [Inkfish]
 		unsigned int autotrade : 2; //By Fantik
 		unsigned int showdelay :1;
 		unsigned int showexp :1;
@@ -206,6 +225,7 @@ struct map_session_data {
 		unsigned int size :2; // for tiny/large types
 		unsigned int night :1; //Holds whether or not the player currently has the SI_NIGHT effect on. [Skotlex]
 		unsigned int using_fake_npc :1;
+		unsigned int using_megaphone : 1; //!< Whether the character is currently using a Megephone (ID=12221).
 		unsigned int rewarp :1; //Signals that a player should warp as soon as he is done loading a map. [Skotlex]
 		unsigned int killer : 1;
 		unsigned int killable : 1;
@@ -294,7 +314,6 @@ struct map_session_data {
 	int followtimer; // [MouseJstr]
 	int followtarget;
 	time_t emotionlasttime; // to limit flood with emotion packets
-	int skillitem,skillitemlv;
 	uint16 skill_id_old,skill_lv_old;
 	uint16 skill_id_dance,skill_lv_dance;
 	short cook_mastery; // range: [0,1999] [Inkfish]
@@ -376,7 +395,11 @@ BEGIN_ZEROED_BLOCK; // this block will be globally zeroed at the beginning of st
 	struct {
 		int value;
 		int rate, tick;
-	} def_set_race[RC_MAX], mdef_set_race[RC_MAX];
+	} def_set_race[RC_MAX], mdef_set_race[RC_MAX], no_recover_state_race[RC_MAX];
+	struct {
+		int rate_mob; //!< Damage reduction rate against monster's defense element.
+		int rate_pc;  //!< Damage reduction rate against player's defense element.
+	} sub_def_ele[ELE_MAX], magic_sub_def_ele[ELE_MAX]; //!< Bonus bSubDefEle/bMagicSubDefEle data structure.
 	struct {
 		int atk_rate;
 		int arrow_atk,arrow_ele,arrow_cri,arrow_hit;
@@ -430,7 +453,7 @@ END_ZEROED_BLOCK;
 	int spiritball, spiritball_old;
 	int spirit_timer[MAX_SPIRITBALL];
 	int charm_count;
-	int charm_type;
+	enum spirit_charm_types charm_type;
 	int charm_timer[MAX_SPIRITCHARM];
 	unsigned char potion_success_counter; //Potion successes in row counter
 	unsigned char mission_count; //Stores the bounty kill count for TK_MISSION
@@ -488,6 +511,7 @@ END_ZEROED_BLOCK;
 	int change_level_3rd; // job level when changing from 2nd to 3rd class [jobchange_level_3rd in global_reg_value]
 
 	char fakename[NAME_LENGTH]; // fake names [Valaris]
+	int fakename_options; // Fake name display options.
 
 	int duel_group; // duel vars [LuzZza]
 	int duel_invite;
@@ -619,10 +643,6 @@ END_ZEROED_BLOCK;
 
 	uint8 lang_id;
 
-	// temporary debugging of bug #3504
-	const char* delunit_prevfile;
-	int delunit_prevline;
-
 	// HatEffect
 	VECTOR_DECL(int) hatEffectId;
 
@@ -635,6 +655,7 @@ END_ZEROED_BLOCK;
 		unsigned immune   : 1;
 		unsigned sitstand : 1;
 		unsigned commands : 1;
+		unsigned npc      : 1;
 	} block_action;
 
 	/* Achievement System */
@@ -666,7 +687,11 @@ END_ZEROED_BLOCK;
 #define pc_issit(sd)          ( (sd)->vd.dead_sit == 2 )
 #define pc_isidle(sd)         ( (sd)->chat_id != 0 || (sd)->state.vending || (sd)->state.buyingstore || DIFF_TICK(sockt->last_tick, (sd)->idletime) >= battle->bc->idle_no_share )
 #define pc_istrading(sd)      ( (sd)->npc_id || (sd)->state.vending || (sd)->state.buyingstore || (sd)->state.trading )
+#define pc_istrading_except_npc(sd) ( (sd)->state.vending != 0 || (sd)->state.buyingstore != 0 || (sd)->state.trading != 0 )
 #define pc_cant_act(sd)       ( (sd)->npc_id || (sd)->state.vending || (sd)->state.buyingstore || (sd)->chat_id != 0 || ((sd)->sc.opt1 && (sd)->sc.opt1 != OPT1_BURNING) || (sd)->state.trading || (sd)->state.storage_flag || (sd)->state.prevend || (sd)->state.refine_ui == 1 || (sd)->state.lapine_ui == 1)
+#define pc_cant_act_except_lapine(sd) ((sd)->npc_id || (sd)->state.vending || (sd)->state.buyingstore || (sd)->chat_id != 0 || ((sd)->sc.opt1 && (sd)->sc.opt1 != OPT1_BURNING) || (sd)->state.trading || (sd)->state.storage_flag || (sd)->state.prevend || (sd)->state.refine_ui == 1)
+#define pc_cant_act_except_npc(sd) ( (sd)->state.vending != 0 || (sd)->state.buyingstore != 0 || (sd)->chat_id != 0 || ((sd)->sc.opt1 != 0 && (sd)->sc.opt1 != OPT1_BURNING) || (sd)->state.trading != 0 || (sd)->state.storage_flag != 0 || (sd)->state.prevend != 0 || (sd)->state.refine_ui == 1 || (sd)->state.lapine_ui == 1)
+#define pc_cant_act_except_npc_chat(sd) ( (sd)->state.vending != 0 || (sd)->state.buyingstore != 0 || ((sd)->sc.opt1 != 0 && (sd)->sc.opt1 != OPT1_BURNING) || (sd)->state.trading != 0 || (sd)->state.storage_flag != 0 || (sd)->state.prevend != 0 || (sd)->state.refine_ui == 1 || (sd)->state.lapine_ui == 1)
 
 /* equals pc_cant_act except it doesn't check for chat rooms */
 #define pc_cant_act2(sd)       ( (sd)->npc_id || (sd)->state.buyingstore || ((sd)->sc.opt1 && (sd)->sc.opt1 != OPT1_BURNING) || (sd)->state.trading || (sd)->state.storage_flag || (sd)->state.prevend || (sd)->state.refine_ui == 1 || (sd)->state.lapine_ui == 1)
@@ -676,7 +701,7 @@ END_ZEROED_BLOCK;
 #define pc_ishiding(sd)       ( (sd)->sc.option&(OPTION_HIDE|OPTION_CLOAK|OPTION_CHASEWALK) )
 #define pc_iscloaking(sd)     ( !((sd)->sc.option&OPTION_CHASEWALK) && ((sd)->sc.option&OPTION_CLOAK) )
 #define pc_ischasewalk(sd)    ( (sd)->sc.option&OPTION_CHASEWALK )
-#define pc_ismuted(sc,type)   ( (sc)->data[SC_NOCHAT] && (sc)->data[SC_NOCHAT]->val1&(type) )
+#define pc_ismuted(sc, type)  ( (sc)->data[SC_NOCHAT] != NULL && (battle_config.manner_system & (type)) != 0 )
 #define pc_isvending(sd)      ((sd)->state.vending || (sd)->state.prevend || (sd)->state.buyingstore)
 
 #ifdef NEW_CARTS
@@ -709,6 +734,9 @@ END_ZEROED_BLOCK;
 #define pc_ismadogear(sd) ( (sd)->sc.option&OPTION_MADOGEAR )
 /// Rune Knight Dragon
 #define pc_isridingdragon(sd) ( (sd)->sc.option&OPTION_DRAGON )
+
+// Check if character has a pet.
+#define pc_has_pet(sd) ( (sd)->status.pet_id != 0 && (sd)->pd != NULL && (sd)->pd->pet.intimate > PET_INTIMACY_NONE )
 
 #define pc_stop_walking(sd, type) (unit->stop_walking(&(sd)->bl, (type)))
 #define pc_stop_attack(sd)        (unit->stop_attack(&(sd)->bl))
@@ -854,6 +882,12 @@ enum class_exp_type {
 
 struct class_exp_tables {
 	struct class_exp_group *class_exp_table[CLASS_COUNT][2];
+};
+
+enum player_actions_when_dead_flags {
+	PCALLOWACTION_NONE    = 0x0, // Don't allow trading and open chat rooms.
+	PCALLOWACTION_TRADE   = 0x1, // Allow trading when dead.
+	PCALLOWACTION_CHAT    = 0x2, // Allow open chat room when dead.
 };
 
 /*=====================================
@@ -1020,6 +1054,10 @@ END_ZEROED_BLOCK; /* End */
 	void (*unequipitem_pos) (struct map_session_data *sd, int n, int pos);
 	int (*checkitem) (struct map_session_data *sd);
 	int (*useitem) (struct map_session_data *sd,int n);
+	void (*autocast_clear_current) (struct map_session_data *sd);
+	void (*autocast_clear) (struct map_session_data *sd);
+	void (*autocast_set_current) (struct map_session_data *sd, int skill_id);
+	void (*autocast_remove) (struct map_session_data *sd, enum autocast_type type, int skill_id, int skill_lv);
 
 	int (*skillatk_bonus) (struct map_session_data *sd, uint16 skill_id);
 	int (*skillheal_bonus) (struct map_session_data *sd, uint16 skill_id);
@@ -1032,11 +1070,13 @@ END_ZEROED_BLOCK; /* End */
 	int (*itemheal) (struct map_session_data *sd,int itemid, int hp,int sp);
 	int (*percentheal) (struct map_session_data *sd,int hp,int sp);
 	int (*jobchange) (struct map_session_data *sd, int class, int upper);
+	void (*hide) (struct map_session_data *sd, bool show_msg);
+	void (*unhide) (struct map_session_data *sd, bool show_msg);
 	int (*setoption) (struct map_session_data *sd,int type);
 	int (*setcart) (struct map_session_data* sd, int type);
 	void (*setfalcon) (struct map_session_data *sd, bool flag);
 	void (*setridingpeco) (struct map_session_data *sd, bool flag);
-	void (*setmadogear) (struct map_session_data *sd, bool flag);
+	void (*setmadogear) (struct map_session_data *sd, bool flag, enum mado_type mtype);
 	void (*setridingdragon) (struct map_session_data *sd, unsigned int type);
 	void (*setridingwug) (struct map_session_data *sd, bool flag);
 	int (*changelook) (struct map_session_data *sd,int type,int val);
@@ -1058,6 +1098,7 @@ END_ZEROED_BLOCK; /* End */
 	int (*cleareventtimer) (struct map_session_data *sd);
 	int (*addeventtimercount) (struct map_session_data *sd,const char *name,int tick);
 
+	int (*calc_pvprank_sub) (struct block_list *bl, va_list ap);
 	int (*calc_pvprank) (struct map_session_data *sd);
 	int (*calc_pvprank_timer) (int tid, int64 tick, int id, intptr_t data);
 
@@ -1115,8 +1156,8 @@ END_ZEROED_BLOCK; /* End */
 
 	int (*load_combo) (struct map_session_data *sd);
 
-	void (*add_charm) (struct map_session_data *sd, int interval, int max, int type);
-	void (*del_charm) (struct map_session_data *sd, int count, int type);
+	void (*add_charm) (struct map_session_data *sd, int interval, int max, enum spirit_charm_types type);
+	void (*del_charm) (struct map_session_data *sd, int count, enum spirit_charm_types type);
 
 	void (*baselevelchanged) (struct map_session_data *sd);
 	int (*level_penalty_mod) (int diff, unsigned char race, uint32 mode, int type);
@@ -1186,7 +1227,7 @@ END_ZEROED_BLOCK; /* End */
 	void (*update_idle_time) (struct map_session_data* sd, enum e_battle_config_idletime type);
 
 	int (*have_magnifier) (struct map_session_data *sd);
-	int (*have_item_chain) (struct map_session_data *sd, unsigned short chain_id);
+	int (*have_item_chain) (struct map_session_data *sd, enum e_chain_cache chain_cache_id);
 
 	bool (*process_chat_message) (struct map_session_data *sd, const char *message);
 	int (*wis_message_to_gm) (const char *sender_name, int permission, const char *message);
@@ -1196,6 +1237,7 @@ END_ZEROED_BLOCK; /* End */
 	bool (*isDeathPenaltyJob) (uint16 job);
 	bool (*has_second_costume) (struct map_session_data *sd);
 	bool (*expandInventory) (struct map_session_data *sd, int adjustSize);
+	bool (*auto_exp_insurance) (struct map_session_data *sd);
 };
 
 #ifdef HERCULES_CORE

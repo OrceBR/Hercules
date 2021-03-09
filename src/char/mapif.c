@@ -2,8 +2,8 @@
  * This file is part of Hercules.
  * http://herc.ws - http://github.com/HerculesWS/Hercules
  *
- * Copyright (C) 2012-2018  Hercules Dev Team
- * Copyright (C)  Athena Dev Teams
+ * Copyright (C) 2012-2021 Hercules Dev Team
+ * Copyright (C) Athena Dev Teams
  *
  * Hercules is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -559,7 +559,7 @@ static int mapif_guild_withdraw(int guild_id, int account_id, int char_id, int f
 	WBUFL(buf, 6) = account_id;
 	WBUFL(buf, 10) = char_id;
 	WBUFB(buf, 14) = flag;
-	memcpy(WBUFP(buf, 15), mes, 40);
+	safestrncpy(WBUFP(buf, 15), mes, 40);
 	memcpy(WBUFP(buf, 55), name, NAME_LENGTH);
 	mapif->sendall(buf, 55 + NAME_LENGTH);
 	ShowInfo("int_guild: guild withdraw (%d - %d: %s - %s)\n", guild_id, account_id, name, mes);
@@ -1866,10 +1866,22 @@ static int mapif_parse_AccountStorageLoad(int fd)
 
 /**
  * Parses an account storage save request from the map server.
- * @packet 0x3011 [in] <packet_len>.W <account_id>.L <struct item[]>.P
- * @param  fd     [in] file/socket descriptor.
- * @return 1 on success, 0 on failure.
- */
+ *
+ * @code{.unparsed}
+ *	@packet 0x3011 [in] <packet_len>.W <account_id>.L <struct item[]>.P
+ * @endcode
+ *
+ * @attention If the size of packet 0x3011 changes,
+ *            @ref MAX_STORAGE_ASSERT "the related static assertion check"
+ *            in mmo.h needs to be adjusted, too.
+ *
+ * @see intif_send_account_storage()
+ *
+ * @param[in] fd The file/socket descriptor.
+ * @retval 1 Success.
+ * @retval 0 Failure.
+ *
+ **/
 static int mapif_parse_AccountStorageSave(int fd)
 {
 	int payload_size = RFIFOW(fd, 2) - 8, account_id = RFIFOL(fd, 4);
@@ -1930,6 +1942,23 @@ static int mapif_parse_LoadGuildStorage(int fd)
 	return 0;
 }
 
+/**
+ * Parses a guild storage save request from the map server.
+ *
+ * @code{.unparsed}
+ *	@packet 0x3019 [in] <packet_len>.W <account_id>.L <guild_id>.L <struct guild_storage>.P
+ * @endcode
+ *
+ * @attention If the size of packet 0x3019 changes,
+ *            @ref MAX_GUILD_STORAGE_ASSERT "the related static assertion check"
+ *            in mmo.h needs to be adjusted, too.
+ *
+ * @see intif_send_guild_storage()
+ *
+ * @param[in] fd The file/socket descriptor.
+ * @return Always 0.
+ *
+ **/
 static int mapif_parse_SaveGuildStorage(int fd)
 {
 	int guild_id;
@@ -2030,7 +2059,8 @@ static int mapif_parse_Registry(int fd)
 
 	if (count != 0) {
 		int cursor = 14, i;
-		char key[SCRIPT_VARNAME_LENGTH+1], sval[254];
+		char key[SCRIPT_VARNAME_LENGTH + 1];
+		char sval[SCRIPT_STRING_VAR_LENGTH + 1];
 		bool isLoginActive = sockt->session_is_active(chr->login_fd);
 
 		if (isLoginActive)
@@ -2057,8 +2087,8 @@ static int mapif_parse_Registry(int fd)
 			/* str */
 			case 2:
 				len = RFIFOB(fd, cursor);
-				safestrncpy(sval, RFIFOP(fd, cursor + 1), min((int)sizeof(sval), len));
-				cursor += len + 1;
+				safestrncpy(sval, RFIFOP(fd, cursor + 1), min((int)sizeof(sval), len + 1));
+				cursor += len + 2;
 				inter->savereg(account_id, char_id, key, index, (intptr_t)sval, true);
 				break;
 			case 3:

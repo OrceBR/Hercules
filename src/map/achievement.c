@@ -2,7 +2,7 @@
 * This file is part of Hercules.
 * http://herc.ws - http://github.com/HerculesWS/Hercules
 *
-* Copyright (C) 2017  Hercules Dev Team
+* Copyright (C) 2017-2021 Hercules Dev Team
 * Copyright (C) Smokexyz
 * Copyright (C) Dastgir
 *
@@ -194,6 +194,8 @@ static void achievement_progress_add(struct map_session_data *sd, const struct a
 		// Check if the Achievement is complete.
 		if (achievement->check_complete(sd, ad)) {
 			achievement->validate_achieve(sd, ad->id);
+			if ((ach = achievement->ensure(sd, ad)) == NULL)
+				return;
 			ach->completed_at = time(NULL);
 		}
 
@@ -232,6 +234,8 @@ static void achievement_progress_set(struct map_session_data *sd, const struct a
 
 		if (achievement->check_complete(sd, ad)) {
 			achievement->validate_achieve(sd, ad->id);
+			if ((ach = achievement->ensure(sd, ad)) == NULL)
+				return;
 			ach->completed_at = time(NULL);
 		}
 

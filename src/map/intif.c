@@ -2,8 +2,8 @@
  * This file is part of Hercules.
  * http://herc.ws - http://github.com/HerculesWS/Hercules
  *
- * Copyright (C) 2012-2018  Hercules Dev Team
- * Copyright (C)  Athena Dev Teams
+ * Copyright (C) 2012-2021 Hercules Dev Team
+ * Copyright (C) Athena Dev Teams
  *
  * Hercules is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -218,13 +218,13 @@ static int intif_saveregistry(struct map_session_data *sd)
 			plen += 1;
 
 			if( p->value ) {
-				len = strlen(p->value)+1;
+				len = strlen(p->value);
 
-				WFIFOB(inter_fd, plen) = (unsigned char)len;/* won't be higher; the column size is 254 */
+				WFIFOB(inter_fd, plen) = (unsigned char)len; // Won't be higher; the column size is 255.
 				plen += 1;
 
-				safestrncpy(WFIFOP(inter_fd,plen), p->value, len);
-				plen += len;
+				safestrncpy(WFIFOP(inter_fd, plen), p->value, len + 1);
+				plen += len + 1;
 			} else {
 				script->reg_destroy_single(sd,key.i64,&p->flag);
 			}
@@ -357,10 +357,21 @@ static void intif_parse_account_storage(int fd)
 }
 
 /**
- * Send account storage information for saving.
- * @packet 0x3011 [out] <packet_len>.W <account_id>.L <struct item[]>.P
- * @param  sd     [in]  pointer to session data.
- */
+ * Sends account storage information for saving to the character server.
+ *
+ * @code{.unparsed}
+ *	@packet 0x3011 [out] <packet_len>.W <account_id>.L <struct item[]>.P
+ * @endcode
+ *
+ * @attention If the size of packet 0x3011 changes,
+ *            @ref MAX_STORAGE_ASSERT "the related static assertion check"
+ *            in mmo.h needs to be adjusted, too.
+ *
+ * @see mapif_parse_AccountStorageSave()
+ *
+ * @param[in] sd Pointer to the session data containing the account storage information to save.
+ *
+ **/
 static void intif_send_account_storage(struct map_session_data *sd)
 {
 	int len = 0, i = 0, c = 0;
@@ -432,6 +443,25 @@ static int intif_request_guild_storage(int account_id, int guild_id)
 	WFIFOSET(inter_fd,10);
 	return 0;
 }
+
+/**
+ * Sends guild storage information for saving to the character server.
+ *
+ * @code{.unparsed}
+ *	@packet 0x3019 [out] <packet_len>.W <account_id>.L <guild_id>.L <struct guild_storage>.P
+ * @endcode
+ *
+ * @attention If the size of packet 0x3019 changes,
+ *            @ref MAX_GUILD_STORAGE_ASSERT "the related static assertion check"
+ *            in mmo.h needs to be adjusted, too.
+ *
+ * @see mapif_parse_SaveGuildStorage()
+ *
+ * @param[in] account_id The account ID of the character who initiated saving the guild storage information.
+ * @param[in] gstor Pointer to the guild storage data containing the information to save.
+ * @return Always 0. 
+ *
+ **/
 static int intif_send_guild_storage(int account_id, struct guild_storage *gstor)
 {
 	if (intif->CheckForCharServer())
@@ -1025,7 +1055,7 @@ static void intif_parse_Registers(int fd)
 		 * { keyLength(B), key(<keyLength>), index(L), valLength(B), val(<valLength>) }
 		 **/
 		if (type) {
-			char sval[254];
+			char sval[SCRIPT_STRING_VAR_LENGTH + 1];
 			for (i = 0; i < max; i++) {
 				int len = RFIFOB(fd, cursor);
 				safestrncpy(key, RFIFOP(fd, cursor + 1), min((int)sizeof(key), len));
@@ -1035,8 +1065,8 @@ static void intif_parse_Registers(int fd)
 				cursor += 4;
 
 				len = RFIFOB(fd, cursor);
-				safestrncpy(sval, RFIFOP(fd, cursor + 1), min((int)sizeof(sval), len));
-				cursor += len + 1;
+				safestrncpy(sval, RFIFOP(fd, cursor + 1), min((int)sizeof(sval), len + 1));
+				cursor += len + 2;
 
 				script->set_reg(NULL,sd,reference_uid(script->add_variable(key), index), key, sval, NULL);
 			}

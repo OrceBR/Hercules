@@ -2,7 +2,7 @@
  * This file is part of Hercules.
  * http://herc.ws - http://github.com/HerculesWS/Hercules
  *
- * Copyright (C) 2013-2018  Hercules Dev Team
+ * Copyright (C) 2013-2021 Hercules Dev Team
  *
  * Hercules is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -2461,6 +2461,10 @@ struct PACKET_ZC_ACK_SCHEDULER_CASHITEM_sub {
 	uint16 itemId;
 #endif
 	uint32 price;
+#ifdef ENABLE_CASHSHOP_PREVIEW_PATCH
+	uint16 viewSprite;
+	uint32 location;
+#endif  // ENABLE_CASHSHOP_PREVIEW_PATCH
 } __attribute__((packed));
 
 struct PACKET_ZC_ACK_SCHEDULER_CASHITEM {
@@ -3728,6 +3732,320 @@ struct PACKET_CZ_REQ_MOUNTOFF {
 } __attribute__((packed));
 DEFINE_PACKET_HEADER(CZ_REQ_MOUNTOFF, 0x0b35);
 #endif
+
+// in 3 clients from same version
+#if PACKETVER >= 20191127
+struct PACKET_ZC_NOTIFY_EFFECT3 {
+	int16 packetType;
+	uint32 aid;
+	uint32 effectId;
+	uint64 num;
+} __attribute__((packed));
+DEFINE_PACKET_HEADER(ZC_NOTIFY_EFFECT3, 0x0b69);
+#elif PACKETVER_MAIN_NUM >= 20060911 || PACKETVER_AD_NUM >= 20060911 || PACKETVER_SAK_NUM >= 20060911 || defined(PACKETVER_RE) || defined(PACKETVER_ZERO)
+struct PACKET_ZC_NOTIFY_EFFECT3 {
+	int16 packetType;
+	uint32 aid;
+	uint32 effectId;
+	uint32 num;
+} __attribute__((packed));
+DEFINE_PACKET_HEADER(ZC_NOTIFY_EFFECT3, 0x0284);
+#endif
+
+#if PACKETVER >= 20100824
+struct PACKET_CZ_SE_CASHSHOP_OPEN1 {
+	int16 packetType;
+} __attribute__((packed));
+DEFINE_PACKET_HEADER(CZ_SE_CASHSHOP_OPEN1, 0x0844);
+#endif
+
+#if PACKETVER >= 20191224
+struct PACKET_CZ_SE_CASHSHOP_OPEN2 {
+	int16 packetType;
+	uint32 tab;
+} __attribute__((packed));
+DEFINE_PACKET_HEADER(CZ_SE_CASHSHOP_OPEN2, 0x0b6d);
+#endif
+
+#if PACKETVER >= 20190724
+struct PACKET_CZ_SE_CASHSHOP_LIMITED_REQ {
+	int16 packetType;
+} __attribute__((packed));
+DEFINE_PACKET_HEADER(CZ_SE_CASHSHOP_LIMITED_REQ, 0x0b4c);
+#endif
+
+#if PACKETVER_MAIN_NUM >= 20200129 || PACKETVER_RE_NUM >= 20200205 || PACKETVER_ZERO_NUM >= 20191224
+struct PACKET_ZC_SE_CASHSHOP_OPEN {
+	int16 packetType;
+	uint32 cashPoints;
+	uint32 kafraPoints;
+	uint32 tab;
+} __attribute__((packed));
+DEFINE_PACKET_HEADER(ZC_SE_CASHSHOP_OPEN, 0x0b6e);
+// for ragexeRE in some version this packet unused [4144]
+#elif PACKETVER_MAIN_NUM >= 20101123 || PACKETVER_RE_NUM >= 20120328 || defined(PACKETVER_ZERO)
+struct PACKET_ZC_SE_CASHSHOP_OPEN {
+	int16 packetType;
+	uint32 cashPoints;
+	uint32 kafraPoints;
+} __attribute__((packed));
+DEFINE_PACKET_HEADER(ZC_SE_CASHSHOP_OPEN, 0x0845);
+#endif
+
+#if PACKETVER_MAIN_NUM >= 20190904 || PACKETVER_RE_NUM >= 20190904 || PACKETVER_ZERO_NUM >= 20190828
+struct PACKET_CZ_NPC_EXPANDED_BARTER_CLOSE {
+	int16 packetType;
+} __attribute__((packed));
+DEFINE_PACKET_HEADER(CZ_NPC_EXPANDED_BARTER_CLOSE, 0x0b58);
+#endif
+
+#if PACKETVER_MAIN_NUM >= 20191120 || PACKETVER_RE_NUM >= 20191106 || PACKETVER_ZERO_NUM >= 20191127
+struct PACKET_ZC_NPC_EXPANDED_BARTER_OPEN_sub2 {
+#if PACKETVER_MAIN_NUM >= 20181121 || PACKETVER_RE_NUM >= 20180704 || PACKETVER_ZERO_NUM >= 20181114
+	uint32 nameid;
+#else
+	uint16 nameid;
+#endif
+	uint16 refine_level;
+	uint32 amount;
+	uint16 type;
+} __attribute__((packed));
+
+struct PACKET_ZC_NPC_EXPANDED_BARTER_OPEN_sub {
+#if PACKETVER_MAIN_NUM >= 20181121 || PACKETVER_RE_NUM >= 20180704 || PACKETVER_ZERO_NUM >= 20181114
+	uint32 nameid;
+#else
+	uint16 nameid;
+#endif
+	uint16 type;
+	uint32 amount;
+	uint32 weight;
+	uint32 index;
+	uint32 zeny;
+	uint32 currency_count;
+	// Workaround for fix Visual Studio bug (error C2233). Here should be currencies[]
+	struct PACKET_ZC_NPC_EXPANDED_BARTER_OPEN_sub2 currencies[1];
+} __attribute__((packed));
+
+// Workaround check for Visual Studio bug (error C2233)
+STATIC_ASSERT(sizeof(struct PACKET_ZC_NPC_EXPANDED_BARTER_OPEN_sub2[1]) ==
+	sizeof(struct PACKET_ZC_NPC_EXPANDED_BARTER_OPEN_sub2),
+	"Wrong PACKET_ZC_NPC_EXPANDED_BARTER_OPEN_sub size");
+
+struct PACKET_ZC_NPC_EXPANDED_BARTER_OPEN {
+	int16 packetType;
+	int16 packetLength;
+	int32 items_count;
+	struct PACKET_ZC_NPC_EXPANDED_BARTER_OPEN_sub items[];
+} __attribute__((packed));
+
+DEFINE_PACKET_HEADER(ZC_NPC_EXPANDED_BARTER_OPEN, 0x0b56);
+#endif
+
+#if PACKETVER_MAIN_NUM >= 20190904 || PACKETVER_RE_NUM >= 20190904 || PACKETVER_ZERO_NUM >= 20190828
+struct PACKET_CZ_NPC_EXPANDED_BARTER_PURCHASE_sub {
+#if PACKETVER_MAIN_NUM >= 20181121 || PACKETVER_RE_NUM >= 20180704 || PACKETVER_ZERO_NUM >= 20181114
+	uint32 itemId;
+#else
+	uint16 itemId;
+#endif
+	uint32 shopIndex;
+	uint32 amount;
+} __attribute__((packed));
+
+struct PACKET_CZ_NPC_EXPANDED_BARTER_PURCHASE {
+	int16 packetType;
+	int16 packetLength;
+	struct PACKET_CZ_NPC_EXPANDED_BARTER_PURCHASE_sub list[];
+} __attribute__((packed));
+DEFINE_PACKET_HEADER(CZ_NPC_EXPANDED_BARTER_PURCHASE, 0x0b57);
+#endif
+
+#if PACKETVER >= 7
+struct PACKET_ZC_STATE_CHANGE {
+	int16 packetType;
+	uint32 AID;
+	int16 bodyState;
+	int16 healthState;
+	int32 effectState;
+	int8 isPKModeON;
+} __attribute__((packed));
+DEFINE_PACKET_HEADER(ZC_STATE_CHANGE, 0x0229);
+#else
+struct PACKET_ZC_STATE_CHANGE {
+	int16 PacketType;
+	uint32 AID;
+	int16 bodyState;
+	int16 healthState;
+	int16 effectState;
+	int8 isPKModeON;
+} __attribute__((packed));
+DEFINE_PACKET_HEADER(ZC_STATE_CHANGE, 0x0119);
+#endif
+
+struct PACKET_ZC_AUTORUN_SKILL {
+	int16 packetType;
+	uint16 skill_id;
+	uint32 skill_type;
+	uint16 skill_lv;
+	uint16 skill_sp;
+	uint16 skill_range;
+	char skill_name[NAME_LENGTH];
+	char up_flag;
+} __attribute__((packed));
+DEFINE_PACKET_HEADER(ZC_AUTORUN_SKILL, 0x0147);
+
+#if PACKETVER_MAIN_NUM >= 20170726 || PACKETVER_RE_NUM >= 20170621 || defined(PACKETVER_ZERO)
+struct PACKET_ZC_LAPINEUPGRADE_OPEN {
+	int16 packetType;
+#if PACKETVER_MAIN_NUM >= 20181121 || PACKETVER_RE_NUM >= 20180704 || PACKETVER_ZERO_NUM >= 20181114
+	uint32 itemId;
+#else
+	uint16 itemId;
+#endif
+} __attribute__((packed));
+DEFINE_PACKET_HEADER(ZC_LAPINEUPGRADE_OPEN, 0x0ab4);
+
+struct PACKET_ZC_LAPINEUPGRADE_RESULT {
+	int16 packetType;
+	uint16 result;
+} __attribute__((packed));
+DEFINE_PACKET_HEADER(ZC_LAPINEUPGRADE_RESULT, 0x0ab7);
+#endif  // PACKETVER_MAIN_NUM >= 20170726 || PACKETVER_RE_NUM >= 20170621 || defined(PACKETVER_ZERO)
+
+#if PACKETVER_MAIN_NUM >= 20170111 || PACKETVER_RE_NUM >= 20170111 || defined(PACKETVER_ZERO)
+struct PACKET_CZ_LAPINEUPGRADE_CLOSE {
+	int16 packetType;
+} __attribute__((packed));
+DEFINE_PACKET_HEADER(CZ_LAPINEUPGRADE_CLOSE, 0x0ab5);
+
+struct PACKET_CZ_LAPINEUPGRADE_MAKE_ITEM {
+	int16 packetType;
+#if PACKETVER_MAIN_NUM >= 20181121 || PACKETVER_RE_NUM >= 20180704 || PACKETVER_ZERO_NUM >= 20181114
+	uint32 itemId;
+#else
+	uint16 itemId;
+#endif
+	uint16 index;
+} __attribute__((packed));
+DEFINE_PACKET_HEADER(CZ_LAPINEUPGRADE_MAKE_ITEM, 0x0ab6);
+#endif  // PACKETVER_MAIN_NUM >= 20170111 || PACKETVER_RE_NUM >= 20170111 || defined(PACKETVER_ZERO)
+
+#if PACKETVER_MAIN_NUM >= 20120503 || PACKETVER_RE_NUM >= 20120502 || defined(PACKETVER_ZERO)
+struct PACKET_ZC_PERSONAL_INFOMATION_SUB {
+	int8 type;
+	int32 exp;
+	int32 death;
+	int32 drop;
+} __attribute__((packed));
+struct PACKET_ZC_PERSONAL_INFOMATION {
+	int16 packetType;
+	int16 length;
+	int32 total_exp;
+	int32 total_death;
+	int32 total_drop;
+	struct PACKET_ZC_PERSONAL_INFOMATION_SUB details[];
+} __attribute__((packed));
+DEFINE_PACKET_HEADER(ZC_PERSONAL_INFOMATION, 0x097b);
+#endif  // PACKETVER_MAIN_NUM >= 20120503 || PACKETVER_RE_NUM >= 20120502 || defined(PACKETVER_ZERO)
+
+struct PACKET_CZ_REQUEST_ACTNPC {
+	int16 packetType;
+	uint32 GID;
+	uint32 targetGID;
+	int8 action;
+} __attribute__((packed));
+
+#if PACKETVER < 3
+struct PACKET_ZC_NOTIFY_SKILL {
+	int16 PacketType;
+	uint16 SKID;
+	uint32 AID;
+	uint32 targetID;
+	uint32 startTime;
+	int32 attackMT;
+	int32 attackedMT;
+	int16 damage;
+	int16 level;
+	int16 count;
+	int8 action;
+} __attribute__((packed));
+DEFINE_PACKET_HEADER(ZC_NOTIFY_SKILL, 0x0114);
+#else
+struct PACKET_ZC_NOTIFY_SKILL {
+	int16 PacketType;
+	uint16 SKID;
+	uint32 AID;
+	uint32 targetID;
+	uint32 startTime;
+	int32 attackMT;
+	int32 attackedMT;
+	int32 damage;
+	int16 level;
+	int16 count;
+	int8 action;
+} __attribute__((packed));
+DEFINE_PACKET_HEADER(ZC_NOTIFY_SKILL, 0x01de);
+#endif 
+
+#if PACKETVER_MAIN_NUM >= 20130731 || PACKETVER_RE_NUM >= 20130724 || defined(PACKETVER_ZERO)
+struct PACKET_ZC_USE_SKILL {
+	int16 PacketType;
+	uint16 SKID;
+	int32 level;
+	uint32 targetAID;
+	uint32 srcAID;
+	int8 result;
+} __attribute__((packed));
+DEFINE_PACKET_HEADER(ZC_USE_SKILL, 0x09cb);
+#else
+struct PACKET_ZC_USE_SKILL {
+	int16 PacketType;
+	uint16 SKID;
+	int16 level;
+	uint32 targetAID;
+	uint32 srcAID;
+	int8 result;
+} __attribute__((packed));
+DEFINE_PACKET_HEADER(ZC_USE_SKILL, 0x011a);
+#endif
+
+struct PACKET_ZC_NOTIFY_GROUNDSKILL {
+	int16 PacketType;
+	uint16 SKID;
+	uint32 AID;
+	int16 level;
+	int16 xPos;
+	int16 yPos;
+	uint32 startTime;
+} __attribute__((packed));
+DEFINE_PACKET_HEADER(ZC_NOTIFY_GROUNDSKILL, 0x0117);
+
+#if PACKETVER_MAIN_NUM >= 20081112 || PACKETVER_RE_NUM >= 20081111 || defined(PACKETVER_ZERO)
+struct PACKET_ZC_SKILL_POSTDELAY {
+	int16 PacketType;
+	uint16 SKID;
+	uint32 DelayTM;
+} __attribute__((packed));
+DEFINE_PACKET_HEADER(ZC_SKILL_POSTDELAY, 0x043d);
+#endif
+
+struct PACKET_ZC_NOTIFY_SKILL_POSITION {
+	int16 PacketType;
+	uint16 SKID;
+	uint32 AID;
+	uint32 targetID;
+	uint32 startTime;
+	int32 attackMT;
+	int32 attackedMT;
+	int16 xPos;
+	int16 yPos;
+	int16 damage;
+	int16 level;
+	int16 count;
+	int8 action;
+};
+DEFINE_PACKET_HEADER(ZC_NOTIFY_SKILL_POSITION, 0x0115);
 
 #if !defined(sun) && (!defined(__NETBSD__) || __NetBSD_Version__ >= 600000000) // NetBSD 5 and Solaris don't like pragma pack but accept the packed attribute
 #pragma pack(pop)

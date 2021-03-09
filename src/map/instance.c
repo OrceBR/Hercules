@@ -2,8 +2,8 @@
  * This file is part of Hercules.
  * http://herc.ws - http://github.com/HerculesWS/Hercules
  *
- * Copyright (C) 2012-2018  Hercules Dev Team
- * Copyright (C)  Athena Dev Teams
+ * Copyright (C) 2012-2021 Hercules Dev Team
+ * Copyright (C) Athena Dev Teams
  *
  * Hercules is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -68,7 +68,7 @@ static bool instance_is_valid(int instance_id)
 /*--------------------------------------
  * name : instance name
  * Return value could be
- * -4 = already exists | -3 = no free instances | -2 = owner not found | -1 = invalid type
+ * -4 = already exists | -2 = owner not found | -1 = invalid type
  * On success return instance_id
  *--------------------------------------*/
 static int instance_create(int owner_id, const char *name, enum instance_owner_type type)
@@ -446,7 +446,7 @@ static int instance_cleanup_sub(struct block_list *bl, va_list ap)
 			map->quit(BL_UCAST(BL_PC, bl));
 			break;
 		case BL_NPC:
-			npc->unload(BL_UCAST(BL_NPC, bl), true);
+			npc->unload(BL_UCAST(BL_NPC, bl), true, true);
 			break;
 		case BL_MOB:
 			unit->free(bl,CLR_OUTSIGHT);
@@ -734,7 +734,7 @@ static void instance_force_destroy(struct map_session_data *sd)
 		switch (instance->list[i].owner_type) {
 		case IOT_CHAR:
 		{
-			if (instance->list[i].owner_id != sd->status.char_id)
+			if (instance->list[i].owner_id != sd->status.account_id)
 				continue;
 			break;
 		}

@@ -2,7 +2,7 @@
  * This file is part of Hercules.
  * http://herc.ws - http://github.com/HerculesWS/Hercules
  *
- * Copyright (C) 2017 Hercules Dev Team
+ * Copyright (C) 2017-2021 Hercules Dev Team
  *
  * Hercules is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -231,7 +231,7 @@ static int rodex_send_mail(struct map_session_data *sd, const char *receiver_nam
 	nullpo_retr(RODEX_SEND_MAIL_FATAL_ERROR, body);
 	nullpo_retr(RODEX_SEND_MAIL_FATAL_ERROR, title);
 
-	if (!rodex->isenabled() || sd->npc_id > 0) {
+	if (!rodex->isenabled() || (sd->npc_id != 0 && sd->state.using_megaphone == 0)) {
 		rodex->clean(sd, 1);
 		return RODEX_SEND_MAIL_FATAL_ERROR;
 	}
@@ -356,7 +356,7 @@ static void rodex_send_mail_result(struct map_session_data *ssd, struct map_sess
 
 	if (rsd != NULL) {
 		clif->rodex_icon(rsd->fd, true);
-		clif_disp_onlyself(rsd, "You've got a new mail!");
+		clif_disp_onlyself(rsd, msg_sd(rsd, 236)); // "You've got a new mail!"
 	}
 	return;
 }
@@ -575,6 +575,7 @@ static void rodex_clean(struct map_session_data *sd, int8 flag)
 	if (flag == 0)
 		VECTOR_CLEAR(sd->rodex.messages);
 
+	sd->state.workinprogress &= ~2;
 	memset(&sd->rodex.tmp, 0x0, sizeof(sd->rodex.tmp));
 }
 

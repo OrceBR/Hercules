@@ -2,8 +2,8 @@
  * This file is part of Hercules.
  * http://herc.ws - http://github.com/HerculesWS/Hercules
  *
- * Copyright (C) 2012-2018  Hercules Dev Team
- * Copyright (C)  Athena Dev Teams
+ * Copyright (C) 2012-2021 Hercules Dev Team
+ * Copyright (C) Athena Dev Teams
  *
  * Hercules is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -145,6 +145,8 @@ typedef enum broadcast_flags {
 	BC_BLUE        = 0x10,
 	BC_WOE         = 0x20,
 	BC_COLOR_MASK  = 0x30, // BC_YELLOW|BC_BLUE|BC_WOE
+
+	BC_MEGAPHONE   = 0x40,
 
 	BC_DEFAULT     = BC_ALL|BC_PC|BC_YELLOW
 } broadcast_flags;
@@ -640,6 +642,23 @@ enum siege_teleport_result {
 	SIEGE_TP_INVALID_MODE = 0x2
 };
 
+/** Client action types */
+enum action_type {
+	ACT_ATTACK,
+	ACT_ITEMPICKUP,
+	ACT_SIT,
+	ACT_STAND,
+	ACT_ATTACK_NOMOTION,
+	ACT_SPLASH,
+	ACT_SKILL,
+	ACT_ATTACK_REPEAT,
+	ACT_ATTACK_MULTIPLE,
+	ACT_ATTACK_MULTIPLE_NOMOTION,
+	ACT_ATTACK_CRITICAL,
+	ACT_ATTACK_LUCKY,
+	ACT_TOUCHSKILL
+};
+
 /**
  * Structures
  **/
@@ -733,6 +752,11 @@ enum lapineddukddak_result {
 	LAPINEDDKUKDDAK_INVALID_ITEM = 7,
 };
 
+enum lapineUpgrade_result {
+	LAPINE_UPGRADE_SUCCESS = 0,
+	LAPINE_UPGRADE_FAILED = 1
+};
+
 enum removeGear_flag {
 	REMOVE_MOUNT_0 = 0,  // unused
 	REMOVE_MOUNT_DRAGON = 1,
@@ -741,6 +765,24 @@ enum removeGear_flag {
 	REMOVE_MOUNT_PECO = 4,
 	REMOVE_MOUNT_FALCON = 5,
 	REMOVE_MOUNT_CART = 6,
+};
+
+/** Info types for PACKET_ZC_PERSONAL_INFOMATION (0x097b). **/
+enum detail_exp_info_type {
+	PC_EXP_INFO = 0x0,	//!< PCBang internet cafe modifiers. (http://pcbang.gnjoy.com/) (Unused.)
+	PREMIUM_EXP_INFO = 0x1, //!< Premium user modifiers. Values aren't displayed in 20161207+ clients.
+	SERVER_EXP_INFO = 0x2,	//!< Server rates.
+	TPLUS_EXP_INFO = 0x3,	//!< Unknown. Values are displayed as "TPLUS" in kRO. (Unused.)
+};
+
+/**
+ * Convex Mirror (ZC_BOSS_INFO)
+ **/
+enum bossmap_info_type {
+	BOSS_INFO_NONE = 0,      // No Boss within the map
+	BOSS_INFO_ALIVE,         // Boss is still alive
+	BOSS_INFO_ALIVE_WITHMSG, // Boss is alive (on item use)
+	BOSS_INFO_DEAD,          // Boss is dead
 };
 
 /**
@@ -859,7 +901,7 @@ struct clif_interface {
 	void (*map_property) (struct map_session_data* sd, enum map_property property);
 	void (*pvpset) (struct map_session_data *sd, int pvprank, int pvpnum,int type);
 	void (*map_property_mapall) (int mapid, enum map_property property);
-	void (*bossmapinfo) (int fd, struct mob_data *md, short flag);
+	void (*bossmapinfo) (int fd, struct mob_data *md, enum bossmap_info_type flag);
 	void (*map_type) (struct map_session_data* sd, enum map_type type);
 	void (*maptypeproperty2) (struct block_list *bl,enum send_target t);
 	/* multi-map-server */
@@ -952,8 +994,11 @@ struct clif_interface {
 	void (*mobname_normal_ack) (int fd, struct block_list *bl);
 	void (*chatname_ack) (int fd, struct block_list *bl);
 	void (*elemname_ack) (int fd, struct block_list *bl);
+	void (*skillname_ack) (int fd, struct block_list *bl);
+	void (*itemname_ack) (int fd, struct block_list *bl);
 	void (*unknownname_ack) (int fd, struct block_list *bl);
-	void (*monster_hp_bar) ( struct mob_data* md, struct map_session_data *sd );
+	void (*monster_hp_bar) (struct mob_data *md, struct map_session_data *sd);
+	bool (*show_monster_hp_bar) (struct block_list *bl);
 	int (*hpmeter) (struct map_session_data *sd);
 	void (*hpmeter_single) (int fd, int id, unsigned int hp, unsigned int maxhp);
 	int (*hpmeter_sub) (struct block_list *bl, va_list ap);
@@ -1006,6 +1051,7 @@ struct clif_interface {
 	/* visual effects client-side */
 	void (*misceffect) (struct block_list* bl,int type);
 	void (*changeoption) (struct block_list* bl);
+	void (*changeoption_target) (struct block_list *bl, struct block_list *target_bl, enum send_target target);
 	void (*changeoption2) (struct block_list* bl);
 	void (*emotion) (struct block_list *bl,int type);
 	void (*talkiebox) (struct block_list* bl, const char* talkie);
@@ -1030,7 +1076,8 @@ struct clif_interface {
 	void (*weather) (int16 m);
 	void (*specialeffect) (struct block_list* bl, int type, enum send_target target);
 	void (*specialeffect_single) (struct block_list* bl, int type, int fd);
-	void (*specialeffect_value) (struct block_list* bl, int effect_id, int num, send_target target);
+	void (*specialeffect_value) (struct block_list* bl, int effect_id, uint64 num, send_target target);
+	void (*specialeffect_value_single) (struct block_list *bl, int effect_id, uint64 num, int fd);
 	void (*removeSpecialEffect) (struct block_list *bl, int effectId, enum send_target target);
 	void (*removeSpecialEffect_single) (struct block_list *bl, int effectId, struct block_list *targetBl);
 	void (*millenniumshield) (struct block_list *bl, short shields );
@@ -1353,7 +1400,7 @@ struct clif_interface {
 	void (*pEmotion) (int fd, struct map_session_data *sd);
 	void (*pHowManyConnections) (int fd, struct map_session_data *sd);
 	void (*pActionRequest) (int fd, struct map_session_data *sd);
-	void (*pActionRequest_sub) (struct map_session_data *sd, int action_type, int target_id, int64 tick);
+	void (*pActionRequest_sub) (struct map_session_data *sd, enum action_type action_type, int target_id, int64 tick);
 	void (*pRestart) (int fd, struct map_session_data *sd);
 	void (*pWisMessage) (int fd, struct map_session_data* sd);
 	void (*pBroadcast) (int fd, struct map_session_data* sd);
@@ -1547,7 +1594,9 @@ struct clif_interface {
 	void (*pBGQueueRevokeReq) (int fd, struct map_session_data *sd);
 	void (*pBGQueueBattleBeginAck) (int fd, struct map_session_data *sd);
 	/* RagExe Cash Shop [Ind/Hercules] */
-	void (*pCashShopOpen) (int fd, struct map_session_data *sd);
+	void (*pCashShopOpen1) (int fd, struct map_session_data *sd);
+	void (*pCashShopOpen2) (int fd, struct map_session_data *sd);
+	void (*pCashShopLimitedReq) (int fd, struct map_session_data *sd);
 	void (*pCashShopClose) (int fd, struct map_session_data *sd);
 	void (*pCashShopReqTab) (int fd, struct map_session_data *sd);
 	void (*pCashShopSchedule) (int fd, struct map_session_data *sd);
@@ -1555,6 +1604,7 @@ struct clif_interface {
 	void (*pPartyTick) (int fd, struct map_session_data *sd);
 	void (*pGuildInvite2) (int fd, struct map_session_data *sd);
 	void (*cashShopBuyAck) (int fd, struct map_session_data *sd, int itemId, enum CASH_SHOP_BUY_RESULT result);
+	void (*cashShopOpen) (int fd, struct map_session_data *sd, int tab);
 	/* Group Search System Update */
 	void (*pPartyBookingAddFilter) (int fd, struct map_session_data *sd);
 	void (*pPartyBookingSubFilter) (int fd, struct map_session_data *sd);
@@ -1636,6 +1686,7 @@ struct clif_interface {
 	bool (*attendance_timediff) (struct map_session_data *sd);
 	time_t (*attendance_getendtime) (void);
 	void (*pOpenUIRequest) (int fd, struct map_session_data *sd);
+	void (*open_ui_send) (struct map_session_data *sd, enum zc_ui_types ui_type);
 	void (*open_ui) (struct map_session_data *sd, enum cz_ui_types uiType);
 	void (*pAttendanceRewardRequest) (int fd, struct map_session_data *sd);
 	void (*ui_action) (struct map_session_data *sd, int32 UIType, int32 data);
@@ -1659,6 +1710,9 @@ struct clif_interface {
 	void (*npc_barter_open) (struct map_session_data *sd, struct npc_data *nd);
 	void (*pNPCBarterClosed) (int fd, struct map_session_data *sd);
 	void (*pNPCBarterPurchase) (int fd, struct map_session_data *sd);
+	void (*pNPCExpandedBarterClosed) (int fd, struct map_session_data *sd);
+	void (*pNPCExpandedBarterPurchase) (int fd, struct map_session_data *sd);
+	void (*npc_expanded_barter_open) (struct map_session_data *sd, struct npc_data *nd);
 	void (*pClientVersion) (int fd, struct map_session_data *sd);
 	void (*pPing) (int fd, struct map_session_data *sd);
 	void (*ping) (struct map_session_data *sd);
@@ -1680,6 +1734,10 @@ struct clif_interface {
 	bool (*lapineDdukDdak_result) (struct map_session_data *sd, enum lapineddukddak_result result);
 	void (*plapineDdukDdak_ack) (int fd, struct map_session_data *sd);
 	void (*plapineDdukDdak_close) (int fd, struct map_session_data *sd);
+	bool (*lapineUpgrade_open) (struct map_session_data *sd, int item_id);
+	bool (*lapineUpgrade_result) (struct map_session_data *sd, enum lapineUpgrade_result result);
+	void (*pLapineUpgrade_close) (int fd, struct map_session_data *sd);
+	void (*pLapineUpgrade_makeItem) (int fd, struct map_session_data *sd);
 	void (*pReqGearOff) (int fd, struct map_session_data *sd);
 };
 

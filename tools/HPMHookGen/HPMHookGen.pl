@@ -3,7 +3,7 @@
 # This file is part of Hercules.
 # http://herc.ws - http://github.com/HerculesWS/Hercules
 #
-# Copyright (C) 2013-2018  Hercules Dev Team
+# Copyright (C) 2013-2021 Hercules Dev Team
 #
 # Hercules is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -244,6 +244,12 @@ sub parse($$) {
 			$rtinit = ' = DB_OPT_BASE';
 		} elsif ($x =~ /^enum\s+thread_priority$/) { # Known enum thread_priority
 			$rtinit = ' = THREADPRIO_NORMAL';
+		} elsif ($x =~ /^enum\s+market_buy_result$/) { # Known enum market_buy_result
+			$rtinit = ' = MARKET_BUY_RESULT_ERROR';
+		} elsif ($x =~ /^enum\s+unit_dir$/) { # Known enum unit_dir
+			$rtinit = ' = UNIT_DIR_UNDEFINED';
+		} elsif ($x =~ /^enum\s+quest_mobtype$/) { # Known enum quest_mobtype
+			$rtinit = ' = QMT_RC_DEMIHUMAN';
 		} elsif ($x eq 'DBComparator' or $x eq 'DBHasher' or $x eq 'DBReleaser') { # DB function pointers
 			$rtinit = ' = NULL';
 		} elsif ($x =~ /^(?:struct|union)\s+.*$/) { # Structs and unions
@@ -472,7 +478,7 @@ my $fileheader = <<"EOF";
  * This file is part of Hercules.
  * http://herc.ws - http://github.com/HerculesWS/Hercules
  *
- * Copyright (C) 2013-$year  Hercules Dev Team
+ * Copyright (C) 2013-$year Hercules Dev Team
  *
  * Hercules is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by

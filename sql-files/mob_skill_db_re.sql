@@ -1,7 +1,7 @@
 -- This file is part of Hercules.
 -- http://herc.ws - http://github.com/HerculesWS/Hercules
 --
--- Copyright (C) 2013-2019  Hercules Dev Team
+-- Copyright (C) 2013-2021 Hercules Dev Team
 --
 -- Hercules is free software: you can redistribute it and/or modify
 -- it under the terms of the GNU General Public License as published by
@@ -29,23 +29,23 @@
 
 DROP TABLE IF EXISTS `mob_skill_db`;
 CREATE TABLE `mob_skill_db` (
-  `MOB_ID` SMALLINT(6) NOT NULL,
-  `INFO` TEXT NOT NULL,
-  `STATE` TEXT NOT NULL,
-  `SKILL_ID` SMALLINT(6) NOT NULL,
-  `SKILL_LV` TINYINT(4) NOT NULL,
-  `RATE` SMALLINT(4) NOT NULL,
-  `CASTTIME` MEDIUMINT(9) NOT NULL,
-  `DELAY` INT(9) NOT NULL,
-  `CANCELABLE` TEXT NOT NULL,
-  `TARGET` TEXT NOT NULL,
-  `CONDITION` TEXT NOT NULL,
-  `CONDITION_VALUE` TEXT,
-  `VAL1` INT(11) DEFAULT NULL,
-  `VAL2` INT(11) DEFAULT NULL,
-  `VAL3` INT(11) DEFAULT NULL,
-  `VAL4` INT(11) DEFAULT NULL,
-  `VAL5` INT(11) DEFAULT NULL,
+  `MOB_ID` smallint NOT NULL,
+  `INFO` text NOT NULL,
+  `STATE` text NOT NULL,
+  `SKILL_ID` smallint NOT NULL,
+  `SKILL_LV` tinyint NOT NULL,
+  `RATE` smallint NOT NULL,
+  `CASTTIME` mediumint NOT NULL,
+  `DELAY` int NOT NULL,
+  `CANCELABLE` text NOT NULL,
+  `TARGET` text NOT NULL,
+  `CONDITION` text NOT NULL,
+  `CONDITION_VALUE` text,
+  `VAL1` int DEFAULT NULL,
+  `VAL2` int DEFAULT NULL,
+  `VAL3` int DEFAULT NULL,
+  `VAL4` int DEFAULT NULL,
+  `VAL5` int DEFAULT NULL,
   `EMOTION` TEXT,
   `CHAT` TEXT
 ) ENGINE=MyISAM;
@@ -10055,6 +10055,14 @@ REPLACE INTO `mob_skill_db` VALUES (2959,'Torturous Redeemer@SM_BASH','attack',5
 REPLACE INTO `mob_skill_db` VALUES (2959,'Torturous Redeemer@NPC_FIREATTACK','attack',186,3,1000,0,200000,'yes','target','always',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);
 REPLACE INTO `mob_skill_db` VALUES (2959,'Torturous Redeemer@WZ_FIREPILLAR','attack',80,5,500,0,10000,'no','around2','always',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);
 REPLACE INTO `mob_skill_db` VALUES (2959,'Torturous Redeemer@SM_MAGNUM','attack',7,5,500,0,10000,'no','self','always',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);
+REPLACE INTO `mob_skill_db` VALUES (2963,'Woodie@AL_HEAL','attack',28,9,10000,500,5000,'no','self','myhpinrate',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);
+REPLACE INTO `mob_skill_db` VALUES (2963,'Woodie@NPC_FIREATTACK','attack',186,3,2000,500,5000,'no','target','always',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);
+REPLACE INTO `mob_skill_db` VALUES (2963,'Woodie@NPC_GROUNDATTACK','attack',185,3,2000,500,5000,'no','target','always',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);
+REPLACE INTO `mob_skill_db` VALUES (2995,'Abandoned Teddy Bear@NPC_CURSEATTACK','attack',181,4,500,0,5000,'no','self','myhpinrate',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);
+REPLACE INTO `mob_skill_db` VALUES (2995,'Abandoned Teddy Bear@NPC_CURSEATTACK','follow',181,4,500,0,5000,'no','self','myhpinrate',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);
+REPLACE INTO `mob_skill_db` VALUES (2995,'Abandoned Teddy Bear@NPC_CRITICALSLASH','attack',170,1,500,0,5000,'no','target','always',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);
+REPLACE INTO `mob_skill_db` VALUES (2995,'Abandoned Teddy Bear@SA_DISPELL','attack',289,1,50,1000,15000,'no','target','always',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);
+REPLACE INTO `mob_skill_db` VALUES (2995,'Abandoned Teddy Bear@BS_HAMMERFALL','attack',110,5,500,1000,5000,'no','target','always',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);
 REPLACE INTO `mob_skill_db` VALUES (3074,'Time Holder@NPC_AGIUP','attack',350,5,10000,0,10000,'yes','self','myhpltmaxrate','30',NULL,NULL,NULL,NULL,NULL,NULL,NULL);
 REPLACE INTO `mob_skill_db` VALUES (3074,'Time Holder@AL_INCAGI','chase',29,10,2000,700,10000,'no','self','always',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);
 REPLACE INTO `mob_skill_db` VALUES (3074,'Time Holder@WZ_METEOR','attack',83,11,1000,500,10000,'no','target','always',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);

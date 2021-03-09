@@ -2,8 +2,8 @@
  * This file is part of Hercules.
  * http://herc.ws - http://github.com/HerculesWS/Hercules
  *
- * Copyright (C) 2012-2018  Hercules Dev Team
- * Copyright (C)  Athena Dev Teams
+ * Copyright (C) 2012-2021 Hercules Dev Team
+ * Copyright (C) Athena Dev Teams
  *
  * Hercules is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -57,6 +57,9 @@ struct s_pet_db {
 	int defence_attack_rate;
 	int change_target_rate;
 	int autofeed;
+	int hunger_decrement;
+	int starving_delay;
+	int starving_decrement;
 	struct script_code *equip_script;
 	struct script_code *pet_script;
 
@@ -64,7 +67,13 @@ struct s_pet_db {
 	VECTOR_DECL(struct pet_evolve_data) evolve_data;
 };
 
-enum { PET_CLASS,PET_CATCH,PET_EGG,PET_EQUIP,PET_FOOD };
+enum petdb_key_type {
+	PET_CLASS,
+	PET_CATCH,
+	PET_EGG,
+	PET_EQUIP,
+	PET_FOOD,
+};
 
 struct pet_recovery { //Stat recovery
 	enum sc_type type;    ///< Status Change id
@@ -143,6 +152,8 @@ struct pet_interface {
 	int (*final) (void);
 	/* */
 	int (*hungry_val) (struct pet_data *pd);
+	void (*set_hunger) (struct pet_data *pd, int value);
+	int (*get_card4_value) (int rename_flag, int intimacy);
 	void (*set_intimate) (struct pet_data *pd, int value);
 	int (*create_egg) (struct map_session_data *sd, int item_id);
 	int (*unlocktarget) (struct pet_data *pd);
@@ -150,11 +161,12 @@ struct pet_interface {
 	int (*target_check) (struct map_session_data *sd, struct block_list *bl, int type);
 	int (*sc_check) (struct map_session_data *sd, int type);
 	int (*hungry) (int tid, int64 tick, int id, intptr_t data);
-	int (*search_petDB_index) (int key, int type);
+	int (*search_petDB_index) (int key, enum petdb_key_type);
 	int (*hungry_timer_delete) (struct pet_data *pd);
 	int (*performance) (struct map_session_data *sd, struct pet_data *pd);
 	int (*return_egg) (struct map_session_data *sd, struct pet_data *pd);
 	int (*data_init) (struct map_session_data *sd, struct s_pet *petinfo);
+	int (*spawn) (struct map_session_data *sd, bool birth_process);
 	int (*birth_process) (struct map_session_data *sd, struct s_pet *petinfo);
 	int (*recv_petdata) (int account_id, struct s_pet *p, int flag);
 	int (*select_egg) (struct map_session_data *sd, int egg_index);
@@ -181,11 +193,11 @@ struct pet_interface {
 	void (*read_db) (void);
 	int (*read_db_libconfig) (const char *filename, bool ignore_missing);
 	int (*read_db_sub) (struct config_setting_t *it, int n, const char *source);
-	bool (*read_db_sub_intimacy) (int idx, struct config_setting_t *t);
+	bool (*read_db_sub_intimacy) (struct s_pet_db *entry, struct config_setting_t *t);
 	void (*read_db_clear) (void);
 
 	/* Pet Evolution [Dastgir/Hercules] */
-	void (*read_db_sub_evolution) (struct config_setting_t *t, int n);
+	bool (*read_db_sub_evolution) (struct s_pet_db *entry, struct config_setting_t *t);
 
 };
 

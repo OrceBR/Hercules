@@ -2,7 +2,7 @@
  * This file is part of Hercules.
  * http://herc.ws - http://github.com/HerculesWS/Hercules
  *
- * Copyright (C) 2013-2015  Hercules Dev Team
+ * Copyright (C) 2013-2021 Hercules Dev Team
  *
  * Hercules is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -726,6 +726,11 @@ packet(0x96e,clif->ackmergeitems);
 	packet(0x0843,clif->pGMRemove2,2);
 #endif
 
+// all versions
+#if PACKETVER >= 20100824
+	packet(0x0844,clif->pCashShopOpen1);
+#endif
+
 //2010-11-24aRagexeRE
 #if PACKETVER >= 20101124
 	packet(0x0288,clif->pcashshop_buy,4,8);
@@ -776,7 +781,6 @@ packet(0x96e,clif->ackmergeitems);
 //2011-07-18aRagexe (Thanks to Yommy!)
 #if PACKETVER >= 20110718
 // shuffle packets not added
-	packet(0x0844,clif->pCashShopOpen,2);/* tell server cashshop window is being open */
 	packet(0x084a,clif->pCashShopClose,2);/* tell server cashshop window is being closed */
 	packet(0x0846,clif->pCashShopReqTab,2);
 	packet(0x0848,clif->pCashShopBuy,2);
@@ -1820,6 +1824,11 @@ packet(0x96e,clif->ackmergeitems);
 	packet(0x0aa4, clif->pRefineryUIClose);
 #endif
 
+#if PACKETVER_MAIN_NUM >= 20170111 || PACKETVER_RE_NUM >= 20170111 || defined(PACKETVER_ZERO)
+	packet(0x0ab5, clif->pLapineUpgrade_close);
+	packet(0x0ab6, clif->pLapineUpgrade_makeItem);
+#endif
+
 // 2017-02-28aRagexeRE
 #if PACKETVER >= 20170228
 // new packets
@@ -1973,6 +1982,19 @@ packet(0x96e,clif->ackmergeitems);
 
 #if PACKETVER_ZERO_NUM >= 20190709
 	packet(0x0b35,clif->pReqGearOff);
+#endif
+
+#if PACKETVER >= 20190724
+	packet(0x0b4c,clif->pCashShopLimitedReq);
+#endif
+
+#if PACKETVER_MAIN_NUM >= 20190904 || PACKETVER_RE_NUM >= 20190904 || PACKETVER_ZERO_NUM >= 20190828
+	packet(0x0b57,clif->pNPCExpandedBarterPurchase);
+	packet(0x0b58,clif->pNPCExpandedBarterClosed);
+#endif
+
+#if PACKETVER >= 20191224
+	packet(0x0b6d,clif->pCashShopOpen2);
 #endif
 
 #endif /* MAP_PACKETS_H */

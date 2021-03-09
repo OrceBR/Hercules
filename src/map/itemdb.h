@@ -2,8 +2,8 @@
  * This file is part of Hercules.
  * http://herc.ws - http://github.com/HerculesWS/Hercules
  *
- * Copyright (C) 2012-2018  Hercules Dev Team
- * Copyright (C)  Athena Dev Teams
+ * Copyright (C) 2012-2021 Hercules Dev Team
+ * Copyright (C) Athena Dev Teams
  *
  * Hercules is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -85,6 +85,7 @@ enum item_itemid {
 	ITEMID_CARROT                = 515,
 	ITEMID_HOLY_WATER            = 523,
 	ITEMID_PUMPKIN               = 535,
+	ITEMID_PET_FOOD              = 537,
 	ITEMID_RED_SLIM_POTION       = 545,
 	ITEMID_YELLOW_SLIM_POTION    = 546,
 	ITEMID_WHITE_SLIM_POTION     = 547,
@@ -95,6 +96,8 @@ enum item_itemid {
 	ITEMID_ALOEBERA              = 606,
 	ITEMID_SPECTACLES            = 611,
 	ITEMID_POISON_BOTTLE         = 678,
+	ITEMID_EARTH_SCROLL_1_3      = 686,
+	ITEMID_EARTH_SCROLL_1_5      = 687,
 	ITEMID_EMPTY_BOTTLE          = 713,
 	ITEMID_EMPERIUM              = 714,
 	ITEMID_YELLOW_GEMSTONE       = 715,
@@ -150,6 +153,7 @@ enum item_itemid {
 	ITEMID_BUBBLE_GUM            = 12210,
 	ITEMID_GIANT_FLY_WING        = 12212,
 	ITEMID_NEURALIZER            = 12213,
+	ITEMID_MEGAPHONE             = 12221,
 	ITEMID_M_CENTER_POTION       = 12241,
 	ITEMID_M_AWAKENING_POTION    = 12242,
 	ITEMID_M_BERSERK_POTION      = 12243,
@@ -359,6 +363,7 @@ enum geneticist_item_list {
 enum e_chain_cache {
 	ECC_ORE,
 	ECC_SIEGFRIED,
+	ECC_NEO_INSURANCE,
 	/* */
 	ECC_MAX,
 };
@@ -603,7 +608,6 @@ struct item_data {
 #define itemid_isgemstone(n)     ((n) >= ITEMID_YELLOW_GEMSTONE && (n) <= ITEMID_BLUE_GEMSTONE)
 #define itemdb_is_GNbomb(n)      ((n) >= ITEMID_APPLE_BOMB && (n) <= ITEMID_VERY_HARD_LUMP)
 #define itemdb_is_GNthrowable(n) ((n) >= ITEMID_MYSTERIOUS_POWDER && (n) <= ITEMID_BLACK_THING_TO_THROW)
-#define itemid_is_pilebunker(n)  ((n) == ITEMID_PILEBUNCKER || (n) == ITEMID_PILEBUNCKER_P || (n) == ITEMID_PILEBUNCKER_S || (n) == ITEMID_PILEBUNCKER_T)
 #define itemdb_is_shadowequip(n) ((n) & (EQP_SHADOW_ARMOR|EQP_SHADOW_WEAPON|EQP_SHADOW_SHIELD|EQP_SHADOW_SHOES|EQP_SHADOW_ACC_R|EQP_SHADOW_ACC_L))
 #define itemdb_is_costumeequip(n) ((n) & (EQP_COSTUME_HEAD_TOP|EQP_COSTUME_HEAD_MID|EQP_COSTUME_HEAD_LOW|EQP_COSTUME_GARMENT))
 

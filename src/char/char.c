@@ -2,8 +2,8 @@
  * This file is part of Hercules.
  * http://herc.ws - http://github.com/HerculesWS/Hercules
  *
- * Copyright (C) 2012-2018  Hercules Dev Team
- * Copyright (C)  Athena Dev Teams
+ * Copyright (C) 2012-2021 Hercules Dev Team
+ * Copyright (C) Athena Dev Teams
  *
  * Hercules is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -425,8 +425,6 @@ static struct DBData char_create_charstatus(union DBKey key, va_list args)
 
 static int char_mmo_char_tosql(int char_id, struct mmo_charstatus *p)
 {
-	int i = 0;
-	int count = 0;
 	int diff = 0;
 	char save_status[128]; //For displaying save information. [Skotlex]
 	struct mmo_charstatus *cp;
@@ -476,8 +474,8 @@ static int char_mmo_char_tosql(int char_id, struct mmo_charstatus *p)
 		(p->rename != cp->rename) || (p->slotchange != cp->slotchange) || (p->look.robe != cp->look.robe) ||
 		(p->show_equip != cp->show_equip) || (p->allow_party != cp->allow_party) || (p->font != cp->font) ||
 		(p->uniqueitem_counter != cp->uniqueitem_counter) || (p->hotkey_rowshift != cp->hotkey_rowshift) || (p->hotkey_rowshift2 != cp->hotkey_rowshift2) ||
-		(p->clan_id != cp->clan_id) || (p->last_login != cp->last_login) || (p->attendance_count != cp->attendance_count) ||
-		(p->attendance_timer != cp->attendance_timer) || (p->title_id != cp->title_id) || (p->inventorySize != cp->inventorySize) ||
+		(p->clan_id != cp->clan_id) || (p->last_login != cp->last_login) ||
+		(p->title_id != cp->title_id) || (p->inventorySize != cp->inventorySize) ||
 		(p->allow_call != cp->allow_call)
 	) {
 		//Save status
@@ -505,7 +503,7 @@ static int char_mmo_char_tosql(int char_id, struct mmo_charstatus *p)
 			"`weapon`='%d',`shield`='%d',`head_top`='%d',`head_mid`='%d',`head_bottom`='%d',"
 			"`last_map`='%s',`last_x`='%d',`last_y`='%d',`save_map`='%s',`save_x`='%d',`save_y`='%d', `rename`='%d',"
 			"`delete_date`='%lu',`robe`='%d',`slotchange`='%d', `char_opt`='%u', `font`='%u', `uniqueitem_counter` ='%u',"
-			"`hotkey_rowshift`='%d',`hotkey_rowshift2`='%d',`clan_id`='%d',`last_login`='%"PRId64"',`attendance_count`='%d',`attendance_timer`='%"PRId64"',"
+			"`hotkey_rowshift`='%d',`hotkey_rowshift2`='%d',`clan_id`='%d',`last_login`='%"PRId64"',"
 			"`title_id`='%d', `inventory_size`='%d'"
 			" WHERE  `account_id`='%d' AND `char_id` = '%d'",
 			char_db, p->base_level, p->job_level,
@@ -518,7 +516,7 @@ static int char_mmo_char_tosql(int char_id, struct mmo_charstatus *p)
 			mapindex_id2name(p->save_point.map), p->save_point.x, p->save_point.y, p->rename,
 			(unsigned long)p->delete_date,  // FIXME: platform-dependent size
 			p->look.robe,p->slotchange,opt,p->font,p->uniqueitem_counter,
-			p->hotkey_rowshift,p->hotkey_rowshift2,p->clan_id,p->last_login, p->attendance_count, p->attendance_timer,
+			p->hotkey_rowshift, p->hotkey_rowshift2, p->clan_id, p->last_login,
 			p->title_id, p->inventorySize,
 			p->account_id, p->char_id) )
 		{
@@ -528,8 +526,8 @@ static int char_mmo_char_tosql(int char_id, struct mmo_charstatus *p)
 			strcat(save_status, " status");
 	}
 
-	if( p->bank_vault != cp->bank_vault || p->mod_exp != cp->mod_exp || p->mod_drop != cp->mod_drop || p->mod_death != cp->mod_death ) {
-		if( SQL_ERROR == SQL->Query(inter->sql_handle, "REPLACE INTO `%s` (`account_id`,`bank_vault`,`base_exp`,`base_drop`,`base_death`) VALUES ('%d','%d','%d','%d','%d')",account_data_db,p->account_id,p->bank_vault,p->mod_exp,p->mod_drop,p->mod_death) ) {
+	if (p->bank_vault != cp->bank_vault || p->mod_exp != cp->mod_exp || p->mod_drop != cp->mod_drop || p->mod_death != cp->mod_death || p->attendance_count != cp->attendance_count || p->attendance_timer != cp->attendance_timer) {
+		if (SQL_ERROR == SQL->Query(inter->sql_handle, "REPLACE INTO `%s` (`account_id`,`bank_vault`,`base_exp`,`base_drop`,`base_death`,`attendance_count`,`attendance_timer`) VALUES ('%d','%d','%d','%d','%d','%d','%"PRId64"')", account_data_db, p->account_id, p->bank_vault, p->mod_exp, p->mod_drop, p->mod_death, p->attendance_count, p->attendance_timer) ) {
 			Sql_ShowDebug(inter->sql_handle);
 			errors++;
 		} else
@@ -591,8 +589,9 @@ static int char_mmo_char_tosql(int char_id, struct mmo_charstatus *p)
 		//insert here.
 		StrBuf->Clear(&buf);
 		StrBuf->Printf(&buf, "INSERT INTO `%s`(`char_id`,`map`,`x`,`y`) VALUES ", memo_db);
-		for( i = 0, count = 0; i < MAX_MEMOPOINTS; ++i )
-		{
+
+		int count = 0;
+		for (int i = 0; i < MAX_MEMOPOINTS; ++i) {
 			if( p->memo_point[i].map )
 			{
 				if( count )
@@ -624,24 +623,31 @@ static int char_mmo_char_tosql(int char_id, struct mmo_charstatus *p)
 		StrBuf->Clear(&buf);
 		StrBuf->Printf(&buf, "INSERT INTO `%s`(`char_id`,`id`,`lv`,`flag`) VALUES ", skill_db);
 		//insert here.
-		for (i = 0, count = 0; i < MAX_SKILL_DB; ++i) {
-			if( p->skill[i].id != 0 && p->skill[i].flag != SKILL_FLAG_TEMPORARY ) {
-				if( p->skill[i].lv == 0 && ( p->skill[i].flag == SKILL_FLAG_PERM_GRANTED || p->skill[i].flag == SKILL_FLAG_PERMANENT ) )
-					continue;
-				if( p->skill[i].flag != SKILL_FLAG_PERMANENT && p->skill[i].flag != SKILL_FLAG_PERM_GRANTED && (p->skill[i].flag - SKILL_FLAG_REPLACED_LV_0) == 0 )
-					continue;
-				if( count )
-					StrBuf->AppendStr(&buf, ",");
-				StrBuf->Printf(&buf, "('%d','%d','%d','%d')", char_id, p->skill[i].id,
-								 ( (p->skill[i].flag == SKILL_FLAG_PERMANENT || p->skill[i].flag == SKILL_FLAG_PERM_GRANTED) ? p->skill[i].lv : p->skill[i].flag - SKILL_FLAG_REPLACED_LV_0),
-								 p->skill[i].flag == SKILL_FLAG_PERM_GRANTED ? p->skill[i].flag : 0);/* other flags do not need to be saved */
-				++count;
-			}
+		int count = 0;
+		for (int i = 0; i < MAX_SKILL_DB; ++i) {
+			if (p->skill[i].id == 0)
+				continue;
+			if (p->skill[i].flag == SKILL_FLAG_TEMPORARY)
+				continue;
+			if (p->skill[i].flag == SKILL_FLAG_PLAGIARIZED)
+				continue;
+			if (p->skill[i].lv == 0 && (p->skill[i].flag == SKILL_FLAG_PERM_GRANTED || p->skill[i].flag == SKILL_FLAG_PERMANENT))
+				continue;
+			if (p->skill[i].flag == SKILL_FLAG_REPLACED_LV_0)
+				continue;
+
+			if (Assert_chk(p->skill[i].flag == SKILL_FLAG_PERMANENT || p->skill[i].flag == SKILL_FLAG_PERM_GRANTED || p->skill[i].flag > SKILL_FLAG_REPLACED_LV_0))
+				continue;
+			if (count != 0)
+				StrBuf->AppendStr(&buf, ",");
+			int saved_lv = (p->skill[i].flag > SKILL_FLAG_REPLACED_LV_0) ? p->skill[i].flag - SKILL_FLAG_REPLACED_LV_0 : p->skill[i].lv;
+			int saved_flag = p->skill[i].flag == SKILL_FLAG_PERM_GRANTED ? p->skill[i].flag : 0; // other flags do not need to be saved
+			StrBuf->Printf(&buf, "('%d','%d','%d','%d')", char_id, p->skill[i].id, saved_lv, saved_flag);
+
+			++count;
 		}
-		if( count )
-		{
-			if( SQL_ERROR == SQL->QueryStr(inter->sql_handle, StrBuf->Value(&buf)) )
-			{
+		if (count != 0) {
+			if (SQL_ERROR == SQL->QueryStr(inter->sql_handle, StrBuf->Value(&buf))) {
 				Sql_ShowDebug(inter->sql_handle);
 				errors++;
 			}
@@ -651,7 +657,7 @@ static int char_mmo_char_tosql(int char_id, struct mmo_charstatus *p)
 	}
 
 	diff = 0;
-	for(i = 0; i < MAX_FRIENDS; i++){
+	for (int i = 0; i < MAX_FRIENDS; i++) {
 		if(p->friends[i].char_id != cp->friends[i].char_id ||
 			p->friends[i].account_id != cp->friends[i].account_id){
 			diff = 1;
@@ -669,8 +675,8 @@ static int char_mmo_char_tosql(int char_id, struct mmo_charstatus *p)
 
 		StrBuf->Clear(&buf);
 		StrBuf->Printf(&buf, "INSERT INTO `%s` (`char_id`, `friend_account`, `friend_id`) VALUES ", friend_db);
-		for( i = 0, count = 0; i < MAX_FRIENDS; ++i )
-		{
+		int count = 0;
+		for (int i = 0; i < MAX_FRIENDS; ++i) {
 			if( p->friends[i].char_id > 0 )
 			{
 				if( count )
@@ -695,7 +701,7 @@ static int char_mmo_char_tosql(int char_id, struct mmo_charstatus *p)
 	StrBuf->Clear(&buf);
 	StrBuf->Printf(&buf, "REPLACE INTO `%s` (`char_id`, `hotkey`, `type`, `itemskill_id`, `skill_lvl`) VALUES ", hotkey_db);
 	diff = 0;
-	for(i = 0; i < ARRAYLENGTH(p->hotkeys); i++){
+	for (int i = 0; i < ARRAYLENGTH(p->hotkeys); i++) {
 		if(memcmp(&p->hotkeys[i], &cp->hotkeys[i], sizeof(struct hotkey)))
 		{
 			if( diff )
@@ -1213,7 +1219,7 @@ static int char_mmo_char_fromsql(int char_id, struct mmo_charstatus *p, bool loa
 		"`status_point`,`skill_point`,`option`,`karma`,`manner`,`party_id`,`guild_id`,`pet_id`,`homun_id`,`elemental_id`,`hair`,"
 		"`hair_color`,`clothes_color`,`body`,`weapon`,`shield`,`head_top`,`head_mid`,`head_bottom`,`last_map`,`last_x`,`last_y`,"
 		"`save_map`,`save_x`,`save_y`,`partner_id`,`father`,`mother`,`child`,`fame`,`rename`,`delete_date`,`robe`,`slotchange`,"
-		"`char_opt`,`font`,`uniqueitem_counter`,`sex`,`hotkey_rowshift`,`hotkey_rowshift2`,`clan_id`,`last_login`, `attendance_count`, `attendance_timer`,"
+		"`char_opt`,`font`,`uniqueitem_counter`,`sex`,`hotkey_rowshift`,`hotkey_rowshift2`,`clan_id`,`last_login`,"
 		"`title_id`, `inventory_size`"
 		" FROM `%s` WHERE `char_id`=? LIMIT 1", char_db)
 	 || SQL_ERROR == SQL->StmtBindParam(stmt, 0, SQLDT_INT, &char_id, sizeof char_id)
@@ -1280,10 +1286,8 @@ static int char_mmo_char_fromsql(int char_id, struct mmo_charstatus *p, bool loa
 	 || SQL_ERROR == SQL->StmtBindColumn(stmt, 59, SQLDT_UCHAR,  &p->hotkey_rowshift2,   sizeof p->hotkey_rowshift2,   NULL, NULL)
 	 || SQL_ERROR == SQL->StmtBindColumn(stmt, 60, SQLDT_INT,    &p->clan_id,            sizeof p->clan_id,            NULL, NULL)
 	 || SQL_ERROR == SQL->StmtBindColumn(stmt, 61, SQLDT_INT64,  &p->last_login,         sizeof p->last_login,         NULL, NULL)
-	 || SQL_ERROR == SQL->StmtBindColumn(stmt, 62, SQLDT_SHORT,  &p->attendance_count,   sizeof p->attendance_count,   NULL, NULL)
-	 || SQL_ERROR == SQL->StmtBindColumn(stmt, 63, SQLDT_INT64,  &p->attendance_timer,   sizeof p->attendance_timer,   NULL, NULL)
-	 || SQL_ERROR == SQL->StmtBindColumn(stmt, 64, SQLDT_INT,    &p->title_id,           sizeof p->title_id,           NULL, NULL)
-	 || SQL_ERROR == SQL->StmtBindColumn(stmt, 65, SQLDT_INT,    &p->inventorySize,      sizeof p->inventorySize,      NULL, NULL)
+	 || SQL_ERROR == SQL->StmtBindColumn(stmt, 62, SQLDT_INT,    &p->title_id,           sizeof p->title_id,           NULL, NULL)
+	 || SQL_ERROR == SQL->StmtBindColumn(stmt, 63, SQLDT_INT,    &p->inventorySize,      sizeof p->inventorySize,      NULL, NULL)
 	) {
 		SqlStmt_ShowDebug(stmt);
 		SQL->StmtFree(stmt);
@@ -1369,7 +1373,7 @@ static int char_mmo_char_fromsql(int char_id, struct mmo_charstatus *p, bool loa
 		SqlStmt_ShowDebug(stmt);
 	}
 
-	if( tmp_skill.flag != SKILL_FLAG_PERM_GRANTED )
+	if (tmp_skill.flag != SKILL_FLAG_PERM_GRANTED)
 		tmp_skill.flag = SKILL_FLAG_PERMANENT;
 
 	for (i = 0; i < MAX_SKILL_DB && SQL_SUCCESS == SQL->StmtNextRow(stmt); ++i) {
@@ -1429,14 +1433,16 @@ static int char_mmo_char_fromsql(int char_id, struct mmo_charstatus *p, bool loa
 	/* default */
 	p->mod_exp = p->mod_drop = p->mod_death = 100;
 
-	//`account_data` (`account_id`,`bank_vault`,`base_exp`,`base_drop`,`base_death`)
-	if (SQL_ERROR == SQL->StmtPrepare(stmt, "SELECT `bank_vault`,`base_exp`,`base_drop`,`base_death` FROM `%s` WHERE `account_id`=? LIMIT 1", account_data_db)
+	//`account_data` (`account_id`,`bank_vault`,`base_exp`,`base_drop`,`base_death`,`attendance_count`, `attendance_timer`)
+	if (SQL_ERROR == SQL->StmtPrepare(stmt, "SELECT `bank_vault`,`base_exp`,`base_drop`,`base_death`,`attendance_count`, `attendance_timer` FROM `%s` WHERE `account_id`=? LIMIT 1", account_data_db)
 	 || SQL_ERROR == SQL->StmtBindParam(stmt, 0, SQLDT_INT, &account_id, sizeof account_id)
 	 || SQL_ERROR == SQL->StmtExecute(stmt)
 	 || SQL_ERROR == SQL->StmtBindColumn(stmt, 0, SQLDT_INT,    &p->bank_vault, sizeof p->bank_vault, NULL, NULL)
 	 || SQL_ERROR == SQL->StmtBindColumn(stmt, 1, SQLDT_USHORT, &p->mod_exp,    sizeof p->mod_exp,    NULL, NULL)
 	 || SQL_ERROR == SQL->StmtBindColumn(stmt, 2, SQLDT_USHORT, &p->mod_drop,   sizeof p->mod_drop,   NULL, NULL)
 	 || SQL_ERROR == SQL->StmtBindColumn(stmt, 3, SQLDT_USHORT, &p->mod_death,  sizeof p->mod_death,  NULL, NULL)
+	 || SQL_ERROR == SQL->StmtBindColumn(stmt, 4, SQLDT_SHORT,  &p->attendance_count, sizeof p->attendance_count, NULL, NULL)
+	 || SQL_ERROR == SQL->StmtBindColumn(stmt, 5, SQLDT_INT64,  &p->attendance_timer, sizeof p->attendance_timer, NULL, NULL)
 	) {
 		SqlStmt_ShowDebug(stmt);
 	}
@@ -2531,19 +2537,39 @@ static void char_changesex(int account_id, int sex)
 }
 
 /**
- * Performs the necessary operations when changing a character's sex, such as
- * correcting the job class and unequipping items, and propagating the
- * information to the guild data.
+ * Performs the necessary operations when changing a character's gender,
+ * such as correcting the job class and unequipping items,
+ * and propagating the information to the guild data.
  *
- * @param sex      The new sex (SEX_MALE or SEX_FEMALE).
- * @param acc      The character's account ID.
- * @param char_id  The character ID.
- * @param class    The character's current job class.
+ * @param sex The character's new gender (SEX_MALE or SEX_FEMALE).
+ * @param acc The character's account ID.
+ * @param char_id The character ID.
+ * @param class The character's current job class.
  * @param guild_id The character's guild ID.
- */
+ *
+ **/
 static void char_change_sex_sub(int sex, int acc, int char_id, int class, int guild_id)
 {
-	// job modification
+	struct SqlStmt *stmt = SQL->StmtMalloc(inter->sql_handle);
+
+	/** If we can't save the data, there's nothing to do. **/
+	if (stmt == NULL) {
+		SqlStmt_ShowDebug(stmt);
+		return;
+	}
+
+	const char *query_inv = "UPDATE `%s` SET `equip`='0' WHERE `char_id`=?";
+
+	/** Don't change gender if resetting the view data fails to prevent character from being unable to login. **/
+	if (SQL_ERROR == SQL->StmtPrepare(stmt, query_inv, inventory_db)
+	    || SQL_ERROR == SQL->StmtBindParam(stmt, 0, SQLDT_INT32, &char_id, sizeof(char_id))
+	    || SQL_ERROR == SQL->StmtExecute(stmt)) {
+		SqlStmt_ShowDebug(stmt);
+		SQL->StmtFree(stmt);
+		return;
+	}
+
+	/** Correct the job class for gender specific jobs according to the passed gender. **/
 	if (class == JOB_BARD || class == JOB_DANCER)
 		class = (sex == SEX_MALE ? JOB_BARD : JOB_DANCER);
 	else if (class == JOB_CLOWN || class == JOB_GYPSY)
@@ -2559,14 +2585,30 @@ static void char_change_sex_sub(int sex, int acc, int char_id, int class, int gu
 	else if (class == JOB_KAGEROU || class == JOB_OBORO)
 		class = (sex == SEX_MALE ? JOB_KAGEROU : JOB_OBORO);
 
-	if (SQL_ERROR == SQL->Query(inter->sql_handle, "UPDATE `%s` SET `equip`='0' WHERE `char_id`='%d'", inventory_db, char_id))
-		Sql_ShowDebug(inter->sql_handle);
+#if PACKETVER >= 20141016
+	char gender = (sex == SEX_MALE) ? 'M' : ((sex == SEX_FEMALE) ? 'F' : 'U');
+#else
+	char gender = 'U';
+#endif
 
-	if (SQL_ERROR == SQL->Query(inter->sql_handle, "UPDATE `%s` SET `class`='%d', `weapon`='0', `shield`='0', "
-				"`head_top`='0', `head_mid`='0', `head_bottom`='0' WHERE `char_id`='%d'",
-				char_db, class, char_id))
-		Sql_ShowDebug(inter->sql_handle);
-	if (guild_id) // If there is a guild, update the guild_member data [Skotlex]
+	const char *query_char = "UPDATE `%s` SET `class`=?, `weapon`='0', `shield`='0', `head_top`='0', "
+		"`head_mid`='0', `head_bottom`='0', `robe`='0', `sex`=? WHERE `char_id`=?";
+
+	/** Don't update guild data if changing gender fails to prevent data de-synchronisation. **/
+	if (SQL_ERROR == SQL->StmtPrepare(stmt, query_char, char_db)
+	    || SQL_ERROR == SQL->StmtBindParam(stmt, 0, SQLDT_INT32, &class, sizeof(class))
+	    || SQL_ERROR == SQL->StmtBindParam(stmt, 1, SQLDT_ENUM, &gender, sizeof(gender))
+	    || SQL_ERROR == SQL->StmtBindParam(stmt, 2, SQLDT_INT32, &char_id, sizeof(char_id))
+	    || SQL_ERROR == SQL->StmtExecute(stmt)) {
+		SqlStmt_ShowDebug(stmt);
+		SQL->StmtFree(stmt);
+		return;
+	}
+
+	SQL->StmtFree(stmt);
+
+	/** Update guild member data if a guild ID was passed. **/
+	if (guild_id != 0)
 		inter_guild->sex_changed(guild_id, acc, char_id, sex);
 }
 
@@ -2898,13 +2940,13 @@ static void char_global_accreg_to_login_add(const char *key, unsigned int index,
 
 		if( val ) {
 			char *sval = (char*)val;
-			len = strlen(sval)+1;
+			len = strlen(sval);
 
-			WFIFOB(chr->login_fd, nlen) = (unsigned char)len;/* won't be higher; the column size is 254 */
+			WFIFOB(chr->login_fd, nlen) = (unsigned char)len; // Won't be higher; the column size is 255.
 			nlen += 1;
 
-			safestrncpy(WFIFOP(chr->login_fd,nlen), sval, len);
-			nlen += len;
+			safestrncpy(WFIFOP(chr->login_fd, nlen), sval, len + 1);
+			nlen += len + 1;
 		}
 	} else {
 		WFIFOB(chr->login_fd, nlen) = val ? 0 : 1;
@@ -3500,45 +3542,68 @@ static void char_ask_name_ack(int fd, int acc, const char *name, int type, int r
 }
 
 /**
- * Changes a character's sex.
- * The information is updated on database, and the character is kicked if it
- * currently is online.
+ * Changes a character's gender.
+ * The information is updated on database, and the character is kicked if it currently is online.
  *
- * @param char_id The character's ID.
- * @param sex     The new sex.
+ * @param char_id The character ID
+ * @param sex The character's new gender (SEX_MALE or SEX_FEMALE).
  * @retval 0 in case of success.
  * @retval 1 in case of failure.
- */
+ *
+ **/
 static int char_changecharsex(int char_id, int sex)
 {
-	int class = 0, guild_id = 0, account_id = 0;
-	char *data;
+	struct SqlStmt *stmt = SQL->StmtMalloc(inter->sql_handle);
 
-	// get character data
-	if (SQL_ERROR == SQL->Query(inter->sql_handle, "SELECT `account_id`,`class`,`guild_id` FROM `%s` WHERE `char_id` = '%d'", char_db, char_id)) {
-		Sql_ShowDebug(inter->sql_handle);
+	/** If we can't load the data, there's nothing to do. **/
+	if (stmt == NULL) {
+		SqlStmt_ShowDebug(stmt);
 		return 1;
 	}
-	if (SQL->NumRows(inter->sql_handle) != 1 || SQL_ERROR == SQL->NextRow(inter->sql_handle)) {
-		SQL->FreeResult(inter->sql_handle);
-		return 1;
-	}
-	SQL->GetData(inter->sql_handle, 0, &data, NULL); account_id = atoi(data);
-	SQL->GetData(inter->sql_handle, 1, &data, NULL); class = atoi(data);
-	SQL->GetData(inter->sql_handle, 2, &data, NULL); guild_id = atoi(data);
-	SQL->FreeResult(inter->sql_handle);
 
-	if (SQL_ERROR == SQL->Query(inter->sql_handle, "UPDATE `%s` SET `sex` = '%c' WHERE `char_id` = '%d'", char_db, sex == SEX_MALE ? 'M' : 'F', char_id)) {
-		Sql_ShowDebug(inter->sql_handle);
+	const char *query = "SELECT `account_id`, `class`, `guild_id` FROM `%s` WHERE `char_id`=?";
+	int account_id = 0;
+	int class = 0;
+	int guild_id = 0;
+
+	/** Abort changing gender if there was an error while loading the data. **/
+	if (SQL_ERROR == SQL->StmtPrepare(stmt, query, char_db)
+	    || SQL_ERROR == SQL->StmtBindParam(stmt, 0, SQLDT_INT32, &char_id, sizeof(char_id))
+	    || SQL_ERROR == SQL->StmtExecute(stmt)
+	    || SQL_ERROR == SQL->StmtBindColumn(stmt, 0, SQLDT_INT32, &account_id, sizeof(account_id), NULL, NULL)
+	    || SQL_ERROR == SQL->StmtBindColumn(stmt, 1, SQLDT_INT32, &class, sizeof(class), NULL, NULL)
+	    || SQL_ERROR == SQL->StmtBindColumn(stmt, 2, SQLDT_INT32, &guild_id, sizeof(guild_id), NULL, NULL)) {
+		SqlStmt_ShowDebug(stmt);
+		SQL->StmtFree(stmt);
 		return 1;
 	}
+
+	/** Abort changing gender if no character was found. **/
+	if (SQL->StmtNumRows(stmt) < 1) {
+		ShowError("char_changecharsex: Requested non-existant character! (ID: %d)\n", char_id);
+		SQL->StmtFree(stmt);
+		return 1;
+	}
+
+	/** Abort changing gender if more than one character was found. **/
+	if (SQL->StmtNumRows(stmt) > 1) {
+		ShowError("char_changecharsex: There are multiple characters with identical ID! (ID: %d)\n", char_id);
+		SQL->StmtFree(stmt);
+		return 1;
+	}
+
+	/** Abort changing gender if fetching the data fails. **/
+	if (SQL_ERROR == SQL->StmtNextRow(stmt)) {
+		SqlStmt_ShowDebug(stmt);
+		SQL->StmtFree(stmt);
+		return 1;
+	}
+
+	SQL->StmtFree(stmt);
 	char_change_sex_sub(sex, account_id, char_id, class, guild_id);
+	chr->disconnect_player(account_id); // Disconnect player if online on char-server.
+	chr->changesex(account_id, sex); // Notify all mapservers about this change.
 
-	// disconnect player if online on char-server
-	chr->disconnect_player(account_id);
-
-	// notify all mapservers about this change
-	chr->changesex(account_id, sex);
 	return 0;
 }
 

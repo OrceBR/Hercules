@@ -9,19 +9,19 @@
 //= This file is part of Hercules.
 //= http://herc.ws - http://github.com/HerculesWS/Hercules
 //=
-//= Copyright (C) 2012-2015  Hercules Dev Team
-//= Copyright (C)  Joseph
-//= Copyright (C)  Euphy
-//= Copyright (C)  Gepard
-//= Copyright (C)  Samuray22
-//= Copyright (C)  L0ne_W0lf
-//= Copyright (C)  Lord Gywall
-//= Copyright (C)  Lupus
-//= Copyright (C)  MasterOfMupppets
-//= Copyright (C)  Evera
-//= Copyright (C)  aoa00
-//= Copyright (C)  Vicious_Pucca
-//= Copyright (C)  Persian
+//= Copyright (C) 2012-2021 Hercules Dev Team
+//= Copyright (C) Joseph
+//= Copyright (C) Euphy
+//= Copyright (C) Gepard
+//= Copyright (C) Samuray22
+//= Copyright (C) L0ne_W0lf
+//= Copyright (C) Lord Gywall
+//= Copyright (C) Lupus
+//= Copyright (C) MasterOfMupppets
+//= Copyright (C) Evera
+//= Copyright (C) aoa00
+//= Copyright (C) Vicious_Pucca
+//= Copyright (C) Persian
 //=
 //= Hercules is free software: you can redistribute it and/or modify
 //= it under the terms of the GNU General Public License as published by
@@ -9774,27 +9774,17 @@ OnTouch:
 }
 
 lhz_in01,177,44,0	script	Timer_Sneak	FAKE_NPC,8,12,{
-
-OnTouch:
-	warp "lhz_in01",191,49;
-	end;
-
-OnInit:
-	disablenpc "Timer_Sneak";
-	end;
-
 OnEnter:
 	stopnpctimer;
 	initnpctimer;
 	end;
 
 OnTimer180000:
-	enablenpc "Timer_Sneak";
+	areawarp("lhz_in01", 169, 32, 185, 56, "lhz_in01", 191, 49);
 	end;
 
 OnTimer190000:
 	stopnpctimer;
-	disablenpc "Timer_Sneak";
 	end;
 }
 

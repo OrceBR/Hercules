@@ -2,8 +2,8 @@
  * This file is part of Hercules.
  * http://herc.ws - http://github.com/HerculesWS/Hercules
  *
- * Copyright (C) 2012-2018  Hercules Dev Team
- * Copyright (C)  Athena Dev Teams
+ * Copyright (C) 2012-2021 Hercules Dev Team
+ * Copyright (C) Athena Dev Teams
  *
  * Hercules is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,6 +20,8 @@
  */
 #define HERCULES_CORE
 
+#include <mysql.h>
+
 #include "sql.h"
 
 #include "common/cbasetypes.h"
@@ -33,7 +35,6 @@
 #ifdef WIN32
 #	include "common/winapi.h" // Needed before mysql.h
 #endif
-#include <mysql.h>
 #include <stdio.h>
 #include <stdlib.h> // strtoul
 
@@ -94,6 +95,9 @@ static struct Sql *Sql_Malloc(void)
 	{
 		my_bool reconnect = 1;
 		mysql_options(&self->handle, MYSQL_OPT_RECONNECT, &reconnect);
+#if defined(WIN32) && !defined(__MINGW32__) && !defined(MINGW)
+		mysql_optionsv(&self->handle, MYSQL_PLUGIN_DIR, MARIADB_PLUGINDIR);
+#endif
 	}
 	return self;
 }
